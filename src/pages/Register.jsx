@@ -1,12 +1,13 @@
 import { useState } from "react";
 import {
-  ArrowLeft,
+  ChevronDown,
   Eye,
   EyeOff,
   HeartHandshake,
   ShieldCheck,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+
 import { useAuth } from "../context/AuthContext";
 
 const initialForm = {
@@ -15,7 +16,7 @@ const initialForm = {
   phoneNumber: "",
   password: "",
   confirmPassword: "",
-  role: "mentee",
+  role: "",
   acceptedTerms: false,
 };
 
@@ -25,6 +26,8 @@ function Register() {
 
   const [form, setForm] = useState(initialForm);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -41,9 +44,19 @@ function Register() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    setError("");
+
+    if (!form.role) {
+      setError(
+        "Please select how you would like to use Mentor Connect.",
+      );
+      return;
+    }
 
     if (form.password.length < 8) {
-      setError("Your password must contain at least 8 characters.");
+      setError(
+        "Your password must contain at least 8 characters.",
+      );
       return;
     }
 
@@ -54,7 +67,7 @@ function Register() {
 
     if (!form.acceptedTerms) {
       setError(
-        "You must accept the terms, conduct rules and safety guidelines.",
+        "You must accept the terms, privacy notice, code of conduct and safety guidelines.",
       );
       return;
     }
@@ -78,124 +91,124 @@ function Register() {
 
     navigate("/check-email", {
       state: {
-        email: form.email,
+        email: form.email.trim(),
       },
     });
   }
 
   return (
-    <main className="auth-page">
-      <section className="auth-panel">
-        <Link to="/" className="back-link">
-          <ArrowLeft size={17} />
-          Return home
-        </Link>
+    <main className="auth-page registration-page">
+      <section className="auth-panel registration-panel">
+        <div className="auth-brand registration-brand">
+          <Link
+            to="/"
+            className="brand"
+            aria-label="Return to Mentor Connect homepage"
+          >
+            <span className="brand-icon">
+              <HeartHandshake size={22} />
+            </span>
 
-        <div className="auth-brand">
-          <span className="brand-icon">
-            <HeartHandshake size={22} />
-          </span>
-
-          <span>
-            <strong>Mentor Connect</strong>
-            <small>TCN IKEJA</small>
-          </span>
+            <span className="brand-text">
+              <strong>Mentor Connect</strong>
+              <small>TCN IKEJA</small>
+            </span>
+          </Link>
         </div>
 
-        <div className="auth-heading">
-          <span className="eyebrow">JOIN THE COMMUNITY</span>
+        <div className="auth-heading registration-heading">
+          <span className="eyebrow">
+            JOIN THE COMMUNITY
+          </span>
+
           <h1>Create your account</h1>
+
           <p>
             Begin a safe and purposeful mentoring relationship.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <fieldset className="role-selection">
-            <legend>How would you like to use Mentor Connect?</legend>
+        <form
+          className="registration-form"
+          onSubmit={handleSubmit}
+        >
+          <label className="registration-field">
+            <span>
+              How would you like to use Mentor Connect?
+            </span>
 
-            <label
-              className={
-                form.role === "mentee" ? "role-card selected" : "role-card"
-              }
-            >
-              <input
-                type="radio"
+            <div className="registration-select-field">
+              <select
                 name="role"
-                value="mentee"
-                checked={form.role === "mentee"}
+                value={form.role}
                 onChange={updateForm}
+                required
+              >
+                <option value="" disabled>
+                  Select an option
+                </option>
+
+                <option value="mentee">
+                  I am looking for a mentor
+                </option>
+
+                <option value="mentor">
+                  I would like to become a mentor
+                </option>
+              </select>
+
+              <ChevronDown
+                className="registration-select-icon"
+                size={18}
+                aria-hidden="true"
               />
+            </div>
+          </label>
 
-              <span>
-                <strong>I am looking for a mentor</strong>
-                <small>
-                  Find guidance for your career, business, faith or growth.
-                </small>
-              </span>
-            </label>
-
-            <label
-              className={
-                form.role === "mentor" ? "role-card selected" : "role-card"
-              }
-            >
-              <input
-                type="radio"
-                name="role"
-                value="mentor"
-                checked={form.role === "mentor"}
-                onChange={updateForm}
-              />
-
-              <span>
-                <strong>I would like to become a mentor</strong>
-                <small>
-                  Apply to support members using your experience.
-                </small>
-              </span>
-            </label>
-          </fieldset>
-
-          <label>
-            Full name
+          <label className="registration-field">
+            <span>Full name</span>
 
             <input
               type="text"
               name="fullName"
               value={form.fullName}
               onChange={updateForm}
+              autoComplete="name"
+              placeholder="Enter your full name"
               required
             />
           </label>
 
-          <label>
-            Email address
+          <label className="registration-field">
+            <span>Email address</span>
 
             <input
               type="email"
               name="email"
               value={form.email}
               onChange={updateForm}
+              autoComplete="email"
+              placeholder="Enter your email address"
               required
             />
           </label>
 
-          <label>
-            Mobile number
+          <label className="registration-field">
+            <span>Mobile number</span>
 
             <input
               type="tel"
               name="phoneNumber"
               value={form.phoneNumber}
               onChange={updateForm}
+              autoComplete="tel"
               placeholder="+234"
               required
             />
           </label>
 
-          <label>
-            Password
+          <label className="registration-field">
+            <span>Password</span>
 
             <div className="password-field">
               <input
@@ -203,67 +216,119 @@ function Register() {
                 name="password"
                 value={form.password}
                 onChange={updateForm}
+                autoComplete="new-password"
+                placeholder="Minimum of 8 characters"
                 minLength={8}
                 required
               />
 
               <button
                 type="button"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                onClick={() => setShowPassword((current) => !current)}
+                onClick={() =>
+                  setShowPassword((current) => !current)
+                }
+                aria-label={
+                  showPassword
+                    ? "Hide password"
+                    : "Show password"
+                }
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
               </button>
             </div>
           </label>
 
-          <label>
-            Confirm password
+          <label className="registration-field">
+            <span>Confirm password</span>
 
-            <input
-              type="password"
-              name="confirmPassword"
-              value={form.confirmPassword}
-              onChange={updateForm}
-              minLength={8}
-              required
-            />
+            <div className="password-field">
+              <input
+                type={
+                  showConfirmPassword ? "text" : "password"
+                }
+                name="confirmPassword"
+                value={form.confirmPassword}
+                onChange={updateForm}
+                autoComplete="new-password"
+                placeholder="Enter your password again"
+                minLength={8}
+                required
+              />
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowConfirmPassword(
+                    (current) => !current,
+                  )
+                }
+                aria-label={
+                  showConfirmPassword
+                    ? "Hide confirmed password"
+                    : "Show confirmed password"
+                }
+              >
+                {showConfirmPassword ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
+              </button>
+            </div>
           </label>
 
-          <label className="terms-checkbox">
+          <label className="registration-terms">
             <input
               type="checkbox"
               name="acceptedTerms"
               checked={form.acceptedTerms}
               onChange={updateForm}
+              required
             />
 
             <span>
-              I agree to the terms, privacy notice, code of conduct and safety
-              guidelines.
+              I agree to the terms, privacy notice, code of conduct
+              and safety guidelines.
             </span>
           </label>
 
-          {error && <p className="form-error">{error}</p>}
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
-            className="primary-button full-button"
+            className="registration-submit"
             disabled={submitting}
           >
-            {submitting ? "Creating account..." : "Create account"}
+            {submitting
+              ? "Creating account..."
+              : "Create account"}
           </button>
         </form>
 
-        <p className="account-copy">
-          Already have an account? <Link to="/login">Sign in</Link>
+        <p className="account-copy registration-account-copy">
+          Already have an account?{" "}
+          <Link to="/login">Sign in</Link>
         </p>
       </section>
 
-      <section className="auth-message">
+      <section className="auth-message registration-message">
         <ShieldCheck size={40} />
-        <span className="eyebrow">VERIFIED COMMUNITY</span>
-        <h2>Grow through guidance, trust and accountability.</h2>
+
+        <span className="eyebrow">
+          VERIFIED COMMUNITY
+        </span>
+
+        <h2>
+          Grow through guidance, trust and accountability.
+        </h2>
       </section>
     </main>
   );

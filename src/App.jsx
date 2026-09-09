@@ -1,4 +1,10 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
+
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -20,16 +26,22 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin/login" element={<AdminLogin />} />
 
+          {/* Account status routes */}
           <Route path="/check-email" element={<CheckEmail />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
-          <Route path="/account-suspended" element={<AccountSuspended />} />
+          <Route
+            path="/account-suspended"
+            element={<AccountSuspended />}
+          />
 
+          {/* Mentee dashboard */}
           <Route
             path="/mentee/dashboard"
             element={
@@ -39,6 +51,7 @@ function App() {
             }
           />
 
+          {/* Mentor application status */}
           <Route
             path="/mentor/application-status"
             element={
@@ -51,6 +64,7 @@ function App() {
             }
           />
 
+          {/* Mentor dashboard */}
           <Route
             path="/mentor/dashboard"
             element={
@@ -60,18 +74,27 @@ function App() {
             }
           />
 
+          {/* Administrator dashboard */}
           <Route
             path="/admin/dashboard"
             element={
               <ProtectedRoute
-                allowedRoles={["admin", "safeguarding_lead"]}
+                allowedRoles={[
+                  "admin",
+                  "super_admin",
+                  "safeguarding_lead",
+                ]}
               >
                 <AdminDashboard />
               </ProtectedRoute>
             }
           />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Unknown URLs return to the website */}
+          <Route
+            path="*"
+            element={<Navigate to="/" replace />}
+          />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

@@ -1,6 +1,13 @@
 import { useState } from "react";
-import { LockKeyhole, ShieldCheck } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  HeartHandshake,
+  LockKeyhole,
+  ShieldCheck,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
@@ -13,13 +20,16 @@ function AdminLogin() {
     password: "",
   });
 
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   function updateForm(event) {
+    const { name, value } = event.target;
+
     setForm((current) => ({
       ...current,
-      [event.target.name]: event.target.value,
+      [name]: value,
     }));
 
     setError("");
@@ -27,14 +37,16 @@ function AdminLogin() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+
     setSubmitting(true);
+    setError("");
 
     const { data, error: loginError } = await signIn(
       form.email.trim(),
       form.password,
     );
 
-    if (loginError) {
+    if (loginError || !data?.user) {
       setSubmitting(false);
       setError("The administrator credentials are incorrect.");
       return;
@@ -46,43 +58,77 @@ function AdminLogin() {
       .eq("id", data.user.id)
       .single();
 
-    setSubmitting(false);
-
     if (profileError || !profile) {
       await supabase.auth.signOut();
-      setError("We could not verify your administrator profile.");
+
+      setSubmitting(false);
+      setError(
+        "We could not verify your administrator profile.",
+      );
       return;
     }
 
-    const administratorRoles = ["admin", "safeguarding_lead"];
+    const administratorRoles = [
+      "admin",
+      "super_admin",
+      "safeguarding_lead",
+    ];
 
     if (!administratorRoles.includes(profile.role)) {
       await supabase.auth.signOut();
-      setError("This account does not have administrator access.");
+
+      setSubmitting(false);
+      setError(
+        "This account does not have administrator access.",
+      );
       return;
     }
 
     if (profile.account_status !== "active") {
       await supabase.auth.signOut();
+
+      setSubmitting(false);
       setError("This administrator account is not active.");
       return;
     }
 
-    navigate("/admin/dashboard");
+    setSubmitting(false);
+    navigate("/admin/dashboard", { replace: true });
   }
 
   return (
     <main className="admin-auth-page">
       <section className="admin-auth-card">
+        <div className="admin-auth-brand">
+  <Link
+    to="/"
+    className="brand"
+    aria-label="Return to Mentor Connect homepage"
+  >
+    <span className="brand-icon">
+      <HeartHandshake size={22} />
+    </span>
+
+    <span className="brand-text">
+      <strong>Mentor Connect</strong>
+      <small>TCN IKEJA</small>
+    </span>
+  </Link>
+</div>
+
         <span className="admin-icon">
           <ShieldCheck size={30} />
         </span>
 
-        <span className="eyebrow">TCN IKEJA ADMINISTRATION</span>
+        <span className="eyebrow">
+          TCN IKEJA ADMINISTRATION
+        </span>
 
         <h1>Welcome back</h1>
 
-        <p>Sign in to manage the TCN Ikeja mentoring community.</p>
+        <p>
+          Sign in to manage the TCN Ikeja mentoring community.
+        </p>
 
         <form onSubmit={handleSubmit}>
           <label>
@@ -93,6 +139,7 @@ function AdminLogin() {
               name="email"
               value={form.email}
               onChange={updateForm}
+              autoComplete="email"
               required
             />
           </label>
@@ -100,16 +147,41 @@ function AdminLogin() {
           <label>
             Password
 
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={updateForm}
-              required
-            />
+            <div className="password-field">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={form.password}
+                onChange={updateForm}
+                autoComplete="current-password"
+                required
+              />
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowPassword((current) => !current)
+                }
+                aria-label={
+                  showPassword
+                    ? "Hide password"
+                    : "Show password"
+                }
+              >
+                {showPassword ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
+              </button>
+            </div>
           </label>
 
-          {error && <p className="form-error">{error}</p>}
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
@@ -117,18 +189,27 @@ function AdminLogin() {
             disabled={submitting}
           >
             <LockKeyhole size={17} />
-            {submitting ? "Signing in..." : "Sign in securely"}
+
+            {submitting
+              ? "Signing in..."
+              : "Sign in securely"}
           </button>
         </form>
 
-        <Link to="/forgot-password" className="admin-forgot-link">
+        <Link
+          to="/forgot-password"
+          className="admin-forgot-link"
+        >
           Forgot password?
         </Link>
 
         <div className="restricted-notice">
           <ShieldCheck size={18} />
-          Administrator access is restricted to authorized TCN Ikeja
-          personnel.
+
+          <span>
+            Administrator access is restricted to authorised TCN
+            Ikeja personnel.
+          </span>
         </div>
       </section>
     </main>

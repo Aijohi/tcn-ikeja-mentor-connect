@@ -21,11 +21,11 @@ function Home() {
         </Link>
 
         <div className="nav-actions">
-          <Link to="/login" className="text-link">
+          <Link to="/login" className="nav-sign-in">
             Sign in
           </Link>
 
-          <Link to="/register" className="primary-button">
+          <Link to="/register" className="nav-create-account">
             Create account
           </Link>
         </div>
@@ -42,18 +42,23 @@ function Home() {
           </h1>
 
           <p>
-            Connect with verified mentors from the TCN Ikeja community
-            and build a safe, accountable and purposeful mentoring
-            relationship.
+            Connect with trusted mentors who can help you gain
+            clarity, build confidence and grow with purpose.
           </p>
 
           <div className="hero-actions">
-            <Link to="/register" className="primary-button">
+            <Link
+              to="/register?role=mentee"
+              className="hero-primary-button"
+            >
               Find a mentor
               <ArrowRight size={18} />
             </Link>
 
-            <Link to="/register" className="secondary-link">
+            <Link
+              to="/register?role=mentor"
+              className="hero-secondary-button"
+            >
               Become a mentor
             </Link>
           </div>
@@ -65,30 +70,30 @@ function Home() {
           </span>
 
           <span className="eyebrow">
-            TRUSTED COMMUNITY
+            TRUSTED CONNECTIONS
           </span>
 
           <h2>A safe place to learn and grow.</h2>
 
           <p>
-            Members are verified, mentors are approved, and safety
-            support is available throughout every mentorship journey.
+            Mentor Connect supports safe, accountable and meaningful
+            relationships between mentors and mentees.
           </p>
 
           <ul>
             <li>
               <ShieldCheck size={16} />
-              Verified TCN Ikeja members
+              Verified user profiles
             </li>
 
             <li>
               <ShieldCheck size={16} />
-              Approved mentor profiles
+              Reviewed and approved mentors
             </li>
 
             <li>
               <ShieldCheck size={16} />
-              Structured sessions and accountability
+              Structured mentorship sessions
             </li>
           </ul>
         </aside>
@@ -99,7 +104,7 @@ function Home() {
           © 2026 TCN Ikeja Mentor Connect. All rights reserved.
         </p>
 
-        <div>
+        <div className="footer-links">
           <Link to="/admin/login">
             TCN Administrator
           </Link>
