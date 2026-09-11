@@ -13,13 +13,12 @@ import { supabase } from "../lib/supabase";
 
 function AdminLogin() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, signOut } = useAuth();
 
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
-
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +36,6 @@ function AdminLogin() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-
     setSubmitting(true);
     setError("");
 
@@ -59,34 +57,23 @@ function AdminLogin() {
       .single();
 
     if (profileError || !profile) {
-      await supabase.auth.signOut();
-
+      await signOut();
       setSubmitting(false);
-      setError(
-        "We could not verify your administrator profile.",
-      );
+      setError("We could not verify your administrator profile.");
       return;
     }
 
-    const administratorRoles = [
-      "admin",
-      "super_admin",
-      "safeguarding_lead",
-    ];
+    const administratorRoles = ["admin", "super_admin", "safeguarding_lead"];
 
     if (!administratorRoles.includes(profile.role)) {
-      await supabase.auth.signOut();
-
+      await signOut();
       setSubmitting(false);
-      setError(
-        "This account does not have administrator access.",
-      );
+      setError("This account does not have administrator access.");
       return;
     }
 
     if (profile.account_status !== "active") {
-      await supabase.auth.signOut();
-
+      await signOut();
       setSubmitting(false);
       setError("This administrator account is not active.");
       return;
@@ -100,53 +87,46 @@ function AdminLogin() {
     <main className="admin-auth-page">
       <section className="admin-auth-card">
         <div className="admin-auth-brand">
-  <Link
-    to="/"
-    className="brand"
-    aria-label="Return to Mentor Connect homepage"
-  >
-    <span className="brand-icon">
-      <HeartHandshake size={22} />
-    </span>
+          <Link
+            to="/"
+            className="brand"
+            aria-label="Return to Mentor Connect homepage"
+          >
+            <span className="brand-icon">
+              <HeartHandshake size={22} />
+            </span>
 
-    <span className="brand-text">
-      <strong>Mentor Connect</strong>
-      <small>TCN IKEJA</small>
-    </span>
-  </Link>
-</div>
+            <span className="brand-text">
+              <strong>Mentor Connect</strong>
+              <small>TCN IKEJA</small>
+            </span>
+          </Link>
+        </div>
 
         <span className="admin-icon">
           <ShieldCheck size={30} />
         </span>
 
-        <span className="eyebrow">
-          TCN IKEJA ADMINISTRATION
-        </span>
-
+        <span className="eyebrow">TCN IKEJA ADMINISTRATION</span>
         <h1>Welcome back</h1>
-
-        <p>
-          Sign in to manage the TCN Ikeja mentoring community.
-        </p>
+        <p>Sign in to manage the TCN Ikeja mentoring community.</p>
 
         <form onSubmit={handleSubmit}>
           <label>
             Work email address
-
             <input
               type="email"
               name="email"
               value={form.email}
               onChange={updateForm}
               autoComplete="email"
+              disabled={submitting}
               required
             />
           </label>
 
           <label>
             Password
-
             <div className="password-field">
               <input
                 type={showPassword ? "text" : "password"}
@@ -154,25 +134,17 @@ function AdminLogin() {
                 value={form.password}
                 onChange={updateForm}
                 autoComplete="current-password"
+                disabled={submitting}
                 required
               />
 
               <button
                 type="button"
-                onClick={() =>
-                  setShowPassword((current) => !current)
-                }
-                aria-label={
-                  showPassword
-                    ? "Hide password"
-                    : "Show password"
-                }
+                onClick={() => setShowPassword((current) => !current)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                disabled={submitting}
               >
-                {showPassword ? (
-                  <EyeOff size={18} />
-                ) : (
-                  <Eye size={18} />
-                )}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </label>
@@ -189,17 +161,11 @@ function AdminLogin() {
             disabled={submitting}
           >
             <LockKeyhole size={17} />
-
-            {submitting
-              ? "Signing in..."
-              : "Sign in securely"}
+            {submitting ? "Signing in..." : "Sign in securely"}
           </button>
         </form>
 
-        <Link
-          to="/forgot-password"
-          className="admin-forgot-link"
-        >
+        <Link to="/forgot-password" className="admin-forgot-link">
           Forgot password?
         </Link>
 
@@ -207,8 +173,8 @@ function AdminLogin() {
           <ShieldCheck size={18} />
 
           <span>
-            Administrator access is restricted to authorised TCN
-            Ikeja personnel.
+            Administrator access is restricted to authorised TCN Ikeja
+            personnel.
           </span>
         </div>
       </section>

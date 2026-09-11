@@ -1,12 +1,9 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext(null);
+
+const GOOGLE_ACCOUNT_INTENT_KEY = "mentorConnectGoogleAccountIntent";
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -14,11 +11,16 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   async function loadProfile(userId) {
+    if (!userId) {
+      setProfile(null);
+      return null;
+    }
+
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("Unable to load user profile:", error.message);
@@ -26,53 +28,69 @@ export function AuthProvider({ children }) {
       return null;
     }
 
-    setProfile(data);
-    return data;
+    setProfile(data ?? null);
+    return data ?? null;
   }
 
   useEffect(() => {
+    let isMounted = true;
+
     async function initialiseAuthentication() {
       const {
         data: { session: currentSession },
+        error,
       } = await supabase.auth.getSession();
 
-      setSession(currentSession);
+      if (!isMounted) {
+        return;
+      }
+
+      if (error) {
+        console.error("Unable to load authentication session:", error.message);
+      }
+
+      setSession(currentSession ?? null);
 
       if (currentSession?.user) {
         await loadProfile(currentSession.user.id);
+      } else {
+        setProfile(null);
       }
 
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
 
     initialiseAuthentication();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (_event, currentSession) => {
-        setSession(currentSession);
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      setSession(currentSession ?? null);
 
-        if (currentSession?.user) {
-          await loadProfile(currentSession.user.id);
-        } else {
-          setProfile(null);
-        }
-
+      if (!currentSession?.user) {
+        setProfile(null);
         setLoading(false);
-      },
-    );
+        return;
+      }
 
-    return () => subscription.unsubscribe();
+      window.setTimeout(async () => {
+        await loadProfile(currentSession.user.id);
+
+        if (isMounted) {
+          setLoading(false);
+        }
+      }, 0);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  async function signUp({
-    fullName,
-    email,
-    phoneNumber,
-    password,
-    role,
-  }) {
+  async function signUp({ fullName, email, phoneNumber, password, role }) {
     return supabase.auth.signUp({
       email,
       password,
@@ -80,11 +98,48 @@ export function AuthProvider({ children }) {
         data: {
           full_name: fullName,
           phone_number: phoneNumber,
-          role,
+          role: "mentee",
+          signup_intent: role,
         },
         emailRedirectTo: `${window.location.origin}/verify-email`,
       },
     });
+  }
+
+  async function signInWithGoogle(accountIntent = null) {
+    const allowedAccountIntents = ["mentee", "mentor"];
+
+    if (allowedAccountIntents.includes(accountIntent)) {
+      sessionStorage.setItem(GOOGLE_ACCOUNT_INTENT_KEY, accountIntent);
+    } else {
+      sessionStorage.removeItem(GOOGLE_ACCOUNT_INTENT_KEY);
+    }
+
+    const result = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          prompt: "select_account",
+        },
+      },
+    });
+
+    if (result.error) {
+      sessionStorage.removeItem(GOOGLE_ACCOUNT_INTENT_KEY);
+    }
+
+    return result;
+  }
+
+  function getGoogleAccountIntent() {
+    const accountIntent = sessionStorage.getItem(GOOGLE_ACCOUNT_INTENT_KEY);
+
+    return ["mentee", "mentor"].includes(accountIntent) ? accountIntent : null;
+  }
+
+  function clearGoogleAccountIntent() {
+    sessionStorage.removeItem(GOOGLE_ACCOUNT_INTENT_KEY);
   }
 
   async function signIn(email, password) {
@@ -101,10 +156,13 @@ export function AuthProvider({ children }) {
   }
 
   async function signOut() {
-    const result = await supabase.auth.signOut();
+    const result = await supabase.auth.signOut({
+      scope: "local",
+    });
 
     setSession(null);
     setProfile(null);
+    sessionStorage.removeItem(GOOGLE_ACCOUNT_INTENT_KEY);
 
     return result;
   }
@@ -121,6 +179,15 @@ export function AuthProvider({ children }) {
     });
   }
 
+  async function refreshProfile() {
+    if (!session?.user) {
+      setProfile(null);
+      return null;
+    }
+
+    return loadProfile(session.user.id);
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -130,11 +197,13 @@ export function AuthProvider({ children }) {
         loading,
         signUp,
         signIn,
+        signInWithGoogle,
         signOut,
         resetPassword,
         updatePassword,
-        refreshProfile: () =>
-          session?.user ? loadProfile(session.user.id) : null,
+        refreshProfile,
+        getGoogleAccountIntent,
+        clearGoogleAccountIntent,
       }}
     >
       {children}
