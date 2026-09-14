@@ -1,20 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   CheckCircle2,
-  Clock3,
-  HeartHandshake,
-  LogOut,
+  History,
   Pencil,
+  RotateCcw,
   Send,
-  ShieldCheck,
-  XCircle,
+  UserPlus,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
+import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+
+import "./MentorApplicationStatus.css";
+
+const meetingFormatOptions = [
+  "Virtual",
+  "In person",
+  "Either",
+];
+
+const sessionLengthOptions = [
+  30,
+  45,
+  60,
+];
 
 const initialForm = {
   biography: "",
@@ -23,9 +36,9 @@ const initialForm = {
   expertise: "",
   mentorshipCategories: "",
   languages: "English",
-  meetingFormat: "Virtual",
-  sessionLength: "60",
-  maximumActiveMentees: "5",
+  meetingFormats: ["Virtual"],
+  sessionLengths: [45],
+  maximumActiveMentees: "3",
   yearsOfExperience: "",
 };
 
@@ -36,77 +49,379 @@ function convertTextToArray(value) {
     .filter(Boolean);
 }
 
+function normaliseApplicationForm(data) {
+  return {
+    biography:
+      data?.biography ?? "",
+
+    jobTitle:
+      data?.job_title ?? "",
+
+    organisation:
+      data?.organisation ?? "",
+
+    expertise:
+      (data?.expertise ?? []).join(", "),
+
+    mentorshipCategories:
+      (
+        data?.mentorship_categories ??
+        []
+      ).join(", "),
+
+    languages:
+      (
+        data?.languages ??
+        ["English"]
+      ).join(", "),
+
+    meetingFormats:
+      data?.meeting_formats?.length > 0
+        ? data.meeting_formats
+        : ["Virtual"],
+
+    sessionLengths:
+      data?.session_lengths?.length > 0
+        ? data.session_lengths
+        : [45],
+
+    maximumActiveMentees:
+      String(
+        data?.maximum_active_mentees ??
+          3,
+      ),
+
+    yearsOfExperience:
+      data?.years_of_experience ===
+        null ||
+      data?.years_of_experience ===
+        undefined
+        ? ""
+        : String(
+            data.years_of_experience,
+          ),
+  };
+}
+
 function MentorApplicationStatus() {
   const navigate = useNavigate();
-  const { profile, signOut } = useAuth();
 
-  const [application, setApplication] = useState(null);
-  const [form, setForm] = useState(initialForm);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const {
+    profile,
+    signOut,
+    refreshProfile,
+  } = useAuth();
+
+  const [
+    applications,
+    setApplications,
+  ] = useState([]);
+
+  const [
+    selectedApplicationId,
+    setSelectedApplicationId,
+  ] = useState(null);
+
+  const [
+    form,
+    setForm,
+  ] = useState(initialForm);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    editing,
+    setEditing,
+  ] = useState(false);
+
+  const [
+    reapplying,
+    setReapplying,
+  ] = useState(false);
+
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
+
+  const [
+    creatingMentorAccount,
+    setCreatingMentorAccount,
+  ] = useState(false);
+
+  const [
+    accountActionError,
+    setAccountActionError,
+  ] = useState("");
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const [
+    success,
+    setSuccess,
+  ] = useState("");
+
+  async function fetchApplications({
+    showLoading = false,
+  } = {}) {
+    if (!profile?.id) {
+      return [];
+    }
+
+    if (showLoading) {
+      setLoading(true);
+    }
+
+    const {
+      data,
+      error: applicationError,
+    } = await supabase
+      .from("mentor_applications")
+      .select("*")
+      .eq(
+        "applicant_user_id",
+        profile.id,
+      )
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (applicationError) {
+      console.error(
+        "Unable to load mentor applications:",
+        applicationError,
+      );
+
+      setError(
+        "We could not load your mentor applications.",
+      );
+
+      if (showLoading) {
+        setLoading(false);
+      }
+
+      return [];
+    }
+
+    const nextApplications =
+      data ?? [];
+
+    setApplications(
+      nextApplications,
+    );
+
+    if (
+      nextApplications.length > 0
+    ) {
+      setSelectedApplicationId(
+        (
+          currentSelectedId,
+        ) => {
+          const stillExists =
+            nextApplications.some(
+              (application) =>
+                application.id ===
+                currentSelectedId,
+            );
+
+          return stillExists
+            ? currentSelectedId
+            : nextApplications[0].id;
+        },
+      );
+    } else {
+      setSelectedApplicationId(
+        null,
+      );
+    }
+
+    if (showLoading) {
+      setLoading(false);
+    }
+
+    return nextApplications;
+  }
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadApplication() {
-      const { data, error: applicationError } = await supabase
-        .from("mentor_profiles")
+    async function loadApplications() {
+      if (!profile?.id) {
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      const {
+        data,
+        error: applicationError,
+      } = await supabase
+        .from(
+          "mentor_applications",
+        )
         .select("*")
-        .eq("mentor_id", profile.id)
-        .maybeSingle();
+        .eq(
+          "applicant_user_id",
+          profile.id,
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          },
+        );
 
       if (!isMounted) {
         return;
       }
 
       if (applicationError) {
-        console.error(applicationError);
-        setError("We could not load your mentor application.");
+        console.error(
+          "Unable to load mentor applications:",
+          applicationError,
+        );
+
+        setError(
+          "We could not load your mentor applications.",
+        );
+
         setLoading(false);
         return;
       }
 
-      if (data) {
-        setApplication(data);
+      const nextApplications =
+        data ?? [];
 
-        setForm({
-          biography: data.biography ?? "",
-          jobTitle: data.job_title ?? "",
-          organisation: data.organisation ?? "",
-          expertise: (data.expertise ?? []).join(", "),
-          mentorshipCategories:
-            (data.mentorship_categories ?? []).join(", "),
-          languages: (data.languages ?? ["English"]).join(", "),
-          meetingFormat:
-            data.meeting_formats?.[0] ?? "Virtual",
-          sessionLength:
-            String(data.session_lengths?.[0] ?? 60),
-          maximumActiveMentees:
-            String(data.maximum_active_mentees ?? 5),
-          yearsOfExperience:
-            data.years_of_experience === null
-              ? ""
-              : String(data.years_of_experience),
-        });
+      setApplications(
+        nextApplications,
+      );
+
+      if (
+        nextApplications.length > 0
+      ) {
+        setSelectedApplicationId(
+          nextApplications[0].id,
+        );
       }
 
       setLoading(false);
     }
 
-    if (profile?.id) {
-      loadApplication();
-    }
+    loadApplications();
 
     return () => {
       isMounted = false;
     };
   }, [profile?.id]);
 
+  useEffect(() => {
+    if (!success) {
+      return undefined;
+    }
+
+    const timeout =
+      window.setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+
+    return () => {
+      window.clearTimeout(
+        timeout,
+      );
+    };
+  }, [success]);
+
+  useEffect(() => {
+    if (
+      !profile?.id ||
+      applications.length === 0
+    ) {
+      return;
+    }
+
+    const newestApplication =
+      applications[0];
+
+    const approvedOnThisAccount =
+      newestApplication.status ===
+        "approved" &&
+      newestApplication
+        .mentor_account_id ===
+        profile.id;
+
+    if (!approvedOnThisAccount) {
+      return;
+    }
+
+    let isMounted = true;
+
+    async function continueToMentorPlatform() {
+      await refreshProfile();
+
+      if (!isMounted) {
+        return;
+      }
+
+      navigate(
+        "/mentor/dashboard",
+        {
+          replace: true,
+        },
+      );
+    }
+
+    continueToMentorPlatform();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    applications,
+    navigate,
+    profile?.id,
+    refreshProfile,
+  ]);
+
+  const latestApplication =
+    applications[0] ?? null;
+
+  const selectedApplication =
+    useMemo(
+      () =>
+        applications.find(
+          (application) =>
+            application.id ===
+            selectedApplicationId,
+        ) ??
+        latestApplication ??
+        null,
+      [
+        applications,
+        latestApplication,
+        selectedApplicationId,
+      ],
+    );
+
+  const selectedIsLatest =
+    Boolean(
+      selectedApplication &&
+        latestApplication &&
+        selectedApplication.id ===
+          latestApplication.id,
+    );
+
   function updateForm(event) {
-    const { name, value } = event.target;
+    const {
+      name,
+      value,
+    } = event.target;
 
     setForm((current) => ({
       ...current,
@@ -115,216 +430,665 @@ function MentorApplicationStatus() {
 
     setError("");
     setSuccess("");
+    setAccountActionError("");
   }
 
-  async function handleSubmit(event) {
-    event.preventDefault();
+  function toggleTextOption(
+    field,
+    option,
+  ) {
+    setForm((current) => {
+      const currentOptions =
+        current[field];
 
-    const expertise = convertTextToArray(form.expertise);
-    const categories = convertTextToArray(
-      form.mentorshipCategories,
+      const isSelected =
+        currentOptions.includes(
+          option,
+        );
+
+      return {
+        ...current,
+        [field]: isSelected
+          ? currentOptions.filter(
+              (item) =>
+                item !== option,
+            )
+          : [
+              ...currentOptions,
+              option,
+            ],
+      };
+    });
+
+    setError("");
+    setSuccess("");
+    setAccountActionError("");
+  }
+
+  function toggleNumberOption(
+    field,
+    option,
+  ) {
+    setForm((current) => {
+      const currentOptions =
+        current[field];
+
+      const isSelected =
+        currentOptions.includes(
+          option,
+        );
+
+      return {
+        ...current,
+        [field]: isSelected
+          ? currentOptions.filter(
+              (item) =>
+                item !== option,
+            )
+          : [
+              ...currentOptions,
+              option,
+            ].sort(
+              (
+                first,
+                second,
+              ) =>
+                first -
+                second,
+            ),
+      };
+    });
+
+    setError("");
+    setSuccess("");
+    setAccountActionError("");
+  }
+
+  function startEditing() {
+    if (
+      !selectedApplication ||
+      !selectedIsLatest ||
+      selectedApplication.status !==
+        "pending"
+    ) {
+      return;
+    }
+
+    setForm(
+      normaliseApplicationForm(
+        selectedApplication,
+      ),
     );
-    const languages = convertTextToArray(form.languages);
 
-    if (form.biography.trim().length < 40) {
+    setEditing(true);
+    setReapplying(false);
+    setError("");
+    setSuccess("");
+    setAccountActionError("");
+  }
+
+  function startReapplication() {
+    if (
+      !latestApplication ||
+      latestApplication.status !==
+        "rejected"
+    ) {
+      return;
+    }
+
+    setSelectedApplicationId(
+      latestApplication.id,
+    );
+
+    setForm(
+      normaliseApplicationForm(
+        latestApplication,
+      ),
+    );
+
+    setEditing(true);
+    setReapplying(true);
+    setError("");
+    setSuccess("");
+    setAccountActionError("");
+  }
+
+  function cancelEditing() {
+    setEditing(false);
+    setReapplying(false);
+    setError("");
+    setAccountActionError("");
+  }
+
+  async function handleSubmit(
+    event,
+  ) {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
+
+    const expertise =
+      convertTextToArray(
+        form.expertise,
+      );
+
+    const categories =
+      convertTextToArray(
+        form.mentorshipCategories,
+      );
+
+    const languages =
+      convertTextToArray(
+        form.languages,
+      );
+
+    if (
+      form.biography.trim()
+        .length < 50
+    ) {
       setError(
-        "Please write at least 40 characters in your biography.",
+        "Please write a biography containing at least 50 characters.",
       );
       return;
     }
 
-    if (expertise.length === 0) {
-      setError("Please provide at least one area of expertise.");
+    if (!form.jobTitle.trim()) {
+      setError(
+        "Please enter your current role or occupation.",
+      );
       return;
     }
 
-    if (categories.length === 0) {
+    if (
+      form.yearsOfExperience ===
+      ""
+    ) {
+      setError(
+        "Please enter your years of experience.",
+      );
+      return;
+    }
+
+    if (
+      expertise.length === 0
+    ) {
+      setError(
+        "Please provide at least one area of expertise.",
+      );
+      return;
+    }
+
+    if (
+      categories.length === 0
+    ) {
       setError(
         "Please provide at least one mentorship category.",
       );
       return;
     }
 
-    setSubmitting(true);
-    setError("");
-    setSuccess("");
-
-    const { data, error: submissionError } =
-      await supabase.rpc("submit_mentor_application", {
-        p_biography: form.biography.trim(),
-        p_job_title: form.jobTitle.trim(),
-        p_organisation: form.organisation.trim(),
-        p_expertise: expertise,
-        p_mentorship_categories: categories,
-        p_languages:
-          languages.length > 0 ? languages : ["English"],
-        p_meeting_formats: [form.meetingFormat],
-        p_session_lengths: [
-          Number(form.sessionLength),
-        ],
-        p_maximum_active_mentees:
-          Number(form.maximumActiveMentees),
-        p_years_of_experience:
-          form.yearsOfExperience === ""
-            ? null
-            : Number(form.yearsOfExperience),
-      });
-
-    setSubmitting(false);
-
-    if (submissionError) {
-      console.error(submissionError);
+    if (
+      languages.length === 0
+    ) {
       setError(
-        submissionError.message ||
-          "We could not submit your application.",
+        "Please provide at least one language.",
       );
       return;
     }
 
-    setApplication(data);
+    if (
+      form.meetingFormats.length ===
+      0
+    ) {
+      setError(
+        "Please select at least one meeting format.",
+      );
+      return;
+    }
+
+    if (
+      form.sessionLengths.length ===
+      0
+    ) {
+      setError(
+        "Please select at least one session length.",
+      );
+      return;
+    }
+
+    setSubmitting(true);
+
+    const {
+      error: submissionError,
+    } = await supabase.rpc(
+      "save_mentor_application",
+      {
+        p_biography:
+          form.biography.trim(),
+
+        p_job_title:
+          form.jobTitle.trim(),
+
+        p_organisation:
+          form.organisation.trim() ||
+          null,
+
+        p_expertise:
+          expertise,
+
+        p_mentorship_categories:
+          categories,
+
+        p_languages:
+          languages,
+
+        p_meeting_formats:
+          form.meetingFormats,
+
+        p_session_lengths:
+          form.sessionLengths,
+
+        p_maximum_active_mentees:
+          Number(
+            form.maximumActiveMentees,
+          ),
+
+        p_years_of_experience:
+          Number(
+            form.yearsOfExperience,
+          ),
+      },
+    );
+
+    if (submissionError) {
+      console.error(
+        "Unable to save mentor application:",
+        submissionError,
+      );
+
+      setError(
+        submissionError.message ||
+          "We could not save your mentor application.",
+      );
+
+      setSubmitting(false);
+      return;
+    }
+
+    const wasReapplying =
+      reapplying;
+
+    const refreshedApplications =
+      await fetchApplications();
+
+    setSubmitting(false);
     setEditing(false);
+    setReapplying(false);
+
+    if (
+      refreshedApplications.length >
+      0
+    ) {
+      setSelectedApplicationId(
+        refreshedApplications[0].id,
+      );
+    }
+
     setSuccess(
-      "Your mentor application has been submitted successfully.",
+      wasReapplying
+        ? "Your new mentor application has been submitted for review."
+        : "Your changes have been saved. Your application is still under review.",
     );
   }
 
-  async function handleSignOut() {
-    await signOut();
-    navigate("/", { replace: true });
+  async function handleCreateMentorAccount() {
+    if (
+      !latestApplication ||
+      latestApplication.status !==
+        "approved" ||
+      latestApplication.mentor_account_id
+    ) {
+      return;
+    }
+
+    setCreatingMentorAccount(
+      true,
+    );
+
+    setAccountActionError("");
+    setError("");
+    setSuccess("");
+
+    const {
+      data,
+      error:
+        invitationError,
+    } = await supabase.rpc(
+      "create_mentor_account_invitation",
+    );
+
+    if (invitationError) {
+      console.error(
+        "Unable to create mentor account invitation:",
+        invitationError,
+      );
+
+      setAccountActionError(
+        invitationError.message ||
+          "We could not prepare your mentor account. Please try again.",
+      );
+
+      setCreatingMentorAccount(
+        false,
+      );
+
+      return;
+    }
+
+    const invitation =
+      Array.isArray(data)
+        ? data[0]
+        : data;
+
+    const invitationToken =
+      invitation?.invitation_token;
+
+    if (!invitationToken) {
+      setAccountActionError(
+        "We could not prepare your mentor account invitation. Please try again.",
+      );
+
+      setCreatingMentorAccount(
+        false,
+      );
+
+      return;
+    }
+
+    const {
+      error: signOutError,
+    } = await signOut();
+
+    if (signOutError) {
+      console.error(
+        "Unable to sign out of mentee account:",
+        signOutError,
+      );
+
+      setAccountActionError(
+        "Your mentor invitation was created, but we could not sign you out of your mentee account. Please try again.",
+      );
+
+      setCreatingMentorAccount(
+        false,
+      );
+
+      return;
+    }
+
+    navigate(
+      `/mentor/register?invite=${encodeURIComponent(
+        invitationToken,
+      )}`,
+      {
+        replace: true,
+      },
+    );
+  }
+
+  function viewApplication(
+    application,
+  ) {
+    setSelectedApplicationId(
+      application.id,
+    );
+
+    setEditing(false);
+    setReapplying(false);
+    setError("");
+    setSuccess("");
+    setAccountActionError("");
   }
 
   if (loading) {
     return (
-      <main className="page-message">
-        <div className="loader" />
-        <p>Loading your mentor application...</p>
-      </main>
+      <DashboardLayout
+        title="Mentor application"
+        description="Track and manage your mentor application."
+      >
+        <div className="mentor-status-dashboard-center">
+          <section className="mentor-status-loading">
+            <div className="loader" />
+
+            <p>
+              Loading your mentor
+              application...
+            </p>
+          </section>
+        </div>
+      </DashboardLayout>
     );
   }
 
-  const shouldShowForm = !application || editing;
+  if (
+    applications.length === 0
+  ) {
+    return (
+      <DashboardLayout
+        title="Mentor application"
+        description="Track and manage your mentor application."
+      >
+        <div className="mentor-status-dashboard-center">
+          <section className="mentor-application-status mentor-status-empty">
+            <span className="eyebrow">
+              MENTOR APPLICATION
+            </span>
+
+            <h2>
+              You have not submitted
+              a mentor application
+              yet.
+            </h2>
+
+            <p className="mentor-status-description">
+              Complete the mentor
+              application when you
+              are ready to share your
+              experience with other
+              members.
+            </p>
+
+            <button
+              type="button"
+              className="mentor-status-primary-button mentor-status-empty-button"
+              onClick={() =>
+                navigate(
+                  "/mentee/become-a-mentor",
+                )
+              }
+            >
+              Start application
+            </button>
+
+            {error && (
+              <p
+                className="form-error mentor-status-form-error"
+                role="alert"
+              >
+                {error}
+              </p>
+            )}
+          </section>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
-    <main className="mentor-application-page">
-      <section className="mentor-application-panel">
-        <div className="mentor-application-brand">
-          <Link to="/" className="brand">
-            <span className="brand-icon">
-              <HeartHandshake size={22} />
-            </span>
-
-            <span className="mentor-application-brand-text">
-              <strong>Mentor Connect</strong>
-              <small>TCN IKEJA</small>
-            </span>
-          </Link>
-
-          <button
-            type="button"
-            className="mentor-sign-out"
-            onClick={handleSignOut}
-          >
-            <LogOut size={17} />
-            Sign out
-          </button>
-        </div>
-
-        {shouldShowForm ? (
+    <DashboardLayout
+      title="Mentor application"
+      description="Track and manage your mentor application."
+    >
+      <div
+        className={`mentor-status-page ${
+          editing
+            ? "mentor-status-page--editing"
+            : ""
+        }`}
+      >
+        {editing ? (
           <ApplicationForm
             form={form}
-            updateForm={updateForm}
-            handleSubmit={handleSubmit}
-            submitting={submitting}
+            updateForm={
+              updateForm
+            }
+            toggleTextOption={
+              toggleTextOption
+            }
+            toggleNumberOption={
+              toggleNumberOption
+            }
+            handleSubmit={
+              handleSubmit
+            }
+            submitting={
+              submitting
+            }
             error={error}
-            application={application}
-            cancelEditing={() => {
-              setEditing(false);
-              setError("");
-            }}
+            reapplying={
+              reapplying
+            }
+            cancelEditing={
+              cancelEditing
+            }
           />
         ) : (
-          <ApplicationStatus
-            application={application}
-            fullName={profile?.full_name}
-            success={success}
-            onEdit={() => setEditing(true)}
-          />
+          <>
+            <ApplicationStatus
+              application={
+                selectedApplication
+              }
+              fullName={
+                profile?.full_name
+              }
+              success={
+                success
+              }
+              selectedIsLatest={
+                selectedIsLatest
+              }
+              onEdit={
+                startEditing
+              }
+              onReapply={
+                startReapplication
+              }
+              onCreateMentorAccount={
+                handleCreateMentorAccount
+              }
+              creatingMentorAccount={
+                creatingMentorAccount
+              }
+              accountActionError={
+                accountActionError
+              }
+            />
+
+            <ApplicationHistory
+              applications={
+                applications
+              }
+              selectedApplicationId={
+                selectedApplication
+                  ?.id
+              }
+              onView={
+                viewApplication
+              }
+            />
+          </>
         )}
-      </section>
-
-      <aside className="mentor-application-message">
-        <ShieldCheck size={40} />
-
-        <span className="eyebrow">MENTOR WITH PURPOSE</span>
-
-        <h2>
-          Share your experience. Help someone move forward.
-        </h2>
-
-        <p>
-          Every mentor profile is reviewed before it appears in
-          the community directory.
-        </p>
-      </aside>
-    </main>
+      </div>
+    </DashboardLayout>
   );
 }
 
 function ApplicationForm({
   form,
   updateForm,
+  toggleTextOption,
+  toggleNumberOption,
   handleSubmit,
   submitting,
   error,
-  application,
+  reapplying,
   cancelEditing,
 }) {
   return (
     <div className="mentor-application-content">
       <span className="eyebrow">
-        {application
-          ? "UPDATE YOUR APPLICATION"
-          : "BECOME A MENTOR"}
+        {reapplying
+          ? "NEW MENTOR APPLICATION"
+          : "UPDATE APPLICATION"}
       </span>
 
       <h1>
-        {application
-          ? "Update your mentor profile"
-          : "Complete your mentor application"}
+        {reapplying
+          ? "Apply to become a mentor again"
+          : "Update your mentor application"}
       </h1>
 
       <p className="mentor-application-introduction">
-        Tell us about your experience and the areas where you
-        would like to guide others.
+        {reapplying
+          ? "Your previous application will remain in your history. Review the information below, make any needed changes and submit a new application."
+          : "You can update your application while it is still under review."}
       </p>
 
       <form
-        className="mentor-application-form"
-        onSubmit={handleSubmit}
+        className="mentor-status-edit-form"
+        onSubmit={
+          handleSubmit
+        }
       >
         <label>
-          Job title
+          Current role or occupation
 
           <input
             type="text"
             name="jobTitle"
-            value={form.jobTitle}
-            onChange={updateForm}
+            value={
+              form.jobTitle
+            }
+            onChange={
+              updateForm
+            }
             placeholder="For example, Product Designer"
+            disabled={
+              submitting
+            }
             required
           />
         </label>
 
         <label>
           Organisation
-          <span className="optional-label">Optional</span>
+          <span className="optional-label">
+            Optional
+          </span>
 
           <input
             type="text"
             name="organisation"
-            value={form.organisation}
-            onChange={updateForm}
+            value={
+              form.organisation
+            }
+            onChange={
+              updateForm
+            }
             placeholder="Where do you currently work?"
+            disabled={
+              submitting
+            }
           />
         </label>
 
@@ -334,11 +1098,18 @@ function ApplicationForm({
           <input
             type="number"
             name="yearsOfExperience"
-            value={form.yearsOfExperience}
-            onChange={updateForm}
+            value={
+              form.yearsOfExperience
+            }
+            onChange={
+              updateForm
+            }
             min="0"
-            max="60"
+            max="70"
             placeholder="For example, 5"
+            disabled={
+              submitting
+            }
             required
           />
         </label>
@@ -348,13 +1119,30 @@ function ApplicationForm({
 
           <textarea
             name="biography"
-            value={form.biography}
-            onChange={updateForm}
-            rows="4"
-            minLength="40"
+            value={
+              form.biography
+            }
+            onChange={
+              updateForm
+            }
+            rows="5"
+            minLength="50"
             placeholder="Briefly introduce yourself and your experience."
+            disabled={
+              submitting
+            }
             required
           />
+
+          <small className="field-help">
+            {
+              form.biography
+                .trim()
+                .length
+            }
+            /50 minimum
+            characters
+          </small>
         </label>
 
         <label>
@@ -363,14 +1151,22 @@ function ApplicationForm({
           <input
             type="text"
             name="expertise"
-            value={form.expertise}
-            onChange={updateForm}
+            value={
+              form.expertise
+            }
+            onChange={
+              updateForm
+            }
             placeholder="Product design, leadership, career growth"
+            disabled={
+              submitting
+            }
             required
           />
 
           <small className="field-help">
-            Separate each area with a comma.
+            Separate each area with
+            a comma.
           </small>
         </label>
 
@@ -380,14 +1176,22 @@ function ApplicationForm({
           <input
             type="text"
             name="mentorshipCategories"
-            value={form.mentorshipCategories}
-            onChange={updateForm}
-            placeholder="Career, business, faith, personal growth"
+            value={
+              form.mentorshipCategories
+            }
+            onChange={
+              updateForm
+            }
+            placeholder="Career development, leadership, technology"
+            disabled={
+              submitting
+            }
             required
           />
 
           <small className="field-help">
-            Separate each category with a comma.
+            Separate each category
+            with a comma.
           </small>
         </label>
 
@@ -397,90 +1201,191 @@ function ApplicationForm({
           <input
             type="text"
             name="languages"
-            value={form.languages}
-            onChange={updateForm}
-            placeholder="English"
+            value={
+              form.languages
+            }
+            onChange={
+              updateForm
+            }
+            placeholder="English, Yoruba"
+            disabled={
+              submitting
+            }
             required
           />
 
           <small className="field-help">
-            Separate multiple languages with a comma.
+            Separate multiple
+            languages with a comma.
           </small>
         </label>
 
-        <label>
-          Preferred meeting format
+        <fieldset className="mentor-status-option-group">
+          <legend>
+            Meeting format
+          </legend>
 
-          <select
-            name="meetingFormat"
-            value={form.meetingFormat}
-            onChange={updateForm}
-          >
-            <option value="Virtual">Virtual</option>
-            <option value="In person">In person</option>
-            <option value="Either">Either</option>
-          </select>
-        </label>
+          <div className="mentor-status-option-grid">
+            {meetingFormatOptions.map(
+              (format) => (
+                <label
+                  key={
+                    format
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    checked={
+                      form.meetingFormats.includes(
+                        format,
+                      )
+                    }
+                    onChange={() =>
+                      toggleTextOption(
+                        "meetingFormats",
+                        format,
+                      )
+                    }
+                    disabled={
+                      submitting
+                    }
+                  />
 
-        <label>
-          Preferred session length
+                  <span>
+                    {format}
+                  </span>
+                </label>
+              ),
+            )}
+          </div>
+        </fieldset>
 
-          <select
-            name="sessionLength"
-            value={form.sessionLength}
-            onChange={updateForm}
-          >
-            <option value="30">30 minutes</option>
-            <option value="45">45 minutes</option>
-            <option value="60">60 minutes</option>
-          </select>
-        </label>
+        <fieldset className="mentor-status-option-group">
+          <legend>
+            Preferred session length
+          </legend>
+
+          <div className="mentor-status-option-grid">
+            {sessionLengthOptions.map(
+              (length) => (
+                <label
+                  key={
+                    length
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    checked={
+                      form.sessionLengths.includes(
+                        length,
+                      )
+                    }
+                    onChange={() =>
+                      toggleNumberOption(
+                        "sessionLengths",
+                        length,
+                      )
+                    }
+                    disabled={
+                      submitting
+                    }
+                  />
+
+                  <span>
+                    {length} minutes
+                  </span>
+                </label>
+              ),
+            )}
+          </div>
+        </fieldset>
 
         <label>
           Maximum active mentees
 
           <select
             name="maximumActiveMentees"
-            value={form.maximumActiveMentees}
-            onChange={updateForm}
+            value={
+              form.maximumActiveMentees
+            }
+            onChange={
+              updateForm
+            }
+            disabled={
+              submitting
+            }
+            required
           >
-            <option value="1">1 mentee</option>
-            <option value="2">2 mentees</option>
-            <option value="3">3 mentees</option>
-            <option value="4">4 mentees</option>
-            <option value="5">5 mentees</option>
-            <option value="6">6 mentees</option>
-            <option value="8">8 mentees</option>
-            <option value="10">10 mentees</option>
+            {[
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              8,
+              10,
+            ].map(
+              (number) => (
+                <option
+                  key={
+                    number
+                  }
+                  value={
+                    number
+                  }
+                >
+                  {number}{" "}
+                  {number === 1
+                    ? "mentee"
+                    : "mentees"}
+                </option>
+              ),
+            )}
           </select>
         </label>
 
-        {error && <p className="form-error">{error}</p>}
+        {error && (
+          <p
+            className="form-error mentor-status-form-error"
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
 
-        <div className="mentor-application-actions">
-          {application && (
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={cancelEditing}
-              disabled={submitting}
-            >
-              Cancel
-            </button>
-          )}
+        <div className="mentor-status-form-actions">
+          <button
+            type="button"
+            className="mentor-status-secondary-button"
+            onClick={
+              cancelEditing
+            }
+            disabled={
+              submitting
+            }
+          >
+            Cancel
+          </button>
 
           <button
             type="submit"
-            className="primary-button"
-            disabled={submitting}
+            className="mentor-status-primary-button"
+            disabled={
+              submitting
+            }
           >
-            <Send size={17} />
+            <Send size={16} />
 
-            {submitting
-              ? "Submitting..."
-              : application
-                ? "Save application"
-                : "Submit application"}
+            <span>
+              {submitting
+                ? reapplying
+                  ? "Submitting..."
+                  : "Saving..."
+                : reapplying
+                  ? "Submit new application"
+                  : "Save changes"}
+            </span>
           </button>
         </div>
       </form>
@@ -492,82 +1397,415 @@ function ApplicationStatus({
   application,
   fullName,
   success,
+  selectedIsLatest,
   onEdit,
+  onReapply,
+  onCreateMentorAccount,
+  creatingMentorAccount,
+  accountActionError,
 }) {
   const statusInformation = {
     pending: {
-      icon: <Clock3 size={38} />,
-      eyebrow: "APPLICATION UNDER REVIEW",
-      heading: `Thank you, ${fullName || "mentor"}`,
+      label:
+        "UNDER REVIEW",
+
+      heading:
+        "Your mentor application is under review.",
+
       description:
-        "Your mentor application is being reviewed by the administration team.",
+        "The TCN Ikeja administration team is reviewing this application. You will see the decision here when the review is complete.",
+
+      note:
+        "You can update the latest application while it is still under review.",
     },
 
     approved: {
-      icon: <CheckCircle2 size={38} />,
-      eyebrow: "APPLICATION APPROVED",
-      heading: "Your mentor profile has been approved",
+      label:
+        "APPROVED",
+
+      heading:
+        "Your mentor application has been approved.",
+
       description:
-        "Your profile can now appear in the mentor directory when you are accepting requests.",
+        "Your mentee account remains unchanged. The next step is to create a separate mentor account with a different email address.",
+
+      note:
+        "Your approved application remains saved in your application history.",
     },
 
-    declined: {
-      icon: <XCircle size={38} />,
-      eyebrow: "APPLICATION NEEDS CHANGES",
-      heading: "Your application was not approved",
-      description:
-        "Review the administrator’s feedback, update your information and submit again.",
-    },
+    rejected: {
+      label:
+        "REJECTED",
 
-    suspended: {
-      icon: <ShieldCheck size={38} />,
-      eyebrow: "APPLICATION SUSPENDED",
-      heading: "Your mentor profile is currently unavailable",
+      heading:
+        "Your mentor application was not approved.",
+
       description:
-        "Please contact the administration team for more information.",
+        "Review the administrator’s feedback below. If you want to try again, you can submit a new application without losing this one.",
+
+      note:
+        "A new application will be saved as a separate attempt in your history.",
     },
   };
 
+  const status =
+    application?.status ??
+    "pending";
+
   const information =
-    statusInformation[application.approval_status] ??
+    statusInformation[
+      status
+    ] ??
     statusInformation.pending;
 
+  const expertise =
+    application?.expertise ??
+    [];
+
+  const categories =
+    application
+      ?.mentorship_categories ??
+    [];
+
+  const mentoringAreas =
+    expertise.length > 0
+      ? expertise
+      : categories;
+
   return (
-    <div className="mentor-application-status">
-      <span className="status-icon">
-        {information.icon}
-      </span>
+    <section className="mentor-application-status">
+      <div className="mentor-status-top-row">
+        <span
+          className={`mentor-status-badge mentor-status-badge--${status}`}
+        >
+          {
+            information.label
+          }
+        </span>
 
-      <span className="eyebrow">
-        {information.eyebrow}
-      </span>
+        <div className="mentor-status-top-actions">
+          {selectedIsLatest &&
+            status ===
+              "pending" && (
+              <button
+                type="button"
+                className="mentor-status-edit-button"
+                onClick={
+                  onEdit
+                }
+              >
+                <Pencil
+                  size={15}
+                />
 
-      <h1>{information.heading}</h1>
+                <span>
+                  Update application
+                </span>
+              </button>
+            )}
 
-      <p>{information.description}</p>
+          {selectedIsLatest &&
+            status ===
+              "rejected" && (
+              <button
+                type="button"
+                className="mentor-status-reapply-button"
+                onClick={
+                  onReapply
+                }
+              >
+                <RotateCcw
+                  size={15}
+                />
 
-      {application.mentor_response && (
+                <span>
+                  Apply again
+                </span>
+              </button>
+            )}
+        </div>
+      </div>
+
+      <h2>
+        {information.heading}
+      </h2>
+
+      <p className="mentor-status-description">
+        {
+          information.description
+        }
+      </p>
+
+      {fullName && (
+        <p className="mentor-status-name">
+          Application for{" "}
+          <strong>
+            {fullName}
+          </strong>
+        </p>
+      )}
+
+      <div className="mentor-status-meta-row">
+        <span>
+          Submitted{" "}
+          {formatDate(
+            application
+              ?.created_at,
+          )}
+        </span>
+
+        {application
+          ?.reviewed_at && (
+          <span>
+            Reviewed{" "}
+            {formatDate(
+              application
+                .reviewed_at,
+            )}
+          </span>
+        )}
+      </div>
+
+      {mentoringAreas.length >
+        0 && (
+        <div className="mentor-status-areas">
+          <span>
+            MENTORING AREAS
+          </span>
+
+          <div>
+            {mentoringAreas.map(
+              (area) => (
+                <small
+                  key={
+                    area
+                  }
+                >
+                  {area}
+                </small>
+              ),
+            )}
+          </div>
+        </div>
+      )}
+
+      {selectedIsLatest &&
+        status ===
+          "approved" && (
+        <div className="mentor-status-approved-action">
+          {application
+            ?.mentor_account_id ? (
+            <div className="mentor-status-account-created">
+              <CheckCircle2
+                size={18}
+                strokeWidth={1.9}
+              />
+
+              <div>
+                <strong>
+                  Mentor account created
+                </strong>
+
+                <p>
+                  This approved
+                  application has
+                  already been linked
+                  to a mentor account.
+                  Sign in with your
+                  mentor account email
+                  to continue.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="mentor-status-approved-copy">
+                <strong>
+                  Ready for the next
+                  step
+                </strong>
+
+                <p>
+                  Create your separate
+                  mentor account using
+                  a different email
+                  address. You will
+                  keep this mentee
+                  account exactly as
+                  it is.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="mentor-status-create-account-button"
+                onClick={
+                  onCreateMentorAccount
+                }
+                disabled={
+                  creatingMentorAccount
+                }
+              >
+                <UserPlus
+                  size={16}
+                />
+
+                <span>
+                  {creatingMentorAccount
+                    ? "Preparing mentor account..."
+                    : "Create mentor account"}
+                </span>
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {accountActionError && (
+        <p
+          className="mentor-status-account-error"
+          role="alert"
+        >
+          {accountActionError}
+        </p>
+      )}
+
+      {application
+        ?.admin_feedback && (
         <div className="application-feedback">
-          <strong>Administrator’s feedback</strong>
-          <p>{application.mentor_response}</p>
+          <strong>
+            Administrator’s
+            feedback
+          </strong>
+
+          <p>
+            {
+              application
+                .admin_feedback
+            }
+          </p>
         </div>
       )}
 
       {success && (
-        <p className="application-success">{success}</p>
+        <p className="mentor-status-success-message">
+          {success}
+        </p>
       )}
 
-      {application.approval_status !== "suspended" && (
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={onEdit}
-        >
-          <Pencil size={16} />
-          Edit application
-        </button>
-      )}
-    </div>
+      <footer className="mentor-status-footer">
+        <p>
+          {information.note}
+        </p>
+      </footer>
+    </section>
+  );
+}
+
+function ApplicationHistory({
+  applications,
+  selectedApplicationId,
+  onView,
+}) {
+  return (
+    <section className="mentor-application-history">
+      <div className="mentor-history-heading">
+        <span className="mentor-history-icon">
+          <History
+            size={18}
+          />
+        </span>
+
+        <div>
+          <h3>
+            Application history
+          </h3>
+
+          <p>
+            Every application attempt
+            stays here, including
+            rejected and approved
+            applications.
+          </p>
+        </div>
+      </div>
+
+      <div className="mentor-history-list">
+        {applications.map(
+          (
+            application,
+            index,
+          ) => {
+            const attemptNumber =
+              applications.length -
+              index;
+
+            const isSelected =
+              application.id ===
+              selectedApplicationId;
+
+            return (
+              <button
+                key={
+                  application.id
+                }
+                type="button"
+                className={`mentor-history-item ${
+                  isSelected
+                    ? "mentor-history-item--active"
+                    : ""
+                }`}
+                onClick={() =>
+                  onView(
+                    application,
+                  )
+                }
+              >
+                <span className="mentor-history-item-main">
+                  <strong>
+                    Application{" "}
+                    {
+                      attemptNumber
+                    }
+                  </strong>
+
+                  <small>
+                    {formatDate(
+                      application.created_at,
+                    )}
+                  </small>
+                </span>
+
+                <span
+                  className={`mentor-history-status mentor-history-status--${application.status}`}
+                >
+                  {
+                    application.status
+                  }
+                </span>
+              </button>
+            );
+          },
+        )}
+      </div>
+    </section>
+  );
+}
+
+function formatDate(value) {
+  if (!value) {
+    return "Not available";
+  }
+
+  return new Intl.DateTimeFormat(
+    "en-NG",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    },
+  ).format(
+    new Date(value),
   );
 }
 

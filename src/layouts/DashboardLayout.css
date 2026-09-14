@@ -1,0 +1,321 @@
+/* =========================================================
+   DASHBOARD USER IDENTITY
+   Keep the user name and role badge calm and consistent.
+   ========================================================= */
+
+#root
+.dashboard-layout
+.dashboard-content
+.dashboard-user strong {
+  color: #101419 !important;
+
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+}
+
+#root
+.dashboard-layout
+.dashboard-content
+.dashboard-user small {
+  min-height: 24px !important;
+  padding: 0 9px !important;
+
+  border: 1px solid #d7dee7 !important;
+  border-radius: 999px !important;
+
+  color: #2d353f !important;
+  background: #f7f8fa !important;
+
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  line-height: 22px !important;
+
+  text-transform: capitalize !important;
+}
+
+/* =========================================================
+   DASHBOARD LAYOUT
+   Shared confirmation modal for Sign out.
+   Works for mentee, mentor and administrator dashboards.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   SIGN OUT MODAL
+   --------------------------------------------------------- */
+
+.dashboard-signout-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background:
+    rgba(3, 4, 5, 0.48);
+
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.dashboard-signout-modal {
+  width:
+    min(
+      100%,
+      440px
+    );
+
+  padding: 24px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  color: #101419;
+  background: #ffffff;
+
+  box-shadow:
+    0 26px 70px
+    rgba(3, 4, 5, 0.22);
+
+  animation:
+    dashboard-signout-in
+    170ms ease-out both;
+}
+
+@keyframes dashboard-signout-in {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(7px)
+      scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+.dashboard-signout-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+}
+
+.dashboard-signout-modal-header
+> div {
+  min-width: 0;
+}
+
+.dashboard-signout-modal-header
+span {
+  display: block;
+
+  color: #ff5303;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.dashboard-signout-modal-header h2 {
+  margin: 6px 0 0;
+
+  color: #101419;
+
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-signout-close {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 34px;
+
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 8px;
+
+  color: #4c5867;
+  background: #ffffff;
+
+  cursor: pointer;
+
+  transition:
+    color 150ms ease,
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.dashboard-signout-close:hover:not(:disabled) {
+  border-color: #c9d2df;
+
+  color: #101419;
+  background: #f7f8fa;
+}
+
+.dashboard-signout-copy {
+  margin: 18px 0 0;
+
+  color: #4c5867;
+
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.dashboard-signout-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 9px;
+
+  margin-top: 24px;
+}
+
+.dashboard-signout-cancel,
+.dashboard-signout-confirm {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  min-height: 42px;
+  padding: 0 16px;
+
+  border-radius: 9px;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+
+  cursor: pointer;
+
+  box-shadow: none;
+  transform: none;
+
+  transition:
+    color 150ms ease,
+    border-color 150ms ease,
+    background-color 150ms ease,
+    opacity 150ms ease;
+}
+
+/* Secondary action */
+.dashboard-signout-cancel {
+  min-width: 96px;
+
+  border: 1px solid #c9d2df;
+
+  color: #101419;
+  background: #ffffff;
+}
+
+.dashboard-signout-cancel:hover:not(:disabled) {
+  border-color: #97aac2;
+
+  background: #f7f8fa;
+}
+
+/* Destructive confirmation */
+.dashboard-signout-confirm {
+  min-width: 120px;
+
+  border: 1px solid #b74750;
+
+  color: #ffffff;
+  background: #b74750;
+}
+
+.dashboard-signout-confirm:hover:not(:disabled) {
+  border-color: #953841;
+
+  color: #ffffff;
+  background: #953841;
+}
+
+.dashboard-signout-close:focus-visible,
+.dashboard-signout-cancel:focus-visible,
+.dashboard-signout-confirm:focus-visible {
+  outline:
+    2px solid
+    rgba(
+      76,
+      88,
+      103,
+      0.28
+    );
+
+  outline-offset: 2px;
+}
+
+.dashboard-signout-close:disabled,
+.dashboard-signout-cancel:disabled,
+.dashboard-signout-confirm:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.58;
+}
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 560px) {
+  .dashboard-signout-backdrop {
+    align-items: flex-end;
+
+    padding: 12px;
+  }
+
+  .dashboard-signout-modal {
+    width: 100%;
+
+    padding: 22px;
+
+    border-radius:
+      18px 18px
+      14px 14px;
+  }
+
+  .dashboard-signout-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .dashboard-signout-cancel,
+  .dashboard-signout-confirm {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-signout-modal {
+    animation: none;
+  }
+}

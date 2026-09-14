@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BriefcaseBusiness,
   ChevronDown,
@@ -8,7 +8,10 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../context/AuthContext";
 import DashboardLayout from "../layouts/DashboardLayout";
+
+import "./BecomeAMentor.css";
 
 const mentorshipCategories = [
   "Career development",
@@ -37,12 +40,89 @@ const initialForm = {
 
 function BecomeAMentor() {
   const navigate = useNavigate();
-  const [form, setForm] = useState(initialForm);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const { user } = useAuth();
+
+  const [form, setForm] =
+    useState(initialForm);
+
+  const [
+    checkingExistingApplication,
+    setCheckingExistingApplication,
+  ] = useState(true);
+
+  const [submitting, setSubmitting] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkExistingApplication() {
+      if (!user?.id) {
+        if (isMounted) {
+          setCheckingExistingApplication(false);
+        }
+
+        return;
+      }
+
+      const {
+        data,
+        error: applicationError,
+      } = await supabase
+        .from("mentor_applications")
+        .select("id, status, created_at")
+        .eq("applicant_user_id", user.id)
+        .order("created_at", {
+          ascending: false,
+        })
+        .limit(1)
+        .maybeSingle();
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (applicationError) {
+        console.error(
+          "Unable to check mentor application:",
+          applicationError,
+        );
+
+        setError(
+          "We could not check your mentor application. Please try again.",
+        );
+
+        setCheckingExistingApplication(false);
+        return;
+      }
+
+      if (data) {
+        navigate(
+          "/mentor/application-status",
+          {
+            replace: true,
+          },
+        );
+
+        return;
+      }
+
+      setCheckingExistingApplication(false);
+    }
+
+    checkExistingApplication();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate, user?.id]);
 
   function updateForm(event) {
-    const { name, value } = event.target;
+    const { name, value } =
+      event.target;
 
     setForm((current) => ({
       ...current,
@@ -52,184 +132,335 @@ function BecomeAMentor() {
     setError("");
   }
 
-  function toggleTextOption(field, option) {
+  function toggleTextOption(
+    field,
+    option,
+  ) {
     setForm((current) => {
-      const currentOptions = current[field];
-      const optionIsSelected = currentOptions.includes(option);
+      const currentOptions =
+        current[field];
+
+      const optionIsSelected =
+        currentOptions.includes(
+          option,
+        );
 
       return {
         ...current,
         [field]: optionIsSelected
-          ? currentOptions.filter((item) => item !== option)
-          : [...currentOptions, option],
+          ? currentOptions.filter(
+              (item) =>
+                item !== option,
+            )
+          : [
+              ...currentOptions,
+              option,
+            ],
       };
     });
 
     setError("");
   }
 
-  function toggleNumberOption(field, option) {
+  function toggleNumberOption(
+    field,
+    option,
+  ) {
     setForm((current) => {
-      const currentOptions = current[field];
-      const optionIsSelected = currentOptions.includes(option);
+      const currentOptions =
+        current[field];
+
+      const optionIsSelected =
+        currentOptions.includes(
+          option,
+        );
 
       return {
         ...current,
         [field]: optionIsSelected
-          ? currentOptions.filter((item) => item !== option)
-          : [...currentOptions, option].sort((first, second) => first - second),
+          ? currentOptions.filter(
+              (item) =>
+                item !== option,
+            )
+          : [
+              ...currentOptions,
+              option,
+            ].sort(
+              (first, second) =>
+                first - second,
+            ),
       };
     });
 
     setError("");
   }
 
-  function splitCommaSeparatedValues(value) {
+  function splitCommaSeparatedValues(
+    value,
+  ) {
     return value
       .split(",")
-      .map((item) => item.trim())
+      .map((item) =>
+        item.trim(),
+      )
       .filter(Boolean);
   }
 
-  async function handleSubmit(event) {
+  async function handleSubmit(
+    event,
+  ) {
     event.preventDefault();
     setError("");
 
-    const expertise = splitCommaSeparatedValues(form.expertise);
-    const languages = splitCommaSeparatedValues(form.languages);
+    const expertise =
+      splitCommaSeparatedValues(
+        form.expertise,
+      );
 
-    if (form.biography.trim().length < 50) {
-      setError("Please write a biography containing at least 50 characters.");
+    const languages =
+      splitCommaSeparatedValues(
+        form.languages,
+      );
+
+    if (
+      form.biography.trim().length <
+      50
+    ) {
+      setError(
+        "Please write a biography containing at least 50 characters.",
+      );
       return;
     }
 
     if (expertise.length === 0) {
-      setError("Please provide at least one area of expertise.");
+      setError(
+        "Please provide at least one area of expertise.",
+      );
       return;
     }
 
-    if (form.categories.length === 0) {
-      setError("Please select at least one mentorship category.");
+    if (
+      form.categories.length === 0
+    ) {
+      setError(
+        "Please select at least one mentorship category.",
+      );
       return;
     }
 
     if (languages.length === 0) {
-      setError("Please provide at least one language.");
+      setError(
+        "Please provide at least one language.",
+      );
       return;
     }
 
-    if (form.meetingFormats.length === 0) {
-      setError("Please select at least one meeting format.");
+    if (
+      form.meetingFormats.length ===
+      0
+    ) {
+      setError(
+        "Please select at least one meeting format.",
+      );
       return;
     }
 
-    if (form.sessionLengths.length === 0) {
-      setError("Please select at least one session length.");
+    if (
+      form.sessionLengths.length ===
+      0
+    ) {
+      setError(
+        "Please select at least one session length.",
+      );
       return;
     }
 
     setSubmitting(true);
 
-    const { error: applicationError } = await supabase.rpc(
-      "submit_mentor_application",
+    const {
+      error: applicationError,
+    } = await supabase.rpc(
+      "save_mentor_application",
       {
-        p_biography: form.biography.trim(),
-        p_job_title: form.jobTitle.trim(),
-        p_organisation: form.organisation.trim() || null,
+        p_biography:
+          form.biography.trim(),
+        p_job_title:
+          form.jobTitle.trim(),
+        p_organisation:
+          form.organisation.trim() ||
+          null,
         p_expertise: expertise,
-        p_mentorship_categories: form.categories,
+        p_mentorship_categories:
+          form.categories,
         p_languages: languages,
-        p_meeting_formats: form.meetingFormats,
-        p_session_lengths: form.sessionLengths,
-        p_maximum_active_mentees: Number(form.maximumActiveMentees),
-        p_years_of_experience: Number(form.yearsOfExperience),
+        p_meeting_formats:
+          form.meetingFormats,
+        p_session_lengths:
+          form.sessionLengths,
+        p_maximum_active_mentees:
+          Number(
+            form.maximumActiveMentees,
+          ),
+        p_years_of_experience:
+          Number(
+            form.yearsOfExperience,
+          ),
       },
     );
 
     setSubmitting(false);
 
     if (applicationError) {
-      console.error("Unable to submit mentor application:", applicationError);
+      console.error(
+        "Unable to submit mentor application:",
+        applicationError,
+      );
+
       setError(
         applicationError.message ||
           "We could not submit your application. Please try again.",
       );
+
       return;
     }
 
-    navigate("/mentor/application-status", {
-      replace: true,
-    });
+    navigate(
+      "/mentor/application-status",
+      {
+        replace: true,
+      },
+    );
+  }
+
+  if (checkingExistingApplication) {
+    return (
+      <DashboardLayout
+        title="Become a mentor"
+        description="Share your experience and help someone take a meaningful next step."
+      >
+        <div className="mentor-application-checking">
+          <div className="loader" />
+
+          <p>
+            Checking your mentor application...
+          </p>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (
     <DashboardLayout
-      title="Become a mentor"
-      description="Share your experience and help someone take a meaningful next step."
+      title="Mentor application"
+      description="Share your experience and complete your application to mentor."
     >
-      <form className="mentor-application-form" onSubmit={handleSubmit}>
+      <form
+        className="mentor-application-form"
+        onSubmit={handleSubmit}
+      >
         <section className="mentor-application-intro">
-          <span className="mentor-application-intro-icon">
-            <HeartHandshake size={25} />
-          </span>
-
           <div>
-            <span className="eyebrow">MENTOR APPLICATION</span>
-            <h2>Tell us how you would like to support others.</h2>
+            <span className="eyebrow">
+              MENTOR APPLICATION
+            </span>
+
+            <h2>
+              Tell us how you would
+              like to support others.
+            </h2>
+
             <p>
-              Your application will be reviewed by the TCN Ikeja administration
-              team before your mentor profile becomes visible.
+              Your application will
+              be reviewed by the TCN
+              Ikeja administration
+              team before you can
+              create a mentor account.
             </p>
           </div>
         </section>
 
         <section className="mentor-application-section">
           <div className="mentor-application-section-heading">
-            <BriefcaseBusiness size={21} />
+            <BriefcaseBusiness
+              size={21}
+            />
 
             <div>
-              <h3>Professional background</h3>
-              <p>Tell us about your current work and experience.</p>
+              <h3>
+                Professional
+                background
+              </h3>
+
+              <p>
+                Tell us about your
+                current work and
+                experience.
+              </p>
             </div>
           </div>
 
           <div className="mentor-application-grid">
             <label>
-              Current role or occupation
+              Current role or
+              occupation
+
               <input
                 type="text"
                 name="jobTitle"
-                value={form.jobTitle}
-                onChange={updateForm}
+                value={
+                  form.jobTitle
+                }
+                onChange={
+                  updateForm
+                }
                 placeholder="For example, Product Designer"
-                disabled={submitting}
+                disabled={
+                  submitting
+                }
                 required
               />
             </label>
 
             <label>
-              Organisation <small>(optional)</small>
+              Organisation{" "}
+              <small>
+                (optional)
+              </small>
+
               <input
                 type="text"
                 name="organisation"
-                value={form.organisation}
-                onChange={updateForm}
+                value={
+                  form.organisation
+                }
+                onChange={
+                  updateForm
+                }
                 placeholder="Where do you currently work?"
-                disabled={submitting}
+                disabled={
+                  submitting
+                }
               />
             </label>
 
             <label>
               Years of experience
+
               <input
                 type="number"
                 name="yearsOfExperience"
-                value={form.yearsOfExperience}
-                onChange={updateForm}
+                value={
+                  form.yearsOfExperience
+                }
+                onChange={
+                  updateForm
+                }
                 min="0"
                 max="70"
                 placeholder="For example, 5"
-                disabled={submitting}
+                disabled={
+                  submitting
+                }
                 required
               />
             </label>
@@ -238,144 +469,298 @@ function BecomeAMentor() {
 
         <section className="mentor-application-section">
           <div className="mentor-application-section-heading">
-            <HeartHandshake size={21} />
+            <HeartHandshake
+              size={21}
+            />
 
             <div>
-              <h3>Your mentoring focus</h3>
-              <p>Help us understand the guidance you can provide.</p>
+              <h3>
+                Your mentoring focus
+              </h3>
+
+              <p>
+                Help us understand
+                the guidance you can
+                provide.
+              </p>
             </div>
           </div>
 
           <label className="mentor-application-full-field">
             Short biography
+
             <textarea
               name="biography"
-              value={form.biography}
-              onChange={updateForm}
+              value={
+                form.biography
+              }
+              onChange={
+                updateForm
+              }
               rows="5"
               minLength="50"
               placeholder="Share your background, experience and why you want to mentor others."
-              disabled={submitting}
+              disabled={
+                submitting
+              }
               required
             />
-            <small>{form.biography.trim().length}/50 minimum characters</small>
+
+            <small>
+              {
+                form.biography.trim()
+                  .length
+              }
+              /50 minimum
+              characters
+            </small>
           </label>
 
           <label className="mentor-application-full-field">
             Areas of expertise
+
             <input
               type="text"
               name="expertise"
-              value={form.expertise}
-              onChange={updateForm}
+              value={
+                form.expertise
+              }
+              onChange={
+                updateForm
+              }
               placeholder="For example, Product design, Leadership, Career planning"
-              disabled={submitting}
+              disabled={
+                submitting
+              }
               required
             />
-            <small>Separate multiple areas with commas.</small>
+
+            <small>
+              Separate multiple
+              areas with commas.
+            </small>
           </label>
 
           <fieldset className="mentor-option-group">
-            <legend>Mentorship categories</legend>
-            <p>Select every category you can confidently support.</p>
+            <legend>
+              Mentorship categories
+            </legend>
+
+            <p>
+              Select every category
+              you can confidently
+              support.
+            </p>
 
             <div className="mentor-checkbox-grid">
-              {mentorshipCategories.map((category) => (
-                <label key={category}>
-                  <input
-                    type="checkbox"
-                    checked={form.categories.includes(category)}
-                    onChange={() => toggleTextOption("categories", category)}
-                    disabled={submitting}
-                  />
-                  <span>{category}</span>
-                </label>
-              ))}
+              {mentorshipCategories.map(
+                (category) => (
+                  <label
+                    key={
+                      category
+                    }
+                  >
+                    <input
+                      type="checkbox"
+                      checked={
+                        form.categories.includes(
+                          category,
+                        )
+                      }
+                      onChange={() =>
+                        toggleTextOption(
+                          "categories",
+                          category,
+                        )
+                      }
+                      disabled={
+                        submitting
+                      }
+                    />
+
+                    <span>
+                      {category}
+                    </span>
+                  </label>
+                ),
+              )}
             </div>
           </fieldset>
         </section>
 
         <section className="mentor-application-section">
           <div className="mentor-application-section-heading">
-            <Languages size={21} />
+            <Languages
+              size={21}
+            />
 
             <div>
-              <h3>Availability preferences</h3>
-              <p>Choose how you would prefer to conduct sessions.</p>
+              <h3>
+                Availability
+                preferences
+              </h3>
+
+              <p>
+                Choose how you would
+                prefer to conduct
+                sessions.
+              </p>
             </div>
           </div>
 
           <label className="mentor-application-full-field">
             Languages
+
             <input
               type="text"
               name="languages"
-              value={form.languages}
-              onChange={updateForm}
+              value={
+                form.languages
+              }
+              onChange={
+                updateForm
+              }
               placeholder="For example, English, Yoruba"
-              disabled={submitting}
+              disabled={
+                submitting
+              }
               required
             />
-            <small>Separate multiple languages with commas.</small>
+
+            <small>
+              Separate multiple
+              languages with commas.
+            </small>
           </label>
 
           <div className="mentor-application-grid two-columns">
             <fieldset className="mentor-option-group compact">
-              <legend>Meeting format</legend>
+              <legend>
+                Meeting format
+              </legend>
 
               <div className="mentor-checkbox-stack">
-                {meetingFormatOptions.map((format) => (
-                  <label key={format}>
-                    <input
-                      type="checkbox"
-                      checked={form.meetingFormats.includes(format)}
-                      onChange={() =>
-                        toggleTextOption("meetingFormats", format)
+                {meetingFormatOptions.map(
+                  (format) => (
+                    <label
+                      key={
+                        format
                       }
-                      disabled={submitting}
-                    />
-                    <span>{format}</span>
-                  </label>
-                ))}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={
+                          form.meetingFormats.includes(
+                            format,
+                          )
+                        }
+                        onChange={() =>
+                          toggleTextOption(
+                            "meetingFormats",
+                            format,
+                          )
+                        }
+                        disabled={
+                          submitting
+                        }
+                      />
+
+                      <span>
+                        {format}
+                      </span>
+                    </label>
+                  ),
+                )}
               </div>
             </fieldset>
 
             <fieldset className="mentor-option-group compact">
-              <legend>Preferred session length</legend>
+              <legend>
+                Preferred session
+                length
+              </legend>
 
               <div className="mentor-checkbox-stack">
-                {sessionLengthOptions.map((length) => (
-                  <label key={length}>
-                    <input
-                      type="checkbox"
-                      checked={form.sessionLengths.includes(length)}
-                      onChange={() =>
-                        toggleNumberOption("sessionLengths", length)
+                {sessionLengthOptions.map(
+                  (length) => (
+                    <label
+                      key={
+                        length
                       }
-                      disabled={submitting}
-                    />
-                    <span>{length} minutes</span>
-                  </label>
-                ))}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={
+                          form.sessionLengths.includes(
+                            length,
+                          )
+                        }
+                        onChange={() =>
+                          toggleNumberOption(
+                            "sessionLengths",
+                            length,
+                          )
+                        }
+                        disabled={
+                          submitting
+                        }
+                      />
+
+                      <span>
+                        {length} minutes
+                      </span>
+                    </label>
+                  ),
+                )}
               </div>
             </fieldset>
           </div>
 
           <label className="mentor-application-full-field">
-            Maximum number of active mentees
+            Maximum number of
+            active mentees
+
             <div className="mentor-application-select-field">
               <select
                 name="maximumActiveMentees"
-                value={form.maximumActiveMentees}
-                onChange={updateForm}
-                disabled={submitting}
+                value={
+                  form.maximumActiveMentees
+                }
+                onChange={
+                  updateForm
+                }
+                disabled={
+                  submitting
+                }
                 required
               >
-                {[1, 2, 3, 4, 5, 6, 8, 10].map((number) => (
-                  <option key={number} value={number}>
-                    {number} {number === 1 ? "mentee" : "mentees"}
-                  </option>
-                ))}
+                {[
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  8,
+                  10,
+                ].map(
+                  (number) => (
+                    <option
+                      key={
+                        number
+                      }
+                      value={
+                        number
+                      }
+                    >
+                      {number}{" "}
+                      {number ===
+                      1
+                        ? "mentee"
+                        : "mentees"}
+                    </option>
+                  ),
+                )}
               </select>
 
               <ChevronDown
@@ -388,12 +773,19 @@ function BecomeAMentor() {
         </section>
 
         <div className="mentor-application-review-notice">
-          Submitting this form does not approve mentor access automatically. The
-          administration team will review your application first.
+          Submitting this form does
+          not create mentor access
+          automatically. The
+          administration team must
+          review and approve your
+          application first.
         </div>
 
         {error && (
-          <p className="form-error" role="alert">
+          <p
+            className="form-error mentor-application-error"
+            role="alert"
+          >
             {error}
           </p>
         )}
@@ -401,9 +793,15 @@ function BecomeAMentor() {
         <div className="mentor-application-actions">
           <button
             type="button"
-            className="tertiary-button"
-            onClick={() => navigate("/mentee/dashboard")}
-            disabled={submitting}
+            className="mentor-application-cancel"
+            onClick={() =>
+              navigate(
+                "/mentee/dashboard",
+              )
+            }
+            disabled={
+              submitting
+            }
           >
             Cancel
           </button>
@@ -411,9 +809,13 @@ function BecomeAMentor() {
           <button
             type="submit"
             className="mentor-application-submit"
-            disabled={submitting}
+            disabled={
+              submitting
+            }
           >
-            {submitting ? "Submitting application..." : "Submit application"}
+            {submitting
+              ? "Submitting application..."
+              : "Submit application"}
           </button>
         </div>
       </form>

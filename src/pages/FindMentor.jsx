@@ -1,27 +1,330 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import {
+  BadgeCheck,
   BriefcaseBusiness,
-  Languages,
+  Monitor,
   Search,
-  UserRoundSearch,
-  Users,
-  Video,
-  X,
+  UsersRound,
 } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
+import {
+  useNavigate,
+} from "react-router-dom";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import { supabase } from "../lib/supabase";
 
-function FindMentor() {
-  const navigate = useNavigate();
+import "./MenteeRequestFlow.css";
 
-  const [mentors, setMentors] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+function formatLabel(value) {
+  return String(value || "")
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (character) =>
+      character.toUpperCase(),
+    );
+}
+
+function getProfile(row) {
+  if (Array.isArray(row?.profiles)) {
+    return row.profiles[0] ?? null;
+  }
+
+  return row?.profiles ?? null;
+}
+
+function normaliseMentor(row) {
+  const profile =
+    getProfile(row);
+
+  const name =
+    profile?.full_name ||
+    "Approved mentor";
+
+  const initials =
+    name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) =>
+        part
+          .charAt(0)
+          .toUpperCase(),
+      )
+      .join("");
+
+  const maximumActive =
+    Number(
+      row.maximum_active_mentees ??
+        0,
+    );
+
+  const currentActive =
+    Number(
+      row.current_active_mentees ??
+        0,
+    );
+
+  const availableSpaces =
+    Math.max(
+      maximumActive -
+        currentActive,
+      0,
+    );
+
+  const meetingFormats =
+    row.meeting_formats ?? [];
+
+  return {
+    id: row.mentor_id,
+
+    name,
+    initials,
+
+    profilePhotoUrl:
+      profile?.profile_photo_url ??
+      null,
+
+    role:
+      row.job_title ||
+      "Mentor",
+
+    organisation:
+      row.organisation || "",
+
+    categories:
+      row.mentorship_categories ??
+      [],
+
+    expertise:
+      row.expertise ?? [],
+
+    languages:
+      row.languages ?? [],
+
+    meetingFormat:
+      meetingFormats.length > 0
+        ? meetingFormats
+            .map(formatLabel)
+            .join(" / ")
+        : "To be agreed",
+
+    yearsOfExperience:
+      row.years_of_experience ??
+      null,
+
+    spaces:
+      availableSpaces,
+
+    acceptingRequests:
+      row.accepting_requests ===
+      true,
+  };
+}
+
+function Progress() {
+  const items = [
+    "Find mentor",
+    "View profile",
+    "Send request",
+  ];
+
+  return (
+    <div className="request-flow-progress">
+      {items.map(
+        (label, index) => {
+          const number =
+            index + 1;
+
+          const active =
+            number === 1;
+
+          return (
+            <div
+              key={label}
+              className={[
+                "request-flow-progress-item",
+                active
+                  ? "is-active"
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              <span>
+                {number}
+              </span>
+
+              <small>
+                {label}
+              </small>
+            </div>
+          );
+        },
+      )}
+    </div>
+  );
+}
+
+function MentorAvatar({
+  mentor,
+}) {
+  return (
+    <span className="request-flow-avatar">
+      {mentor.profilePhotoUrl ? (
+        <img
+          src={
+            mentor.profilePhotoUrl
+          }
+          alt=""
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius:
+              "inherit",
+            objectFit: "cover",
+          }}
+        />
+      ) : (
+        mentor.initials ||
+        "MC"
+      )}
+    </span>
+  );
+}
+
+function MentorCard({
+  mentor,
+  onView,
+}) {
+  return (
+    <article className="request-flow-mentor-card">
+      <div className="request-flow-mentor-card-top">
+        <MentorAvatar
+          mentor={mentor}
+        />
+
+        <div>
+          <span className="request-flow-approved">
+            <BadgeCheck
+              size={14}
+            />
+            TCN Ikeja approved mentor
+          </span>
+
+          <h3>
+            {mentor.name}
+          </h3>
+
+          <p>
+            {mentor.role}
+
+            {mentor.organisation
+              ? ` · ${mentor.organisation}`
+              : ""}
+          </p>
+        </div>
+      </div>
+
+      <div className="request-flow-tags">
+        {mentor.categories
+          .slice(0, 3)
+          .map(
+            (category) => (
+              <span
+                key={
+                  category
+                }
+              >
+                {category}
+              </span>
+            ),
+          )}
+      </div>
+
+      <div className="request-flow-mentor-meta">
+        <span>
+          <UsersRound
+            size={15}
+          />
+
+          {mentor.spaces}{" "}
+          {mentor.spaces === 1
+            ? "space"
+            : "spaces"}{" "}
+          available
+        </span>
+
+        <span>
+          <Monitor
+            size={15}
+          />
+
+          {mentor.meetingFormat}
+        </span>
+
+        <span>
+          <BriefcaseBusiness
+            size={15}
+          />
+
+          {mentor.yearsOfExperience ===
+          null
+            ? "Experience not specified"
+            : `${mentor.yearsOfExperience} ${
+                mentor.yearsOfExperience ===
+                1
+                  ? "year"
+                  : "years"
+              } experience`}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        className="request-flow-primary-button request-flow-view-profile-primary"
+        onClick={() =>
+          onView(mentor)
+        }
+      >
+        View profile
+      </button>
+    </article>
+  );
+}
+
+function FindMentor() {
+  const navigate =
+    useNavigate();
+
+  const [
+    mentors,
+    setMentors,
+  ] = useState([]);
+
+  const [
+    searchTerm,
+    setSearchTerm,
+  ] = useState("");
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const [
+    reloadKey,
+    setReloadKey,
+  ] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -30,11 +333,15 @@ function FindMentor() {
       setLoading(true);
       setError("");
 
-      const { data, error: mentorError } = await supabase
-        .from("mentor_profiles")
+      const {
+        data,
+        error: mentorError,
+      } = await supabase
+        .from(
+          "mentor_profiles",
+        )
         .select(`
           mentor_id,
-          biography,
           job_title,
           organisation,
           expertise,
@@ -46,16 +353,22 @@ function FindMentor() {
           years_of_experience,
           accepting_requests,
           approval_status,
+          approved_at,
           profiles!mentor_profiles_mentor_id_fkey (
             full_name,
             profile_photo_url
           )
         `)
-        .eq("approval_status", "approved")
-        .eq("accepting_requests", true)
-        .order("created_at", {
-          ascending: false,
-        });
+        .eq(
+          "approval_status",
+          "approved",
+        )
+        .order(
+          "approved_at",
+          {
+            ascending: false,
+          },
+        );
 
       if (!isMounted) {
         return;
@@ -67,16 +380,22 @@ function FindMentor() {
           mentorError.message,
         );
 
+        setMentors([]);
+
         setError(
-          "We could not load mentors right now. Please try again.",
+          "We could not load approved mentors. Please try again.",
         );
 
-        setMentors([]);
         setLoading(false);
         return;
       }
 
-      setMentors(data ?? []);
+      setMentors(
+        (data ?? []).map(
+          normaliseMentor,
+        ),
+      );
+
       setLoading(false);
     }
 
@@ -85,318 +404,234 @@ function FindMentor() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [reloadKey]);
 
-  const cleanedSearchTerm =
-    searchTerm.trim().toLowerCase();
-
-  const filteredMentors = useMemo(() => {
-    if (!cleanedSearchTerm) {
-      return mentors;
-    }
-
-    return mentors.filter((mentor) => {
-      const searchableValues = [
-        mentor.profiles?.full_name,
-        mentor.job_title,
-        mentor.organisation,
-        mentor.biography,
-        ...(mentor.expertise ?? []),
-        ...(mentor.mentorship_categories ?? []),
-        ...(mentor.languages ?? []),
-        ...(mentor.meeting_formats ?? []),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return searchableValues.includes(
-        cleanedSearchTerm,
-      );
-    });
-  }, [mentors, cleanedSearchTerm]);
-
-  const hasSearch =
-    searchTerm.trim().length > 0;
-
-  function clearSearch() {
-    setSearchTerm("");
-  }
-
-  if (loading) {
-    return (
-      <DashboardLayout
-        title="Find a mentor"
-        description="Explore approved mentors who can support your growth."
-      >
-        <section className="dashboard-empty-state">
-          <div className="loader" />
-
-          <h2>Loading mentors</h2>
-
-          <p>
-            Please wait while we prepare the mentor directory.
-          </p>
-        </section>
-      </DashboardLayout>
+  const availableMentors =
+    useMemo(
+      () =>
+        mentors.filter(
+          (mentor) =>
+            mentor.acceptingRequests &&
+            mentor.spaces > 0,
+        ),
+      [mentors],
     );
-  }
 
-  if (error) {
-    return (
-      <DashboardLayout
-        title="Find a mentor"
-        description="Explore approved mentors who can support your growth."
-      >
-        <section className="dashboard-empty-state">
-          <span className="empty-state-icon">
-            <UserRoundSearch size={30} />
-          </span>
+  const filteredMentors =
+    useMemo(() => {
+      const query =
+        searchTerm
+          .trim()
+          .toLowerCase();
 
-          <h2>Unable to load mentors</h2>
+      if (!query) {
+        return availableMentors;
+      }
 
-          <p>{error}</p>
+      return availableMentors.filter(
+        (mentor) => {
+          const searchableValues = [
+            mentor.name,
+            mentor.role,
+            mentor.organisation,
+            ...mentor.categories,
+            ...mentor.expertise,
+            ...mentor.languages,
+            mentor.meetingFormat,
+          ];
 
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() =>
-              window.location.reload()
-            }
-          >
-            Try again
-          </button>
-        </section>
-      </DashboardLayout>
+          return searchableValues.some(
+            (value) =>
+              String(
+                value || "",
+              )
+                .toLowerCase()
+                .includes(
+                  query,
+                ),
+          );
+        },
+      );
+    }, [
+      availableMentors,
+      searchTerm,
+    ]);
+
+  function viewMentor(
+    mentor,
+  ) {
+    navigate(
+      `/mentee/mentors/${mentor.id}`,
+    );
+
+    window.scrollTo(
+      0,
+      0,
     );
   }
 
   return (
     <DashboardLayout
       title="Find a mentor"
-      description="Explore approved mentors who can support your growth."
+      description="Find an approved mentor whose experience fits your goals."
     >
-      <section className="dashboard-section-toolbar">
-        <label className="dashboard-search-field">
-          <Search size={19} />
+      <div className="mentee-request-flow">
+        <Progress />
 
-          <input
-            type="text"
-            value={searchTerm}
-            placeholder="Search by name, expertise or keyword"
-            aria-label="Search mentors"
-            onChange={(event) =>
-              setSearchTerm(event.target.value)
-            }
-          />
+        <div className="request-flow-screen">
+          <section className="request-flow-intro">
+            <span className="request-flow-eyebrow">
+              FIND A MENTOR
+            </span>
 
-          {hasSearch && (
-            <button
-              type="button"
-              aria-label="Clear mentor search"
-              className="mentor-search-clear"
-              onClick={clearSearch}
-            >
-              <X size={17} />
-            </button>
-          )}
-        </label>
+            <h2>
+              Choose someone whose experience fits your goals.
+            </h2>
 
-        {hasSearch && (
-          <p
-            className="mentor-result-count"
-            aria-live="polite"
-          >
-            {filteredMentors.length}{" "}
-            {filteredMentors.length === 1
-              ? "mentor"
-              : "mentors"}{" "}
-            found
-          </p>
-        )}
-      </section>
+            <p>
+              Browse approved mentors, review their profile
+              and request mentorship when you find a suitable
+              match.
+            </p>
+          </section>
 
-      {hasSearch &&
-      filteredMentors.length === 0 ? (
-        <section className="dashboard-empty-state">
-          <span className="empty-state-icon">
-            <Search size={30} />
-          </span>
+          <div className="request-flow-search">
+            <Search
+              size={18}
+            />
 
-          <h2>
-            No mentors found for "
-            {searchTerm.trim()}"
-          </h2>
-
-          <p>
-            Try another mentor name, area of expertise or keyword.
-          </p>
-
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={clearSearch}
-          >
-            Clear search
-          </button>
-        </section>
-      ) : mentors.length === 0 ? (
-        <section className="dashboard-empty-state">
-          <span className="empty-state-icon">
-            <UserRoundSearch size={30} />
-          </span>
-
-          <h2>No mentors available yet</h2>
-
-          <p>
-            There are currently no approved mentors accepting
-            mentorship requests. Please check again later.
-          </p>
-        </section>
-      ) : (
-        <section className="mentor-directory-grid">
-          {filteredMentors.map((mentor) => (
-            <MentorCard
-              key={mentor.mentor_id}
-              mentor={mentor}
-              onViewProfile={() =>
-                navigate(
-                  `/mentee/mentors/${mentor.mentor_id}`,
+            <input
+              type="text"
+              value={
+                searchTerm
+              }
+              onChange={(
+                event,
+              ) =>
+                setSearchTerm(
+                  event.target.value,
                 )
               }
+              placeholder="Search by name, expertise or keyword"
+              aria-label="Search mentors"
             />
-          ))}
-        </section>
-      )}
-    </DashboardLayout>
-  );
-}
+          </div>
 
-function MentorCard({
-  mentor,
-  onViewProfile,
-}) {
-  const fullName =
-    mentor.profiles?.full_name ||
-    "Approved mentor";
-
-  const initials = fullName
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((name) =>
-      name.charAt(0).toUpperCase(),
-    )
-    .join("");
-
-  const maximumActiveMentees =
-    mentor.maximum_active_mentees ?? 0;
-
-  const currentActiveMentees =
-    mentor.current_active_mentees ?? 0;
-
-  const availableSpaces = Math.max(
-    maximumActiveMentees -
-      currentActiveMentees,
-    0,
-  );
-
-  return (
-    <article className="mentor-directory-card">
-      <div className="mentor-card-header">
-        {mentor.profiles?.profile_photo_url ? (
-          <img
-            src={
-              mentor.profiles.profile_photo_url
-            }
-            alt=""
-            className="mentor-card-avatar"
-          />
-        ) : (
-          <span className="mentor-card-avatar mentor-card-initials">
-            {initials || "MC"}
-          </span>
-        )}
-
-        <div>
-          <span className="mentor-approved-label">
-            Approved mentor
-          </span>
-
-          <h2>{fullName}</h2>
-
-          <p>
-            {mentor.job_title || "Mentor"}
-
-            {mentor.organisation
-              ? ` at ${mentor.organisation}`
-              : ""}
-          </p>
-        </div>
-      </div>
-
-      <p className="mentor-card-biography">
-        {mentor.biography ||
-          "This mentor has not added a biography yet."}
-      </p>
-
-      {mentor.mentorship_categories?.length >
-        0 && (
-        <div className="mentor-category-list">
-          {mentor.mentorship_categories
-            .slice(0, 4)
-            .map((category) => (
-              <span key={category}>
-                {category}
+          {loading ? (
+            <section className="request-flow-panel">
+              <span className="request-flow-eyebrow">
+                FIND A MENTOR
               </span>
-            ))}
+
+              <h3>
+                Finding approved mentors
+              </h3>
+
+              <p>
+                We are loading mentors who are currently
+                available to receive mentorship requests.
+              </p>
+            </section>
+          ) : error ? (
+            <section className="request-flow-panel">
+              <span className="request-flow-eyebrow">
+                SOMETHING WENT WRONG
+              </span>
+
+              <h3>
+                We could not load mentors
+              </h3>
+
+              <p>
+                {error}
+              </p>
+
+              <div
+                className="request-flow-bottom-action"
+                style={{
+                  justifyContent:
+                    "flex-start",
+                  marginTop:
+                    "18px",
+                }}
+              >
+                <button
+                  type="button"
+                  className="request-flow-primary-button"
+                  onClick={() =>
+                    setReloadKey(
+                      (
+                        current,
+                      ) =>
+                        current +
+                        1,
+                    )
+                  }
+                >
+                  Try again
+                </button>
+              </div>
+            </section>
+          ) : filteredMentors.length ===
+            0 ? (
+            <section className="request-flow-panel">
+              {searchTerm.trim() ? (
+                <>
+                  <span className="request-flow-eyebrow">
+                    NO MATCH FOUND
+                  </span>
+
+                  <h3>
+                    No mentor found for “
+                    {searchTerm.trim()}
+                    ”
+                  </h3>
+
+                  <p>
+                    Try another name, area of expertise or
+                    mentorship category.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <span className="request-flow-eyebrow">
+                    NO MENTORS AVAILABLE
+                  </span>
+
+                  <h3>
+                    There are no mentors accepting requests
+                    right now.
+                  </h3>
+
+                  <p>
+                    Approved mentors will appear here when
+                    they are available for new mentees.
+                  </p>
+                </>
+              )}
+            </section>
+          ) : (
+            <section className="request-flow-directory-grid">
+              {filteredMentors.map(
+                (mentor) => (
+                  <MentorCard
+                    key={
+                      mentor.id
+                    }
+                    mentor={
+                      mentor
+                    }
+                    onView={
+                      viewMentor
+                    }
+                  />
+                ),
+              )}
+            </section>
+          )}
         </div>
-      )}
-
-      <div className="mentor-card-details">
-        <span>
-          <BriefcaseBusiness size={16} />
-
-          {mentor.years_of_experience
-            ? `${mentor.years_of_experience} years experience`
-            : "Experience not specified"}
-        </span>
-
-        <span>
-          <Languages size={16} />
-
-          {mentor.languages?.length
-            ? mentor.languages.join(", ")
-            : "Languages not specified"}
-        </span>
-
-        <span>
-          <Video size={16} />
-
-          {mentor.meeting_formats?.length
-            ? mentor.meeting_formats.join(", ")
-            : "Meeting format not specified"}
-        </span>
-
-        <span>
-          <Users size={16} />
-
-          {availableSpaces}{" "}
-          {availableSpaces === 1
-            ? "space"
-            : "spaces"}{" "}
-          available
-        </span>
       </div>
-
-      <button
-        type="button"
-        className="primary-button full-button"
-        onClick={onViewProfile}
-      >
-        View mentor profile
-      </button>
-    </article>
+    </DashboardLayout>
   );
 }
 

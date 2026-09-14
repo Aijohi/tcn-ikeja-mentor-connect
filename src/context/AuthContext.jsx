@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
 
   async function loadProfile(userId) {
     if (!userId) {
@@ -106,6 +107,29 @@ export function AuthProvider({ children }) {
     });
   }
 
+  async function signUpApprovedMentor({
+    fullName,
+    email,
+    phoneNumber,
+    password,
+    invitationToken,
+  }) {
+    return supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          phone_number: phoneNumber || null,
+          role: "mentor",
+          signup_intent: "mentor",
+          mentor_invite_token: invitationToken,
+        },
+        emailRedirectTo: `${window.location.origin}/verify-email?account=mentor`,
+      },
+    });
+  }
+
   async function signInWithGoogle(accountIntent = null) {
     const allowedAccountIntents = ["mentee", "mentor"];
 
@@ -155,14 +179,38 @@ export function AuthProvider({ children }) {
     return result;
   }
 
-  async function signOut() {
-    const result = await supabase.auth.signOut({
-      scope: "local",
-    });
+  async function signOut(options = {}) {
+    const {
+      redirectTo = null,
+    } = options;
+
+    setSigningOut(true);
+
+    const result =
+      await supabase.auth.signOut({
+        scope: "local",
+      });
+
+    sessionStorage.removeItem(
+      GOOGLE_ACCOUNT_INTENT_KEY,
+    );
+
+    if (result.error) {
+      setSigningOut(false);
+      return result;
+    }
+
+    if (redirectTo) {
+      window.location.replace(
+        redirectTo,
+      );
+
+      return result;
+    }
 
     setSession(null);
     setProfile(null);
-    sessionStorage.removeItem(GOOGLE_ACCOUNT_INTENT_KEY);
+    setSigningOut(false);
 
     return result;
   }
@@ -195,7 +243,9 @@ export function AuthProvider({ children }) {
         user: session?.user ?? null,
         profile,
         loading,
+        signingOut,
         signUp,
+        signUpApprovedMentor,
         signIn,
         signInWithGoogle,
         signOut,

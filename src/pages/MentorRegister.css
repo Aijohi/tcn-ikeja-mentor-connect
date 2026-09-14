@@ -1,0 +1,839 @@
+/* =========================================================
+   MENTOR REGISTER
+   Approved mentor invitation registration.
+   White canvas + orange primary + neutral secondary.
+   ========================================================= */
+
+.mentor-register-page {
+  --mentor-register-orange:
+    #ff5303;
+  --mentor-register-orange-dark:
+    #c13c00;
+  --mentor-register-ink:
+    #101419;
+  --mentor-register-ink-2:
+    #2d353f;
+  --mentor-register-text:
+    #4c5867;
+  --mentor-register-muted:
+    #6f8095;
+  --mentor-register-border:
+    #d7dee7;
+  --mentor-register-border-soft:
+    #e4e8ef;
+
+  width: 100%;
+  min-height: 100vh;
+
+  margin: 0;
+
+  color:
+    var(--mentor-register-text);
+  background: #ffffff;
+
+  font-family:
+    "Inter",
+    "Segoe UI",
+    Arial,
+    sans-serif;
+}
+
+.mentor-register-page *,
+.mentor-register-page *::before,
+.mentor-register-page *::after {
+  box-sizing: border-box;
+}
+
+.mentor-register-page a {
+  text-decoration: none;
+}
+
+.mentor-register-shell {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.05fr)
+    minmax(360px, 0.95fr);
+
+  width: 100%;
+  min-height: 100vh;
+
+  background: #ffffff;
+}
+
+/* =========================================================
+   LEFT / FORM SIDE
+   ========================================================= */
+
+.mentor-register-form-side {
+  width: min(100%, 620px);
+
+  margin-inline: auto;
+
+  padding:
+    38px
+    44px
+    54px;
+}
+
+.mentor-register-brand {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 10px;
+
+  color: inherit;
+}
+
+.mentor-register-brand img {
+  width: 62px;
+  height: 40px;
+
+  object-fit: contain;
+}
+
+.mentor-register-brand > span {
+  display: grid;
+
+  gap: 2px;
+}
+
+.mentor-register-brand strong {
+  color:
+    var(--mentor-register-ink);
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mentor-register-brand small {
+  color:
+    var(--mentor-register-muted);
+
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.mentor-register-heading {
+  margin-top: 54px;
+}
+
+.mentor-register-heading > span {
+  display: block;
+
+  color:
+    var(--mentor-register-orange);
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.mentor-register-heading h1 {
+  max-width: 500px;
+
+  margin:
+    8px 0 10px;
+
+  color:
+    var(--mentor-register-ink);
+
+  font-size:
+    clamp(
+      30px,
+      4vw,
+      40px
+    );
+
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.mentor-register-heading p {
+  max-width: 500px;
+
+  margin: 0;
+
+  color:
+    var(--mentor-register-text);
+
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* =========================================================
+   APPROVAL / EMAIL NOTICES
+   ========================================================= */
+
+.mentor-register-approved-notice,
+.mentor-register-email-notice {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  margin-top: 22px;
+  padding: 13px 14px;
+
+  border-radius: 11px;
+}
+
+.mentor-register-approved-notice {
+  border: 1px solid #ffcbc5;
+
+  background: #fffaf9;
+}
+
+.mentor-register-approved-notice
+> svg {
+  flex: 0 0 auto;
+
+  margin-top: 1px;
+
+  color:
+    var(--mentor-register-orange);
+}
+
+.mentor-register-approved-notice strong {
+  display: block;
+
+  color:
+    var(--mentor-register-ink);
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mentor-register-approved-notice p {
+  margin: 4px 0 0;
+
+  color:
+    var(--mentor-register-text);
+
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.mentor-register-email-notice {
+  border: 1px solid
+    var(--mentor-register-border-soft);
+
+  background: #f8f9fb;
+}
+
+.mentor-register-email-notice
+> svg {
+  flex: 0 0 auto;
+
+  margin-top: 1px;
+
+  color:
+    var(--mentor-register-ink-2);
+}
+
+.mentor-register-email-notice p {
+  margin: 0;
+
+  color:
+    var(--mentor-register-text);
+
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.mentor-register-email-notice strong {
+  color:
+    var(--mentor-register-ink);
+
+  font-weight: 600;
+}
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.mentor-register-error {
+  margin:
+    18px 0 0;
+
+  padding:
+    11px 13px;
+
+  border: 1px solid #efc5c8;
+  border-radius: 9px;
+
+  color: #8c2f37;
+  background: #fff7f7;
+
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.mentor-register-form {
+  display: grid;
+
+  gap: 17px;
+
+  margin-top: 24px;
+}
+
+.mentor-register-field {
+  display: block;
+
+  min-width: 0;
+}
+
+.mentor-register-field
+> span {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color:
+    var(--mentor-register-ink);
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mentor-register-field
+> span small {
+  color:
+    var(--mentor-register-muted);
+
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.mentor-register-field
+> small {
+  display: block;
+
+  margin-top: 6px;
+
+  color:
+    var(--mentor-register-muted);
+
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.mentor-register-field input {
+  width: 100%;
+  min-height: 46px;
+
+  padding: 0 13px;
+
+  border: 1px solid
+    #c9d2df;
+  border-radius: 9px;
+
+  outline: none;
+
+  color:
+    var(--mentor-register-ink);
+  background: #ffffff;
+
+  font: inherit;
+  font-size: 12px;
+
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.mentor-register-field
+input::placeholder {
+  color: #97aac2;
+}
+
+.mentor-register-field
+input:focus,
+.mentor-register-field
+input:focus-visible {
+  border-color: #4c5867;
+
+  outline: none;
+
+  box-shadow:
+    0 0 0 1px
+    rgba(
+      76,
+      88,
+      103,
+      0.10
+    );
+}
+
+.mentor-register-field
+input:disabled {
+  color: #8794a4;
+  background: #f7f8fa;
+
+  cursor: not-allowed;
+}
+
+.mentor-register-password-wrap {
+  position: relative;
+}
+
+.mentor-register-password-wrap
+input {
+  padding-right: 44px;
+}
+
+.mentor-register-password-wrap
+button {
+  position: absolute;
+
+  top: 50%;
+  right: 9px;
+
+  display: grid;
+  place-items: center;
+
+  width: 30px;
+  height: 30px;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 7px;
+
+  color:
+    var(--mentor-register-muted);
+  background: transparent;
+
+  cursor: pointer;
+
+  transform:
+    translateY(-50%);
+}
+
+.mentor-register-password-wrap
+button:hover:not(:disabled) {
+  color:
+    var(--mentor-register-ink);
+
+  background: #f7f8fa;
+}
+
+.mentor-register-terms {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 9px;
+
+  color:
+    var(--mentor-register-text);
+
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.55;
+
+  cursor: pointer;
+}
+
+.mentor-register-terms
+input {
+  flex: 0 0 17px;
+
+  width: 17px;
+  height: 17px;
+
+  margin-top: 1px;
+
+  accent-color:
+    var(--mentor-register-orange);
+}
+
+.mentor-register-submit {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 46px;
+
+  padding: 0 16px;
+
+  border: 1px solid
+    var(--mentor-register-orange);
+  border-radius: 9px;
+
+  color: #ffffff;
+  background:
+    var(--mentor-register-orange);
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.mentor-register-submit:hover:not(:disabled) {
+  border-color:
+    var(--mentor-register-orange-dark);
+
+  background:
+    var(--mentor-register-orange-dark);
+}
+
+.mentor-register-submit:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.6;
+}
+
+.mentor-register-sign-in-copy {
+  margin:
+    20px 0 0;
+
+  color:
+    var(--mentor-register-muted);
+
+  font-size: 11px;
+  text-align: center;
+}
+
+.mentor-register-sign-in-copy
+a {
+  color:
+    var(--mentor-register-orange-dark);
+
+  font-weight: 500;
+}
+
+/* =========================================================
+   RIGHT INFORMATION SIDE
+   ========================================================= */
+
+.mentor-register-information-side {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  min-width: 0;
+  min-height: 100vh;
+
+  padding: 48px;
+
+  overflow: hidden;
+
+  border-left: 1px solid
+    #e4e8ef;
+
+  background: #101419;
+}
+
+.mentor-register-information-side::before,
+.mentor-register-information-side::after {
+  content: "";
+
+  position: absolute;
+
+  border: 1px solid
+    rgba(
+      255,
+      83,
+      3,
+      0.28
+    );
+
+  border-radius: 50%;
+}
+
+.mentor-register-information-side::before {
+  top: -90px;
+  right: -110px;
+
+  width: 290px;
+  height: 290px;
+}
+
+.mentor-register-information-side::after {
+  bottom: -160px;
+  left: -130px;
+
+  width: 390px;
+  height: 390px;
+
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+}
+
+.mentor-register-information-content {
+  position: relative;
+  z-index: 1;
+
+  width: min(100%, 470px);
+}
+
+.mentor-register-information-content
+> span {
+  color: #ff8a5c;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.mentor-register-information-content
+h2 {
+  margin:
+    11px 0 16px;
+
+  color: #ffffff;
+
+  font-size:
+    clamp(
+      30px,
+      4vw,
+      46px
+    );
+
+  font-weight: 620;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.mentor-register-information-content
+p {
+  max-width: 430px;
+
+  margin: 0;
+
+  color: #d7dee7;
+
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.mentor-register-information-line {
+  width: 58px;
+  height: 3px;
+
+  margin:
+    28px 0
+    22px;
+
+  border-radius: 999px;
+
+  background:
+    var(--mentor-register-orange);
+}
+
+.mentor-register-information-content
+small {
+  color: #97aac2;
+
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   VALIDATION / EMPTY STATE
+   ========================================================= */
+
+.mentor-register-state-card {
+  width: min(520px, calc(100% - 32px));
+
+  margin: 0 auto;
+
+  padding: 34px;
+
+  border: 1px solid
+    #e4e8ef;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 16px 44px
+    rgba(16, 20, 25, 0.06);
+
+  text-align: center;
+}
+
+.mentor-register-page:has(
+  .mentor-register-state-card
+) {
+  display: grid;
+  place-items: center;
+
+  padding: 24px;
+}
+
+.mentor-register-state-icon {
+  display: grid;
+  place-items: center;
+
+  width: 56px;
+  height: 56px;
+
+  margin: 0 auto 18px;
+
+  border: 1px solid #ffcbc5;
+  border-radius: 14px;
+
+  color:
+    var(--mentor-register-orange);
+  background: #fffaf9;
+}
+
+.mentor-register-state-eyebrow {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color:
+    var(--mentor-register-orange);
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.mentor-register-state-card
+h1 {
+  margin: 0;
+
+  color:
+    var(--mentor-register-ink);
+
+  font-size:
+    clamp(
+      26px,
+      5vw,
+      34px
+    );
+
+  font-weight: 650;
+  line-height: 1.18;
+  letter-spacing: -0.025em;
+}
+
+.mentor-register-state-card
+> p {
+  max-width: 420px;
+
+  margin:
+    14px auto 0;
+
+  color:
+    var(--mentor-register-text);
+
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.mentor-register-state-actions {
+  display: grid;
+
+  gap: 9px;
+
+  margin-top: 24px;
+}
+
+.mentor-register-state-primary,
+.mentor-register-state-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 42px;
+
+  padding: 0 14px;
+
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mentor-register-state-primary {
+  border: 1px solid
+    var(--mentor-register-orange);
+
+  color: #ffffff;
+  background:
+    var(--mentor-register-orange);
+}
+
+.mentor-register-state-secondary {
+  border: 1px solid
+    var(--mentor-register-border);
+
+  color:
+    var(--mentor-register-ink-2);
+  background: #ffffff;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 980px) {
+  .mentor-register-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .mentor-register-information-side {
+    display: none;
+  }
+
+  .mentor-register-form-side {
+    width: min(100%, 620px);
+
+    min-height: 100vh;
+  }
+}
+
+@media (max-width: 620px) {
+  .mentor-register-form-side {
+    width: 100%;
+
+    padding:
+      20px
+      18px
+      36px;
+  }
+
+  .mentor-register-brand img {
+    width: 56px;
+    height: 36px;
+  }
+
+  .mentor-register-heading {
+    margin-top: 40px;
+  }
+
+  .mentor-register-heading h1 {
+    font-size: 29px;
+  }
+
+  .mentor-register-state-card {
+    width: 100%;
+
+    padding:
+      28px 20px;
+
+    border-radius: 14px;
+  }
+}

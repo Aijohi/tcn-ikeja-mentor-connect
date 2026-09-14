@@ -1,0 +1,1704 @@
+/* =========================================================
+   ADMIN DASHBOARD
+   White background across the platform.
+   Dark neutral + orange accents only.
+   ========================================================= */
+
+.admin-overview-page,
+.admin-list-section,
+.admin-state-card {
+  background: #ffffff;
+}
+
+.admin-overview-page {
+  width: 100%;
+  min-height: 100%;
+  padding-bottom: 32px;
+  color: #101419;
+}
+
+/* HERO */
+
+.admin-overview-hero {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  min-height: 230px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border-radius: 18px;
+  color: #ffffff;
+  background: #101419;
+}
+
+.admin-overview-hero-copy {
+  position: relative;
+  z-index: 2;
+  width: min(690px, 100%);
+  padding: 36px;
+}
+
+.admin-overview-eyebrow,
+.admin-section-eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: #ff5303;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+}
+
+.admin-overview-hero h2 {
+  max-width: 620px;
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 650;
+  line-height: 1.13;
+  letter-spacing: -0.035em;
+}
+
+.admin-overview-attention-message {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 24px;
+}
+
+.admin-overview-attention-count {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 83, 3, 0.42);
+  border-radius: 999px;
+  color: #ffffff;
+  background: rgba(255, 83, 3, 0.15);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-overview-attention-message p {
+  margin: 0;
+  color: #d7dee7;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* Subtle orange hero decoration */
+
+.admin-overview-pattern {
+  position: relative;
+  flex: 0 0 34%;
+  min-width: 250px;
+  pointer-events: none;
+}
+
+.admin-overview-pattern::before,
+.admin-overview-pattern::after,
+.admin-overview-pattern span {
+  position: absolute;
+  content: "";
+}
+
+.admin-overview-pattern::before {
+  top: 26px;
+  right: 42px;
+  width: 180px;
+  height: 180px;
+  border: 1px solid rgba(255, 83, 3, 0.22);
+  border-radius: 50%;
+}
+
+.admin-overview-pattern::after {
+  right: -42px;
+  bottom: -72px;
+  width: 230px;
+  height: 230px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.admin-overview-pattern span:nth-child(1) {
+  top: 58px;
+  right: 95px;
+  width: 62px;
+  height: 62px;
+  border: 1px solid rgba(255, 83, 3, 0.32);
+  border-radius: 18px;
+  transform: rotate(18deg);
+}
+
+.admin-overview-pattern span:nth-child(2) {
+  top: 94px;
+  right: 178px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 83, 3, 0.86);
+}
+
+.admin-overview-pattern span:nth-child(3) {
+  right: 92px;
+  bottom: 48px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.admin-overview-pattern span:nth-child(4) {
+  top: 31px;
+  right: 222px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.admin-overview-pattern span:nth-child(5) {
+  right: 22px;
+  bottom: 70px;
+  width: 84px;
+  height: 1px;
+  background: rgba(255, 83, 3, 0.34);
+  transform: rotate(-32deg);
+}
+
+/* SUMMARY */
+
+.admin-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.admin-summary-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(16, 20, 25, 0.025);
+}
+
+.admin-summary-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.admin-summary-card-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: #ff5303;
+  background: #fff4ef;
+}
+
+.admin-summary-card-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff5303;
+}
+
+.admin-summary-card small {
+  display: block;
+  margin-bottom: 6px;
+  color: #6f8095;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.admin-summary-card > strong {
+  display: block;
+  color: #101419;
+  font-size: 28px;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* NEEDS ATTENTION */
+
+.admin-attention-section {
+  overflow: hidden;
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.admin-attention-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.admin-attention-heading h2 {
+  margin: 0;
+  color: #101419;
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.admin-attention-heading p {
+  max-width: 630px;
+  margin: 7px 0 0;
+  color: #6f8095;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+
+.admin-attention-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-attention-table {
+  width: 100%;
+  min-width: 840px;
+  border-collapse: collapse;
+}
+
+.admin-attention-table th {
+  padding: 12px 18px;
+  border-bottom: 1px solid #edf0f4;
+  color: #6f8095;
+  background: #fbfcfd;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: left;
+  letter-spacing: 0.025em;
+}
+
+.admin-attention-table td {
+  padding: 15px 18px;
+  border-bottom: 1px solid #edf0f4;
+  color: #374151;
+  font-size: 12px;
+  line-height: 1.45;
+  vertical-align: middle;
+}
+
+.admin-attention-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-attention-table tbody tr:hover {
+  background: #fcfcfd;
+}
+
+.admin-attention-type {
+  color: #2d353f;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-attention-person {
+  display: grid;
+  gap: 3px;
+}
+
+.admin-attention-person strong {
+  color: #101419;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-attention-person small {
+  color: #8794a4;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.admin-attention-detail {
+  max-width: 240px;
+  color: #4c5867;
+}
+
+.admin-attention-action-cell {
+  text-align: right;
+}
+
+.admin-review-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid #101419;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #101419;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.admin-review-link:hover {
+  border-color: #2d353f;
+  background: #2d353f;
+}
+
+.admin-review-link:focus-visible {
+  outline: 2px solid rgba(76, 88, 103, 0.25);
+  outline-offset: 2px;
+}
+
+.admin-attention-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 30px 24px;
+}
+
+.admin-attention-empty > span {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: #ff5303;
+  background: #fff4ef;
+}
+
+.admin-attention-empty strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #101419;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-attention-empty p {
+  margin: 0;
+  color: #6f8095;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* PAGINATION */
+
+.admin-table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 18px;
+  border-top: 1px solid #edf0f4;
+  background: #ffffff;
+}
+
+.admin-table-pagination > p {
+  margin: 0;
+  color: #8794a4;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.admin-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-pagination-controls > span {
+  color: #6f8095;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.admin-pagination-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #d7dee7;
+  border-radius: 8px;
+  color: #2d353f;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-pagination-controls button:hover:not(:disabled) {
+  border-color: #aeb9c7;
+  background: #f7f8fa;
+}
+
+.admin-pagination-controls button:focus-visible {
+  outline: 2px solid rgba(76, 88, 103, 0.18);
+  outline-offset: 2px;
+}
+
+.admin-pagination-controls button:disabled {
+  color: #b1bac6;
+  background: #f7f8fa;
+  cursor: not-allowed;
+}
+
+/* EXISTING ADMIN TABLES */
+
+.admin-list-section {
+  width: 100%;
+}
+
+.admin-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.admin-list-toolbar input {
+  width: min(420px, 100%);
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid #c9d2df;
+  border-radius: 9px;
+  outline: none;
+  color: #101419;
+  background: #ffffff;
+  font: inherit;
+  font-size: 12px;
+}
+
+.admin-list-toolbar input:focus,
+.admin-list-toolbar input:focus-visible {
+  border-color: #4c5867;
+  box-shadow: 0 0 0 2px rgba(76, 88, 103, 0.1);
+}
+
+.admin-list-toolbar > span {
+  color: #6f8095;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.admin-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.admin-data-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+.admin-data-table th {
+  padding: 12px 16px;
+  border-bottom: 1px solid #edf0f4;
+  color: #6f8095;
+  background: #fbfcfd;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.admin-data-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #edf0f4;
+  color: #374151;
+  font-size: 11px;
+  line-height: 1.45;
+  vertical-align: middle;
+}
+
+.admin-data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-data-table td strong,
+.admin-data-table td small {
+  display: block;
+}
+
+.admin-data-table td strong {
+  color: #101419;
+  font-weight: 600;
+}
+
+.admin-data-table td small {
+  margin-top: 3px;
+  color: #8794a4;
+  font-size: 10px;
+}
+
+.admin-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 0 9px;
+  border: 1px solid #d7dee7;
+  border-radius: 999px;
+  color: #4c5867;
+  background: #f7f8fa;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 23px;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.admin-status-badge.status-pending {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #c13c00;
+  background: transparent;
+  line-height: 1.4;
+}
+
+.admin-status-badge.status-approved,
+.admin-status-badge.status-accepted,
+.admin-status-badge.status-active {
+  border-color: #d7dee7;
+  color: #2d353f;
+  background: #f7f8fa;
+}
+
+.admin-status-badge.status-declined,
+.admin-status-badge.status-rejected,
+.admin-status-badge.status-suspended {
+  border-color: #efc5c8;
+  color: #8c2f37;
+  background: #fff7f7;
+}
+
+.admin-status-badge.status-withdrawn {
+  border-color: #d7dee7;
+  color: #6f8095;
+  background: #f7f8fa;
+}
+
+.admin-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-verify-button,
+.admin-modal-confirm-button,
+.admin-modal-cancel-button,
+.admin-text-danger {
+  font-family: inherit;
+}
+
+.admin-verify-button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #101419;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #101419;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-text-danger {
+  padding: 0;
+  border: 0;
+  color: #b74750;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-protected-account {
+  color: #8794a4;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.admin-goal-cell {
+  max-width: 320px;
+}
+
+.admin-state-card {
+  display: grid;
+  place-items: center;
+
+  width: 100%;
+  min-height: 300px;
+
+  padding: 40px 32px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff !important;
+  background-image: none !important;
+
+  text-align: center;
+
+  box-shadow:
+    0 8px 24px
+    rgba(16, 20, 25, 0.025);
+}
+
+.admin-state-card h2 {
+  margin: 12px 0 6px;
+  color: #101419;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.admin-state-card p {
+  max-width: 500px;
+  margin: 0;
+  color: #6f8095;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.empty-state-icon {
+  display: grid;
+  place-items: center;
+
+  width: 48px;
+  height: 48px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 12px;
+
+  color: #ff5303;
+  background: #f8f9fb;
+}
+
+.admin-success-message,
+.form-error {
+  margin: 0 0 16px;
+  padding: 11px 13px;
+  border-radius: 9px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.admin-success-message {
+  border: 1px solid #ffcbc5;
+  color: #4c5867;
+  background: #fffaf9;
+}
+
+.form-error {
+  border: 1px solid #efc5c8;
+  color: #8c2f37;
+  background: #fff7f7;
+}
+
+/* CONFIRMATION MODAL */
+
+.admin-modal-backdrop {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(16, 20, 25, 0.52);
+}
+
+.admin-confirmation-modal {
+  width: min(100%, 430px);
+  padding: 26px;
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 22px 70px rgba(16, 20, 25, 0.18);
+}
+
+.admin-confirmation-modal h2 {
+  margin: 0;
+  color: #101419;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.admin-confirmation-modal > p {
+  margin: 8px 0 18px;
+  color: #6f8095;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.admin-selected-person {
+  display: grid;
+  gap: 3px;
+  padding: 13px;
+  border: 1px solid #e4e8ef;
+  border-radius: 10px;
+  background: #fbfcfd;
+}
+
+.admin-selected-person strong {
+  color: #101419;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-selected-person small {
+  color: #8794a4;
+  font-size: 10px;
+}
+
+.admin-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.admin-modal-cancel-button,
+.admin-modal-confirm-button {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-modal-cancel-button {
+  border: 1px solid #d7dee7;
+  color: #2d353f;
+  background: #ffffff;
+}
+
+.admin-modal-confirm-button {
+  border: 1px solid #101419;
+  color: #ffffff;
+  background: #101419;
+}
+
+.admin-modal-confirm-button.danger {
+  border-color: #b74750;
+  background: #b74750;
+}
+
+.admin-modal-cancel-button:disabled,
+.admin-modal-confirm-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1050px) {
+  .admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-overview-pattern {
+    flex-basis: 30%;
+    min-width: 210px;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-overview-hero {
+    min-height: auto;
+  }
+
+  .admin-overview-hero-copy {
+    width: 100%;
+    padding: 28px 24px;
+  }
+
+  .admin-overview-pattern {
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 42%;
+    min-width: 0;
+    opacity: 0.58;
+  }
+
+  .admin-overview-hero h2,
+  .admin-overview-attention-message {
+    max-width: 80%;
+  }
+
+  .admin-attention-heading,
+  .admin-table-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-table-pagination {
+    gap: 12px;
+  }
+
+  .admin-pagination-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .admin-list-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-overview-hero {
+    border-radius: 15px;
+  }
+
+  .admin-overview-hero-copy {
+    padding: 24px 20px;
+  }
+
+  .admin-overview-hero h2,
+  .admin-overview-attention-message {
+    max-width: 100%;
+  }
+
+  .admin-overview-pattern {
+    opacity: 0.22;
+  }
+
+  .admin-overview-attention-message {
+    align-items: flex-start;
+  }
+
+  .admin-summary-card {
+    padding: 18px;
+  }
+
+  .admin-attention-heading {
+    padding: 20px;
+  }
+
+  .admin-attention-empty {
+    padding: 24px 20px;
+  }
+
+  .admin-pagination-controls button {
+    padding: 0 8px;
+  }
+
+  .admin-pagination-controls > span {
+    text-align: center;
+  }
+
+  .admin-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .admin-modal-cancel-button,
+  .admin-modal-confirm-button {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   ADMIN PLATFORM WHITE CANVAS
+   ========================================================= */
+
+html:has(.admin-overview-page),
+body:has(.admin-overview-page),
+body:has(.admin-overview-page) #root,
+body:has(.admin-overview-page) .dashboard-layout,
+body:has(.admin-overview-page) .dashboard-content,
+html:has(.admin-list-section),
+body:has(.admin-list-section),
+body:has(.admin-list-section) #root,
+body:has(.admin-list-section) .dashboard-layout,
+body:has(.admin-list-section) .dashboard-content {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+/* =========================================================
+   MENTOR APPLICATION LIST TOOLBAR
+   ========================================================= */
+
+.admin-application-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.admin-search-field {
+  position: relative;
+  width: min(390px, 100%);
+}
+
+.admin-search-field > svg {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  color: #8794a4;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.admin-search-field input {
+  width: 100%;
+  height: 42px;
+  padding: 0 13px 0 39px;
+  border: 1px solid #c9d2df;
+  border-radius: 9px;
+  outline: none;
+  color: #101419;
+  background: #ffffff;
+  font: inherit;
+  font-size: 12px;
+}
+
+.admin-search-field input:focus,
+.admin-search-field input:focus-visible {
+  border-color: #4c5867;
+  box-shadow: 0 0 0 2px rgba(76, 88, 103, 0.1);
+}
+
+.admin-application-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+}
+
+.admin-application-filters button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d7dee7;
+  border-radius: 8px;
+  color: #4c5867;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-application-filters button:hover {
+  border-color: #aeb9c7;
+  background: #f7f8fa;
+}
+
+.admin-application-filters button.active {
+  border-color: #101419;
+  color: #ffffff;
+  background: #101419;
+}
+
+/* =========================================================
+   MENTOR APPLICATION TABLE
+   ========================================================= */
+
+.admin-application-table-shell {
+  overflow: hidden;
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.admin-table-wrapper--flush {
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.admin-application-areas-cell {
+  max-width: 250px;
+}
+
+.admin-table-action-cell {
+  text-align: right;
+}
+
+.admin-review-button {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid #101419;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #101419;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-review-button:hover {
+  border-color: #2d353f;
+  background: #2d353f;
+}
+
+.admin-review-button:focus-visible {
+  outline: 2px solid rgba(76, 88, 103, 0.25);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   APPLICATION REVIEW MODAL
+   ========================================================= */
+
+.admin-application-review-modal {
+  width: min(760px, 100%);
+  max-height: min(880px, calc(100vh - 40px));
+  margin: auto;
+  padding: 28px;
+  overflow-y: auto;
+  border: 1px solid #e4e8ef;
+  border-radius: 18px;
+  color: #101419;
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(16, 20, 25, 0.2);
+}
+
+.admin-review-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.admin-review-modal-header h2 {
+  margin: 3px 0 0;
+  color: #101419;
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.admin-review-modal-header p {
+  margin: 5px 0 0;
+  color: #6f8095;
+  font-size: 11px;
+}
+
+.admin-modal-close-button {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #d7dee7;
+  border-radius: 9px;
+  color: #4c5867;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.admin-modal-close-button:hover:not(:disabled) {
+  color: #101419;
+  background: #f7f8fa;
+}
+
+.admin-review-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.admin-review-status-row > span:last-child {
+  color: #8794a4;
+  font-size: 10px;
+}
+
+.admin-review-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.admin-review-detail {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid #edf0f4;
+  border-radius: 10px;
+  background: #fbfcfd;
+}
+
+.admin-review-detail > span,
+.admin-review-list > span,
+.admin-review-long-copy > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #8794a4;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-review-detail strong {
+  display: block;
+  color: #2d353f;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.admin-review-list {
+  margin-top: 18px;
+}
+
+.admin-review-list > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.admin-review-list small {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid #dfe4eb;
+  border-radius: 999px;
+  color: #2d353f;
+  background: #ffffff;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.admin-review-list > p {
+  margin: 0;
+  color: #6f8095;
+  font-size: 11px;
+}
+
+.admin-review-long-copy {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #edf0f4;
+}
+
+.admin-review-long-copy p {
+  margin: 0;
+  color: #4c5867;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.admin-review-existing-feedback {
+  margin-top: 18px;
+  padding: 13px 14px;
+  border: 1px solid #e4e8ef;
+  border-radius: 10px;
+  color: #4c5867;
+  background: #f8f9fb;
+}
+
+.admin-review-existing-feedback strong {
+  color: #101419;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-review-existing-feedback p {
+  margin: 5px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.admin-review-message {
+  margin-top: 18px !important;
+  margin-bottom: 0 !important;
+}
+
+.admin-rejection-field {
+  display: block;
+  margin-top: 20px;
+}
+
+.admin-rejection-field > span {
+  display: block;
+  margin-bottom: 7px;
+  color: #101419;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-rejection-field textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 11px 12px;
+  border: 1px solid #c9d2df;
+  border-radius: 9px;
+  outline: none;
+  color: #101419;
+  background: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.admin-rejection-field textarea:focus,
+.admin-rejection-field textarea:focus-visible {
+  border-color: #4c5867;
+  box-shadow: 0 0 0 2px rgba(76, 88, 103, 0.1);
+}
+
+.admin-review-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.admin-approve-application-button {
+  border: 1px solid #ff5303 !important;
+  color: #ffffff !important;
+  background: #ff5303 !important;
+}
+
+.admin-approve-application-button:hover:not(:disabled) {
+  border-color: #c13c00 !important;
+  color: #ffffff !important;
+  background: #c13c00 !important;
+}
+
+.admin-reject-application-button {
+  border: 1px solid #101419 !important;
+  color: #ffffff !important;
+  background: #101419 !important;
+}
+
+.admin-reject-application-button:hover:not(:disabled) {
+  border-color: #2d353f !important;
+  color: #ffffff !important;
+  background: #2d353f !important;
+}
+
+@media (max-width: 1050px) {
+  .admin-review-details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-application-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-search-field,
+  .admin-application-filters {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-review-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-application-review-modal {
+    padding: 22px 18px;
+    border-radius: 14px;
+  }
+
+  .admin-review-modal-header h2 {
+    font-size: 22px;
+  }
+
+  .admin-review-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .admin-review-modal-actions button {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   ADMIN TABLE COLOUR SAFETY
+   Overrides older global admin table rules in index.css.
+   Keep all table surfaces neutral, never peach/orange.
+   ========================================================= */
+
+.admin-application-table-shell,
+.admin-application-table-shell .admin-table-wrapper,
+.admin-application-table-shell .admin-data-table,
+.admin-attention-section,
+.admin-attention-table-wrapper,
+.admin-attention-table {
+  background: #ffffff !important;
+}
+
+.admin-application-table-shell .admin-data-table thead,
+.admin-application-table-shell .admin-data-table thead tr,
+.admin-application-table-shell .admin-data-table thead th,
+.admin-attention-table thead,
+.admin-attention-table thead tr,
+.admin-attention-table thead th {
+  background: #fbfcfd !important;
+}
+
+.admin-application-table-shell .admin-data-table tbody,
+.admin-application-table-shell .admin-data-table tbody tr,
+.admin-application-table-shell .admin-data-table tbody td,
+.admin-attention-table tbody,
+.admin-attention-table tbody tr,
+.admin-attention-table tbody td {
+  background: #ffffff !important;
+}
+
+.admin-application-table-shell .admin-data-table tbody tr:hover,
+.admin-application-table-shell .admin-data-table tbody tr:hover td,
+.admin-attention-table tbody tr:hover,
+.admin-attention-table tbody tr:hover td {
+  background: #f8f9fb !important;
+}
+
+/* Pending is text only. Older index.css has a filled pending badge. */
+.admin-application-table-shell
+  .admin-status-badge.status-pending,
+.admin-attention-table
+  .admin-status-badge.status-pending {
+  min-height: auto !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  color: #c13c00 !important;
+  background: transparent !important;
+
+  line-height: 1.4 !important;
+}
+
+/* =========================================================
+   ADMIN EMPTY STATES + ROUTE TRANSITION SAFETY
+   ========================================================= */
+
+.admin-state-card,
+.admin-list-section,
+.admin-application-table-shell,
+.admin-table-wrapper,
+.admin-data-table {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+.admin-state-card .empty-state-icon {
+  background-color: #f8f9fb !important;
+  background-image: none !important;
+}
+
+.admin-data-table thead,
+.admin-data-table thead tr,
+.admin-data-table thead th {
+  background-color: #fbfcfd !important;
+}
+
+.admin-data-table tbody,
+.admin-data-table tbody tr,
+.admin-data-table tbody td {
+  background-color: #ffffff !important;
+}
+
+/* =========================================================
+   PEOPLE PAGE SEARCH FIELD
+   Keep the admin search surface white and neutral.
+   This overrides the old warm search styling from index.css.
+   ========================================================= */
+
+.admin-list-toolbar {
+  background: #ffffff !important;
+  background-image: none !important;
+}
+
+.admin-list-toolbar input {
+  border: 1px solid #c9d2df !important;
+
+  color: #101419 !important;
+  background: #ffffff !important;
+  background-image: none !important;
+
+  box-shadow: none !important;
+}
+
+.admin-list-toolbar input::placeholder {
+  color: #97aac2 !important;
+}
+
+.admin-list-toolbar input:hover {
+  border-color: #97aac2 !important;
+}
+
+.admin-list-toolbar input:focus,
+.admin-list-toolbar input:focus-visible {
+  border-color: #4c5867 !important;
+
+  outline: none !important;
+
+  color: #101419 !important;
+  background: #ffffff !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.10) !important;
+}
+
+/* =========================================================
+   ADMIN NO-GREEN / NO-TEAL SAFETY
+   ========================================================= */
+
+.admin-success-message {
+  border: 1px solid #e4e8ef !important;
+  color: #2d353f !important;
+  background: #f8f9fb !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.admin-status-badge.status-approved {
+  border-color: #d7dee7 !important;
+  color: #2d353f !important;
+  background: #eef1f5 !important;
+  background-image: none !important;
+}
+
+/* Approval confirmation is a neutral notice.
+   The word Approved already communicates the state. */
+.admin-application-review-modal .admin-success-message {
+  border: 1px solid #e4e8ef !important;
+  color: #2d353f !important;
+  background: #f8f9fb !important;
+}
+
+/* Close is a secondary action, so it uses the dark secondary colour. */
+.admin-application-review-modal .admin-close-button,
+.admin-confirmation-modal .admin-close-button {
+  border: 1px solid #101419 !important;
+  color: #ffffff !important;
+  background: #101419 !important;
+}
+
+.admin-application-review-modal .admin-close-button:hover:not(:disabled),
+.admin-confirmation-modal .admin-close-button:hover:not(:disabled) {
+  border-color: #2d353f !important;
+  color: #ffffff !important;
+  background: #2d353f !important;
+}
+
+/* =========================================================
+   ADMIN SEMANTIC APPROVAL ACTIONS
+   Green is used only for positive admin actions such as
+   verify/reactivate. It is not used as a brand/background.
+   ========================================================= */
+
+.admin-verify-button {
+  min-height: 32px !important;
+
+  padding: 0 8px !important;
+
+  border: 0 !important;
+  border-radius: 7px !important;
+
+  color: #2f7d4a !important;
+  background: transparent !important;
+
+  font-size: 10px !important;
+  font-weight: 600 !important;
+
+  box-shadow: none !important;
+}
+
+.admin-verify-button:hover:not(:disabled) {
+  color: #23653b !important;
+  background: #f3faf5 !important;
+}
+
+.admin-verify-button:focus-visible {
+  outline:
+    1px solid
+    rgba(47, 125, 74, 0.28) !important;
+
+  outline-offset: 2px !important;
+}
+
+/* Confirmation button for positive membership actions. */
+.admin-modal-confirm-button:not(.danger) {
+  border: 1px solid #2f7d4a !important;
+
+  color: #ffffff !important;
+  background: #2f7d4a !important;
+}
+
+.admin-modal-confirm-button:not(.danger):hover:not(:disabled) {
+  border-color: #23653b !important;
+
+  color: #ffffff !important;
+  background: #23653b !important;
+}
+
+/* =========================================================
+   ACCOUNT TYPE TAGS
+   Keep Mentee, Mentor and Admin visually consistent.
+   Account type is informational, not a warning.
+   ========================================================= */
+
+.admin-status-badge.status-mentor-applicant {
+  border-color: #d7dee7 !important;
+  color: #4c5867 !important;
+  background: #f7f8fa !important;
+}
+
+/* =========================================================
+   ADMIN CONFIRMATION MODAL CLEANUP
+   Remove old orange/peach button glow leaking from global CSS.
+   ========================================================= */
+
+.admin-modal-backdrop {
+  background: rgba(16, 20, 25, 0.52) !important;
+}
+
+.admin-confirmation-modal {
+  border: 1px solid #e4e8ef !important;
+  background: #ffffff !important;
+  background-image: none !important;
+
+  box-shadow:
+    0 22px 70px
+    rgba(16, 20, 25, 0.18) !important;
+}
+
+.admin-selected-person {
+  border-color: #e4e8ef !important;
+  background: #fbfcfd !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.admin-modal-actions {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.admin-modal-cancel-button,
+.admin-modal-confirm-button,
+.admin-modal-confirm-button:not(.danger),
+.admin-modal-confirm-button.danger {
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.admin-modal-cancel-button {
+  border: 1px solid #c9d2df !important;
+  color: #2d353f !important;
+  background: #ffffff !important;
+}
+
+.admin-modal-cancel-button:hover:not(:disabled) {
+  border-color: #97aac2 !important;
+  color: #101419 !important;
+  background: #f7f8fa !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.admin-modal-confirm-button:not(.danger) {
+  border: 1px solid #2f7d4a !important;
+  color: #ffffff !important;
+  background: #2f7d4a !important;
+}
+
+.admin-modal-confirm-button:not(.danger):hover:not(:disabled) {
+  border-color: #23653b !important;
+  color: #ffffff !important;
+  background: #23653b !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.admin-modal-confirm-button.danger {
+  border: 1px solid #b74750 !important;
+  color: #ffffff !important;
+  background: #b74750 !important;
+}
+
+.admin-modal-confirm-button.danger:hover:not(:disabled) {
+  border-color: #8c2f37 !important;
+  color: #ffffff !important;
+  background: #8c2f37 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.admin-modal-cancel-button:focus-visible,
+.admin-modal-confirm-button:focus-visible {
+  outline:
+    1px solid
+    rgba(76, 88, 103, 0.30) !important;
+
+  outline-offset: 2px !important;
+
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   PEOPLE PAGINATION
+   ========================================================= */
+
+.admin-list-section
+.admin-table-wrapper
+.admin-table-pagination {
+  border-top: 1px solid #edf0f4;
+  background: #ffffff !important;
+}
+
+.admin-list-section
+.admin-table-wrapper
+.admin-pagination-controls button {
+  box-shadow: none !important;
+  transform: none !important;
+}
+

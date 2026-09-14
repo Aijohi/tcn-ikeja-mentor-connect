@@ -1,14 +1,22 @@
-import { useState } from "react";
 import {
+  ArrowRight,
   ChevronDown,
   Eye,
   EyeOff,
-  HeartHandshake,
-  ShieldCheck,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+
+import {
+  useState,
+} from "react";
+
+import {
+  Link,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
+import "./Register.css";
 
 const initialForm = {
   fullName: "",
@@ -20,341 +28,13 @@ const initialForm = {
   acceptedTerms: false,
 };
 
-function Register() {
-  const navigate = useNavigate();
-  const { signUp, signInWithGoogle } = useAuth();
-
-  const [form, setForm] = useState(initialForm);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [googleSubmitting, setGoogleSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
-  function updateForm(event) {
-    const { name, value, type, checked } = event.target;
-
-    setForm((current) => ({
-      ...current,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-
-    setError("");
-  }
-
-  async function handleGoogleSignIn() {
-    setError("");
-
-    if (!form.role) {
-      setError("Please select how you would like to use Mentor Connect.");
-      return;
-    }
-
-    setGoogleSubmitting(true);
-
-    const { error: googleError } = await signInWithGoogle(form.role);
-
-    if (googleError) {
-      console.error("Unable to continue with Google:", googleError);
-      setError(
-        googleError.message ||
-          "Google registration could not be started. Please try again.",
-      );
-      setGoogleSubmitting(false);
-    }
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    setError("");
-
-    if (!form.role) {
-      setError("Please select how you would like to use Mentor Connect.");
-      return;
-    }
-
-    if (form.password.length < 8) {
-      setError("Your password must contain at least 8 characters.");
-      return;
-    }
-
-    if (form.password !== form.confirmPassword) {
-      setError("Your passwords do not match.");
-      return;
-    }
-
-    if (!form.acceptedTerms) {
-      setError(
-        "You must accept the terms, privacy notice, code of conduct and safety guidelines.",
-      );
-      return;
-    }
-
-    setSubmitting(true);
-
-    const { error: signUpError } = await signUp({
-      fullName: form.fullName.trim(),
-      email: form.email.trim(),
-      phoneNumber: form.phoneNumber.trim(),
-      password: form.password,
-      role: form.role,
-    });
-
-    setSubmitting(false);
-
-    if (signUpError) {
-      setError(signUpError.message);
-      return;
-    }
-
-    navigate("/check-email", {
-      state: {
-        email: form.email.trim(),
-      },
-    });
-  }
-
-  const accountActionInProgress = submitting || googleSubmitting;
-
-  return (
-    <main className="auth-page registration-page">
-      <section className="auth-panel registration-panel">
-        <div className="auth-brand registration-brand">
-          <Link
-            to="/"
-            className="brand"
-            aria-label="Return to Mentor Connect homepage"
-          >
-            <span className="brand-icon">
-              <HeartHandshake size={22} />
-            </span>
-
-            <span className="brand-text">
-              <strong>Mentor Connect</strong>
-              <small>TCN IKEJA</small>
-            </span>
-          </Link>
-        </div>
-
-        <div className="auth-heading registration-heading">
-          <span className="eyebrow">JOIN THE COMMUNITY</span>
-
-          <h1>Create your account</h1>
-
-          <p>Begin a safe and purposeful mentoring relationship.</p>
-        </div>
-
-        <div className="registration-account-type">
-          <label className="registration-field">
-            <span>How would you like to use Mentor Connect?</span>
-
-            <div className="registration-select-field">
-              <select
-                name="role"
-                value={form.role}
-                onChange={updateForm}
-                disabled={accountActionInProgress}
-                required
-              >
-                <option value="" disabled>
-                  Select an option
-                </option>
-
-                <option value="mentee">I am looking for a mentor</option>
-
-                <option value="mentor">I would like to become a mentor</option>
-              </select>
-
-              <ChevronDown
-                className="registration-select-icon"
-                size={18}
-                aria-hidden="true"
-              />
-            </div>
-          </label>
-        </div>
-
-        {error && (
-          <p className="form-error registration-top-error" role="alert">
-            {error}
-          </p>
-        )}
-
-        <form className="registration-form" onSubmit={handleSubmit}>
-          <label className="registration-field">
-            <span>Full name</span>
-
-            <input
-              type="text"
-              name="fullName"
-              value={form.fullName}
-              onChange={updateForm}
-              autoComplete="name"
-              placeholder="Enter your full name"
-              disabled={accountActionInProgress}
-              required
-            />
-          </label>
-
-          <label className="registration-field">
-            <span>Email address</span>
-
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={updateForm}
-              autoComplete="email"
-              placeholder="Enter your email address"
-              disabled={accountActionInProgress}
-              required
-            />
-          </label>
-
-          <label className="registration-field">
-            <span>Mobile number</span>
-
-            <input
-              type="tel"
-              name="phoneNumber"
-              value={form.phoneNumber}
-              onChange={updateForm}
-              autoComplete="tel"
-              placeholder="+234"
-              disabled={accountActionInProgress}
-              required
-            />
-          </label>
-
-          <label className="registration-field">
-            <span>Password</span>
-
-            <div className="password-field">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={form.password}
-                onChange={updateForm}
-                autoComplete="new-password"
-                placeholder="Minimum of 8 characters"
-                minLength={8}
-                disabled={accountActionInProgress}
-                required
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword((current) => !current)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                disabled={accountActionInProgress}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </label>
-
-          <label className="registration-field">
-            <span>Confirm password</span>
-
-            <div className="password-field">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={updateForm}
-                autoComplete="new-password"
-                placeholder="Enter your password again"
-                minLength={8}
-                disabled={accountActionInProgress}
-                required
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword((current) => !current)}
-                aria-label={
-                  showConfirmPassword
-                    ? "Hide confirmed password"
-                    : "Show confirmed password"
-                }
-                disabled={accountActionInProgress}
-              >
-                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </label>
-
-          <label className="registration-terms">
-            <input
-              type="checkbox"
-              name="acceptedTerms"
-              checked={form.acceptedTerms}
-              onChange={updateForm}
-              disabled={accountActionInProgress}
-              required
-            />
-
-            <span>
-              I agree to the terms, privacy notice, code of conduct and safety
-              guidelines.
-            </span>
-          </label>
-
-          <button
-            type="submit"
-            className="registration-submit"
-            disabled={accountActionInProgress}
-          >
-            {submitting ? "Creating account..." : "Create account with email"}
-          </button>
-        </form>
-
-        <div className="auth-divider" aria-hidden="true">
-          <span>or</span>
-        </div>
-
-        <button
-          type="button"
-          className="google-auth-button"
-          onClick={handleGoogleSignIn}
-          disabled={accountActionInProgress}
-        >
-          <GoogleIcon />
-
-          {googleSubmitting
-            ? "Connecting to Google..."
-            : "Continue with Google"}
-        </button>
-
-        <p className="google-terms-copy">
-          By continuing with Google, you agree to the terms, privacy notice,
-          code of conduct and safety guidelines.
-        </p>
-
-        <p className="account-copy registration-account-copy">
-          Already have an account? <Link to="/login">Sign in</Link>
-        </p>
-      </section>
-
-      <section className="auth-message registration-message">
-        <ShieldCheck size={40} />
-
-        <span className="eyebrow">VERIFIED COMMUNITY</span>
-
-        <h2>Grow through guidance, trust and accountability.</h2>
-      </section>
-    </main>
-  );
-}
-
 function GoogleIcon() {
   return (
     <svg
-      width="19"
-      height="19"
+      width="18"
+      height="18"
       viewBox="0 0 24 24"
       aria-hidden="true"
-      focusable="false"
     >
       <path
         fill="#4285F4"
@@ -373,6 +53,637 @@ function GoogleIcon() {
         d="M12 5.94c1.47 0 2.78.5 3.82 1.5l2.87-2.87A9.62 9.62 0 0 0 12 2a10 10 0 0 0-8.95 5.44l3.35 2.62C7.19 7.7 9.4 5.94 12 5.94Z"
       />
     </svg>
+  );
+}
+
+function Register() {
+  const navigate = useNavigate();
+
+  const [
+    searchParams,
+  ] = useSearchParams();
+
+  const isMenteeHandoff =
+    searchParams.get("account") ===
+      "mentee" &&
+    searchParams.get("from") ===
+      "mentor";
+
+  const {
+    signUp,
+    signInWithGoogle,
+  } = useAuth();
+
+  const [
+    form,
+    setForm,
+  ] = useState(() => ({
+    ...initialForm,
+    role:
+      isMenteeHandoff
+        ? "mentee"
+        : "",
+  }));
+
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
+
+  const [
+    showConfirmPassword,
+    setShowConfirmPassword,
+  ] = useState(false);
+
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
+
+  const [
+    googleSubmitting,
+    setGoogleSubmitting,
+  ] = useState(false);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  function updateForm(event) {
+    const {
+      name,
+      value,
+      type,
+      checked,
+    } = event.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : value,
+    }));
+
+    setError("");
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setError("");
+
+    if (!form.role) {
+      setError(
+        "Please choose whether you want to join as a mentee or mentor.",
+      );
+      return;
+    }
+
+    if (form.password.length < 8) {
+      setError(
+        "Your password must contain at least 8 characters.",
+      );
+      return;
+    }
+
+    if (
+      form.password !==
+      form.confirmPassword
+    ) {
+      setError(
+        "Your passwords do not match.",
+      );
+      return;
+    }
+
+    if (!form.acceptedTerms) {
+      setError(
+        "Please accept the terms, privacy notice, code of conduct and safety guidelines.",
+      );
+      return;
+    }
+
+    setSubmitting(true);
+
+    const {
+      error: signUpError,
+    } = await signUp({
+      fullName:
+        form.fullName.trim(),
+      email:
+        form.email
+          .trim()
+          .toLowerCase(),
+      phoneNumber:
+        form.phoneNumber.trim(),
+      password:
+        form.password,
+      role:
+        form.role,
+    });
+
+    setSubmitting(false);
+
+    if (signUpError) {
+      const message =
+        String(
+          signUpError.message ||
+            "",
+        ).toLowerCase();
+
+      if (
+        isMenteeHandoff &&
+        (
+          message.includes(
+            "already registered",
+          ) ||
+          message.includes(
+            "already exists",
+          ) ||
+          message.includes(
+            "user already",
+          )
+        )
+      ) {
+        setError(
+          "That email address is already connected to an account. Your mentee account must use a different email from your mentor account.",
+        );
+      } else {
+        setError(
+          signUpError.message ||
+            "Your account could not be created. Please try again.",
+        );
+      }
+
+      return;
+    }
+
+    navigate("/check-email", {
+      state: {
+        email:
+          form.email
+            .trim()
+            .toLowerCase(),
+        accountType:
+          form.role,
+      },
+    });
+  }
+
+  async function handleGoogleSignIn() {
+    setError("");
+
+    if (!form.role) {
+      setError(
+        "Please choose whether you want to join as a mentee or mentor before continuing with Google.",
+      );
+      return;
+    }
+
+    setGoogleSubmitting(true);
+
+    const {
+      error: googleError,
+    } = await signInWithGoogle(
+      form.role,
+    );
+
+    if (googleError) {
+      setError(
+        googleError.message ||
+          "Google registration could not be started. Please try again.",
+      );
+
+      setGoogleSubmitting(false);
+    }
+  }
+
+  const busy =
+    submitting ||
+    googleSubmitting;
+
+  return (
+    <main className="register-page">
+      <section className="register-form-side">
+        <div className="register-form-inner">
+          <div className="register-brand-row">
+            <Link
+              to="/"
+              className="register-brand"
+              aria-label="Return to Mentor Connect homepage"
+            >
+              <img
+                src="/images/hothub-logo.png"
+                alt="HOTHUB"
+              />
+
+              <span>
+                <strong>
+                  Mentor Connect
+                </strong>
+
+                <small>
+                  TCN IKEJA
+                </small>
+              </span>
+            </Link>
+          </div>
+
+          <div className="register-heading">
+            <span>
+              {isMenteeHandoff
+                ? "MENTEE ACCOUNT"
+                : "JOIN THE COMMUNITY"}
+            </span>
+
+            <h1>
+              Create your account
+            </h1>
+
+            <p>
+              {isMenteeHandoff
+                ? "Create a separate mentee account to receive mentoring support."
+                : "Begin a safe and purposeful mentoring relationship."}
+            </p>
+          </div>
+
+          {isMenteeHandoff && (
+            <div className="register-account-context">
+              <strong>
+                Creating a mentee account
+              </strong>
+
+              <p>
+                Use a different email
+                address from your mentor
+                account.
+              </p>
+            </div>
+          )}
+
+          {error && (
+            <p
+              className="register-error"
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
+
+          <form
+            className="register-form"
+            onSubmit={
+              handleSubmit
+            }
+          >
+            <label className="register-field">
+              <span>
+                {isMenteeHandoff
+                  ? "Account type"
+                  : "How would you like to use Mentor Connect?"}
+              </span>
+
+              <div className="register-select-wrap">
+                <select
+                  name="role"
+                  value={form.role}
+                  onChange={
+                    updateForm
+                  }
+                  disabled={
+                    busy ||
+                    isMenteeHandoff
+                  }
+                  required
+                >
+                  {!isMenteeHandoff && (
+                    <option value="">
+                      Select an option
+                    </option>
+                  )}
+
+                  <option value="mentee">
+                    I need a mentor
+                  </option>
+
+                  {!isMenteeHandoff && (
+                    <option value="mentor">
+                      I want to mentor
+                    </option>
+                  )}
+                </select>
+
+                <ChevronDown
+                  size={18}
+                  aria-hidden="true"
+                />
+              </div>
+            </label>
+
+            <label className="register-field">
+              <span>
+                Full name
+              </span>
+
+              <input
+                type="text"
+                name="fullName"
+                value={
+                  form.fullName
+                }
+                onChange={
+                  updateForm
+                }
+                placeholder="Enter your full name"
+                autoComplete="name"
+                disabled={busy}
+                required
+              />
+            </label>
+
+            <label className="register-field">
+              <span>
+                Email address
+              </span>
+
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={
+                  updateForm
+                }
+                placeholder={
+                  isMenteeHandoff
+                    ? "Use a different email address"
+                    : "Enter your email address"
+                }
+                autoComplete="email"
+                disabled={busy}
+                required
+              />
+
+              {isMenteeHandoff && (
+                <small>
+                  Do not use your mentor
+                  account email.
+                </small>
+              )}
+            </label>
+
+            <label className="register-field">
+              <span>
+                Mobile number
+              </span>
+
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={
+                  form.phoneNumber
+                }
+                onChange={
+                  updateForm
+                }
+                placeholder="Enter your mobile number"
+                autoComplete="tel"
+                inputMode="tel"
+                disabled={busy}
+                required
+              />
+            </label>
+
+            <label className="register-field">
+              <span>
+                Password
+              </span>
+
+              <div className="register-password-wrap">
+                <input
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  name="password"
+                  value={
+                    form.password
+                  }
+                  onChange={
+                    updateForm
+                  }
+                  placeholder="Minimum of 8 characters"
+                  autoComplete="new-password"
+                  minLength={8}
+                  disabled={busy}
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPassword(
+                      (current) =>
+                        !current,
+                    )
+                  }
+                  aria-label={
+                    showPassword
+                      ? "Hide password"
+                      : "Show password"
+                  }
+                >
+                  {showPassword ? (
+                    <EyeOff size={17} />
+                  ) : (
+                    <Eye size={17} />
+                  )}
+                </button>
+              </div>
+            </label>
+
+            <label className="register-field">
+              <span>
+                Confirm password
+              </span>
+
+              <div className="register-password-wrap">
+                <input
+                  type={
+                    showConfirmPassword
+                      ? "text"
+                      : "password"
+                  }
+                  name="confirmPassword"
+                  value={
+                    form.confirmPassword
+                  }
+                  onChange={
+                    updateForm
+                  }
+                  placeholder="Enter your password again"
+                  autoComplete="new-password"
+                  minLength={8}
+                  disabled={busy}
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowConfirmPassword(
+                      (current) =>
+                        !current,
+                    )
+                  }
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirmed password"
+                      : "Show confirmed password"
+                  }
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={17} />
+                  ) : (
+                    <Eye size={17} />
+                  )}
+                </button>
+              </div>
+            </label>
+
+            <label className="register-terms">
+              <input
+                type="checkbox"
+                name="acceptedTerms"
+                checked={
+                  form.acceptedTerms
+                }
+                onChange={
+                  updateForm
+                }
+                disabled={busy}
+                required
+              />
+
+              <span>
+                I agree to the{" "}
+                <a href="/terms">
+                  terms
+                </a>
+                ,{" "}
+                <a href="/privacy">
+                  privacy notice
+                </a>
+                , code of conduct and
+                safety guidelines.
+              </span>
+            </label>
+
+            <button
+              type="submit"
+              className="register-submit"
+              disabled={busy}
+            >
+              <span>
+                {submitting
+                  ? "Creating account..."
+                  : "Create account"}
+              </span>
+
+              {!submitting && (
+                <ArrowRight
+                  size={17}
+                />
+              )}
+            </button>
+          </form>
+
+          <div className="register-divider">
+            <span>
+              or
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="register-google"
+            onClick={
+              handleGoogleSignIn
+            }
+            disabled={busy}
+          >
+            <GoogleIcon />
+
+            {googleSubmitting
+              ? "Connecting to Google..."
+              : "Continue with Google"}
+          </button>
+
+          <p className="register-bottom-signin">
+            Already have an account?{" "}
+
+            <Link
+              to={
+                isMenteeHandoff
+                  ? "/login?account=mentee&from=mentor"
+                  : "/login"
+              }
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </section>
+
+      <aside
+        className="register-visual-side"
+        aria-hidden="true"
+      >
+        <div className="register-visual-canvas">
+          <div className="register-artwork">
+            <span className="register-artwork-halo" />
+            <span className="register-artwork-ring register-artwork-ring--one" />
+            <span className="register-artwork-ring register-artwork-ring--two" />
+            <span className="register-artwork-orb" />
+            <span className="register-artwork-reflection" />
+            <span className="register-artwork-dot register-artwork-dot--one" />
+            <span className="register-artwork-dot register-artwork-dot--two" />
+          </div>
+
+          <div className="register-side-note">
+            <span>
+              A STRONGER
+            </span>
+
+            <span>
+              TOMORROW
+            </span>
+
+            <span>
+              TOGETHER
+            </span>
+
+            <i />
+          </div>
+
+          <div className="register-right-message">
+            <p>
+              PEOPLE EMPOWER PEOPLE
+            </p>
+
+            <span />
+
+            <small>
+              MENTOR&nbsp;&nbsp;|&nbsp;&nbsp;
+              LEARN&nbsp;&nbsp;|&nbsp;&nbsp;
+              GROW&nbsp;&nbsp;|&nbsp;&nbsp;
+              TRANSFORM
+            </small>
+          </div>
+        </div>
+      </aside>
+    </main>
   );
 }
 

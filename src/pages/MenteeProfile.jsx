@@ -5,12 +5,12 @@ import {
   CheckCircle2,
   HeartHandshake,
   Target,
-  UserRound,
 } from "lucide-react";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import "./MenteeProfile.css";
 
 const mentorshipAreas = [
   "Career development",
@@ -222,15 +222,17 @@ function MenteeProfile() {
         title="My profile"
         description="Tell mentors a little about you and the support you are looking for."
       >
-        <section className="dashboard-empty-state">
-          <div className="loader" />
+        <div className="mentee-profile-page">
+          <section className="dashboard-empty-state">
+            <div className="loader" />
 
-          <h2>Loading your profile</h2>
+            <h2>Loading your profile</h2>
 
-          <p>
-            Please wait while we prepare your mentee profile.
-          </p>
-        </section>
+            <p>
+              Please wait while we prepare your mentee profile.
+            </p>
+          </section>
+        </div>
       </DashboardLayout>
     );
   }
@@ -240,15 +242,12 @@ function MenteeProfile() {
       title="My profile"
       description="Tell mentors a little about you and the support you are looking for."
     >
-      <form
-        className="mentee-profile-form"
-        onSubmit={handleSubmit}
-      >
+      <div className="mentee-profile-page">
+        <form
+          className="mentee-profile-form"
+          onSubmit={handleSubmit}
+        >
         <section className="mentee-profile-intro">
-          <span className="mentee-profile-intro-icon">
-            <UserRound size={22} />
-          </span>
-
           <div>
             <span className="eyebrow">
               MENTEE PROFILE
@@ -448,7 +447,7 @@ function MenteeProfile() {
         <div className="mentee-profile-actions">
           <button
             type="submit"
-            className="primary-button"
+            className="primary-button mentee-profile-button mentee-profile-button--medium"
             disabled={submitting}
           >
             {submitting
@@ -456,7 +455,8 @@ function MenteeProfile() {
               : "Save profile"}
           </button>
         </div>
-      </form>
+        </form>
+      </div>
     </DashboardLayout>
   );
 }

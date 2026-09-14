@@ -1,0 +1,507 @@
+/* =========================================================
+   CHECK EMAIL
+   Clean verification experience.
+   White + dark neutral + orange only.
+   ========================================================= */
+
+.check-email-page {
+  width: 100%;
+  min-height: 100vh;
+
+  display: grid;
+  place-items: center;
+
+  padding:
+    36px 24px
+    max(
+      36px,
+      env(safe-area-inset-bottom)
+    );
+
+  color: #101419;
+  background: #ffffff;
+
+  font-family:
+    "Inter",
+    "Segoe UI",
+    Arial,
+    sans-serif;
+}
+
+.check-email-page *,
+.check-email-page *::before,
+.check-email-page *::after {
+  box-sizing: border-box;
+}
+
+.check-email-page a {
+  text-decoration: none;
+}
+
+.check-email-shell {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.08fr)
+    minmax(300px, 0.92fr);
+
+  width: min(100%, 930px);
+  min-height: 560px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 20px;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 20px 56px
+    rgba(16, 20, 25, 0.07);
+}
+
+/* =========================================================
+   MAIN SIDE
+   ========================================================= */
+
+.check-email-main {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+
+  padding: 34px 40px 38px;
+
+  background: #ffffff;
+}
+
+.check-email-brand {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 10px;
+
+  width: fit-content;
+
+  color: inherit;
+}
+
+.check-email-brand img {
+  width: 58px;
+  height: 38px;
+
+  object-fit: contain;
+}
+
+.check-email-brand > span {
+  display: grid;
+
+  gap: 2px;
+}
+
+.check-email-brand strong {
+  color: #101419;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.check-email-brand small {
+  color: #6f8095;
+
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.check-email-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+
+  max-width: 470px;
+
+  padding: 44px 0 20px;
+}
+
+.check-email-icon {
+  display: grid;
+  place-items: center;
+
+  width: 58px;
+  height: 58px;
+
+  margin-bottom: 20px;
+
+  border: 1px solid #ffcbc5;
+  border-radius: 14px;
+
+  color: #ff5303;
+  background: #fffaf9;
+}
+
+.check-email-eyebrow {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #ff5303;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.check-email-content h1 {
+  margin: 0;
+
+  color: #101419;
+
+  font-size:
+    clamp(
+      34px,
+      5vw,
+      48px
+    );
+
+  font-weight: 650;
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.check-email-lead {
+  margin: 20px 0 4px;
+
+  color: #6f8095;
+
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.check-email-address {
+  margin: 0;
+
+  color: #101419;
+
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+
+  word-break: break-word;
+}
+
+.check-email-guidance {
+  max-width: 430px;
+
+  margin: 14px 0 0;
+
+  color: #4c5867;
+
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.check-email-mentor-note {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  margin-top: 20px;
+  padding: 13px 14px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 10px;
+
+  color: #4c5867;
+  background: #f8f9fb;
+}
+
+.check-email-mentor-note > svg {
+  flex: 0 0 auto;
+
+  margin-top: 1px;
+
+  color: #2d353f;
+}
+
+.check-email-mentor-note p {
+  margin: 0;
+
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.check-email-primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 46px;
+
+  margin-top: 26px;
+  padding: 0 16px;
+
+  border: 1px solid #ff5303;
+  border-radius: 9px;
+
+  color: #ffffff;
+  background: #ff5303;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.check-email-primary-button:hover {
+  border-color: #c13c00;
+
+  background: #c13c00;
+}
+
+.check-email-secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  width: 100%;
+  min-height: 44px;
+
+  margin-top: 10px;
+  padding: 0 16px;
+
+  border: 1px solid #c9d2df;
+  border-radius: 9px;
+
+  color: #2d353f;
+  background: #ffffff;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.check-email-secondary-button:hover {
+  border-color: #97aac2;
+
+  color: #101419;
+  background: #f7f8fa;
+}
+
+.check-email-primary-button:focus-visible,
+.check-email-secondary-button:focus-visible,
+.check-email-brand:focus-visible {
+  outline:
+    1px solid
+    rgba(76, 88, 103, 0.28);
+
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   HELP SIDE
+   ========================================================= */
+
+.check-email-help {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  min-width: 0;
+
+  padding: 42px;
+
+  border-left: 1px solid #e4e8ef;
+
+  background: #f8f9fb;
+}
+
+.check-email-help-label {
+  color: #ff5303;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.check-email-help h2 {
+  max-width: 340px;
+
+  margin: 10px 0 26px;
+
+  color: #101419;
+
+  font-size:
+    clamp(
+      24px,
+      3vw,
+      30px
+    );
+
+  font-weight: 630;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.check-email-steps {
+  display: grid;
+
+  gap: 18px;
+}
+
+.check-email-step {
+  display: grid;
+  grid-template-columns:
+    32px
+    minmax(0, 1fr);
+
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.check-email-step-number {
+  display: grid;
+  place-items: center;
+
+  width: 32px;
+  height: 32px;
+
+  border: 1px solid #d7dee7;
+  border-radius: 9px;
+
+  color: #2d353f;
+  background: #ffffff;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.check-email-step strong {
+  display: block;
+
+  margin-top: 1px;
+
+  color: #101419;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.check-email-step p {
+  margin: 4px 0 0;
+
+  color: #6f8095;
+
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.check-email-tip {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 28px;
+  padding-top: 20px;
+
+  border-top: 1px solid #dfe4eb;
+
+  color: #6f8095;
+}
+
+.check-email-tip > svg {
+  flex: 0 0 auto;
+
+  margin: 0;
+
+  color: #ff5303;
+}
+
+.check-email-tip p {
+  margin: 0;
+
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 860px) {
+  .check-email-shell {
+    grid-template-columns: 1fr;
+
+    min-height: 0;
+  }
+
+  .check-email-help {
+    border-top: 1px solid #e4e8ef;
+    border-left: 0;
+  }
+
+  .check-email-content {
+    max-width: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .check-email-page {
+    place-items: start center;
+
+    padding:
+      16px
+      14px
+      max(
+        26px,
+        calc(
+          16px +
+          env(safe-area-inset-bottom)
+        )
+      );
+  }
+
+  .check-email-shell {
+    width: 100%;
+
+    border-radius: 14px;
+  }
+
+  .check-email-main {
+    padding:
+      22px
+      20px
+      28px;
+  }
+
+  .check-email-content {
+    padding:
+      36px 0
+      6px;
+  }
+
+  .check-email-content h1 {
+    font-size: 34px;
+  }
+
+  .check-email-help {
+    padding:
+      28px
+      20px;
+  }
+
+  .check-email-help h2 {
+    font-size: 24px;
+  }
+}

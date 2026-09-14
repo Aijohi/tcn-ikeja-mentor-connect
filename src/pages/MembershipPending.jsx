@@ -1,56 +1,107 @@
-import { Clock3, LogOut, ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 
+import "./MembershipPending.css";
+
 function MembershipPending() {
-  const { profile, signOut } = useAuth();
+  const {
+    profile,
+    signOut,
+  } = useAuth();
 
   async function handleSignOut() {
-    await signOut();
-    window.location.replace("/");
+    await signOut({
+      redirectTo: "/",
+    });
   }
 
-  const isRejected = profile?.account_status === "rejected";
+  const isRejected =
+    profile?.account_status ===
+    "rejected";
+
+  const firstName =
+    profile?.full_name
+      ?.trim()
+      ?.split(/\s+/)
+      ?.[0] || "";
 
   return (
-    <main className="page-message">
-      <span className="status-icon">
-        {isRejected ? <ShieldCheck size={38} /> : <Clock3 size={38} />}
-      </span>
+    <main className="membership-pending-page">
+      <section className="membership-pending-card">
+        <Link
+          to="/"
+          className="membership-pending-brand"
+          aria-label="Return to Mentor Connect homepage"
+        >
+          <img
+            src="/images/hothub-logo.png"
+            alt="HOTHUB"
+          />
 
-      <span className="eyebrow">
-        {isRejected ? "MEMBERSHIP REVIEWED" : "MEMBERSHIP UNDER REVIEW"}
-      </span>
+          <span>
+            <strong>
+              Mentor Connect
+            </strong>
 
-      <h1>
-        {isRejected
-          ? "We could not verify your membership"
-          : `Thank you${profile?.full_name ? `, ${profile.full_name}` : ""}`}
-      </h1>
+            <small>
+              TCN IKEJA
+            </small>
+          </span>
+        </Link>
 
-      <p>
-        {isRejected
-          ? "Please contact the TCN Ikeja administration team if you believe this decision was made in error."
-          : "Your membership information has been submitted to the TCN Ikeja administration team for verification."}
-      </p>
+        <div className="membership-pending-content">
+          <span
+            className={`membership-pending-eyebrow ${
+              isRejected
+                ? "membership-pending-eyebrow--rejected"
+                : ""
+            }`}
+          >
+            {isRejected
+              ? "MEMBERSHIP REVIEWED"
+              : "MEMBERSHIP UNDER REVIEW"}
+          </span>
 
-      <div className="restricted-notice">
-        <ShieldCheck size={18} />
-        <span>
-          {isRejected
-            ? "Your account will remain restricted until an administrator reviews it again."
-            : "You will receive access to the member dashboard after your membership is verified."}
-        </span>
-      </div>
+          <h1>
+            {isRejected
+              ? "We could not verify your membership"
+              : firstName
+                ? `Thank you, ${firstName}`
+                : "Thank you"}
+          </h1>
 
-      <button
-        type="button"
-        className="membership-sign-out-button"
-        onClick={handleSignOut}
-      >
-        <LogOut size={17} />
-        Sign out
-      </button>
+          <p className="membership-pending-description">
+            {isRejected
+              ? "Please contact the TCN Ikeja administration team if you believe this decision was made in error."
+              : "Your membership information has been submitted to the TCN Ikeja administration team for verification."}
+          </p>
+
+          <div
+            className={`membership-pending-notice ${
+              isRejected
+                ? "membership-pending-notice--rejected"
+                : ""
+            }`}
+          >
+            <p>
+              {isRejected
+                ? "Your account will remain restricted until an administrator reviews it again."
+                : "You will receive access to the member dashboard after your membership is verified."}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="membership-sign-out-button"
+            onClick={
+              handleSignOut
+            }
+          >
+            Sign out
+          </button>
+        </div>
+      </section>
     </main>
   );
 }

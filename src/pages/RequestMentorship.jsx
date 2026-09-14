@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import {
   ArrowLeft,
-  CheckCircle2,
-  Clock3,
-  HeartHandshake,
-  Target,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  CircleAlert,
   UserRoundCheck,
 } from "lucide-react";
 
@@ -18,6 +22,11 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
+import "./MenteeRequestFlow.css";
+
+const MIN_GOAL_WORDS = 5;
+const MIN_REASON_WORDS = 5;
+
 const initialForm = {
   mentoringArea: "",
   goalStatement: "",
@@ -25,21 +34,258 @@ const initialForm = {
   preferredTimes: "",
 };
 
+function countWords(value) {
+  const trimmedValue =
+    value.trim();
+
+  if (!trimmedValue) {
+    return 0;
+  }
+
+  return trimmedValue
+    .split(/\s+/)
+    .filter(Boolean)
+    .length;
+}
+
+function getProfile(row) {
+  if (Array.isArray(row?.profiles)) {
+    return row.profiles[0] ?? null;
+  }
+
+  return row?.profiles ?? null;
+}
+
+function Progress({
+  submitted = false,
+}) {
+  const items = [
+    "Find mentor",
+    "View profile",
+    "Send request",
+  ];
+
+  return (
+    <div className="request-flow-progress">
+      {items.map(
+        (label, index) => {
+          const number =
+            index + 1;
+
+          const complete =
+            number < 3 ||
+            (submitted &&
+              number === 3);
+
+          const active =
+            number === 3 &&
+            !submitted;
+
+          return (
+            <div
+              key={label}
+              className={[
+                "request-flow-progress-item",
+                active
+                  ? "is-active"
+                  : "",
+                complete
+                  ? "is-complete"
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              <span>
+                {complete ? (
+                  <Check
+                    size={14}
+                    strokeWidth={2.5}
+                  />
+                ) : (
+                  number
+                )}
+              </span>
+
+              <small>
+                {label}
+              </small>
+            </div>
+          );
+        },
+      )}
+    </div>
+  );
+}
+
+function MentorAvatar({
+  profile,
+  name,
+}) {
+  const initials =
+    name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) =>
+        part
+          .charAt(0)
+          .toUpperCase(),
+      )
+      .join("");
+
+  return (
+    <span className="request-flow-avatar">
+      {profile?.profile_photo_url ? (
+        <img
+          src={profile.profile_photo_url}
+          alt=""
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: "inherit",
+            objectFit: "cover",
+          }}
+        />
+      ) : (
+        initials || "MC"
+      )}
+    </span>
+  );
+}
+
+function SuccessModal({
+  mentorName,
+  mentoringArea,
+  onBackToMentors,
+  onViewRequests,
+}) {
+  return (
+    <div
+      className="request-success-modal-backdrop"
+      role="presentation"
+    >
+      <section
+        className="request-success-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="request-success-title"
+      >
+        <div className="request-success-modal-copy">
+          <span className="request-flow-eyebrow">
+            REQUEST SENT
+          </span>
+
+          <h2 id="request-success-title">
+            Your request is on its way.
+          </h2>
+
+          <p>
+            {mentorName} has received your mentorship
+            request. You can track the status from My
+            requests.
+          </p>
+        </div>
+
+        <div className="request-success-modal-summary">
+          <div>
+            <small>MENTOR</small>
+
+            <strong>
+              {mentorName}
+            </strong>
+          </div>
+
+          <div>
+            <small>
+              MENTORING AREA
+            </small>
+
+            <strong>
+              {mentoringArea}
+            </strong>
+          </div>
+
+          <div>
+            <small>STATUS</small>
+
+            <strong>
+              Pending review
+            </strong>
+          </div>
+        </div>
+
+        <div className="request-success-modal-actions">
+          <button
+            type="button"
+            className="request-flow-secondary-button"
+            onClick={
+              onBackToMentors
+            }
+          >
+            Back to mentors
+          </button>
+
+          <button
+            type="button"
+            className="request-flow-primary-button"
+            onClick={
+              onViewRequests
+            }
+          >
+            View my requests
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function RequestMentorship() {
-  const { mentorId } = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const { mentorId } =
+    useParams();
 
-  const [mentor, setMentor] = useState(null);
-  const [menteeProfile, setMenteeProfile] = useState(null);
-  const [existingRequest, setExistingRequest] = useState(null);
+  const navigate =
+    useNavigate();
 
-  const [form, setForm] = useState(initialForm);
+  const { user } =
+    useAuth();
 
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [
+    mentor,
+    setMentor,
+  ] = useState(null);
+
+  const [
+    menteeProfile,
+    setMenteeProfile,
+  ] = useState(null);
+
+  const [
+    existingRequest,
+    setExistingRequest,
+  ] = useState(null);
+
+  const [form, setForm] =
+    useState(initialForm);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  const [
+    success,
+    setSuccess,
+  ] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -58,7 +304,9 @@ function RequestMentorship() {
         existingRequestResult,
       ] = await Promise.all([
         supabase
-          .from("mentor_profiles")
+          .from(
+            "mentor_profiles",
+          )
           .select(`
             mentor_id,
             job_title,
@@ -73,12 +321,20 @@ function RequestMentorship() {
               profile_photo_url
             )
           `)
-          .eq("mentor_id", mentorId)
-          .eq("approval_status", "approved")
+          .eq(
+            "mentor_id",
+            mentorId,
+          )
+          .eq(
+            "approval_status",
+            "approved",
+          )
           .maybeSingle(),
 
         supabase
-          .from("mentee_profiles")
+          .from(
+            "mentee_profiles",
+          )
           .select(`
             biography,
             mentorship_areas,
@@ -87,11 +343,16 @@ function RequestMentorship() {
             conduct_agreed,
             safety_agreed
           `)
-          .eq("mentee_id", user.id)
+          .eq(
+            "mentee_id",
+            user.id,
+          )
           .maybeSingle(),
 
         supabase
-          .from("mentorship_requests")
+          .from(
+            "mentorship_requests",
+          )
           .select(`
             id,
             mentoring_area,
@@ -99,16 +360,29 @@ function RequestMentorship() {
             status,
             created_at
           `)
-          .eq("mentee_id", user.id)
-          .eq("mentor_id", mentorId)
-          .in("status", [
-            "pending",
-            "accepted",
-            "clarification_requested",
-          ])
-          .order("created_at", {
-            ascending: false,
-          })
+          .eq(
+            "mentee_id",
+            user.id,
+          )
+          .eq(
+            "mentor_id",
+            mentorId,
+          )
+          .in(
+            "status",
+            [
+              "pending",
+              "accepted",
+              "clarification_requested",
+              "referred",
+            ],
+          )
+          .order(
+            "created_at",
+            {
+              ascending: false,
+            },
+          )
           .limit(1)
           .maybeSingle(),
       ]);
@@ -145,22 +419,58 @@ function RequestMentorship() {
         return;
       }
 
-      setMentor(mentorResult.data);
-      setMenteeProfile(menteeProfileResult.data ?? null);
-      setExistingRequest(
-        existingRequestResult.data ?? null,
+      const mentorData =
+        mentorResult.data;
+
+      const menteeData =
+        menteeProfileResult.data ??
+        null;
+
+      setMentor(
+        mentorData,
       );
 
-      const firstMentorshipArea =
-        menteeProfileResult.data
-          ?.mentorship_areas?.[0] ?? "";
+      setMenteeProfile(
+        menteeData,
+      );
 
-      setForm((current) => ({
-        ...current,
-        mentoringArea:
-          current.mentoringArea ||
-          firstMentorshipArea,
-      }));
+      setExistingRequest(
+        existingRequestResult.data ??
+          null,
+      );
+
+      const mentorAreas =
+        mentorData
+          .mentorship_categories ??
+        [];
+
+      const menteeAreas =
+        menteeData
+          ?.mentorship_areas ??
+        [];
+
+      const firstMatchingArea =
+        menteeAreas.find(
+          (area) =>
+            mentorAreas.includes(
+              area,
+            ),
+        );
+
+      const firstArea =
+        firstMatchingArea ||
+        mentorAreas[0] ||
+        menteeAreas[0] ||
+        "";
+
+      setForm(
+        (current) => ({
+          ...current,
+          mentoringArea:
+            current.mentoringArea ||
+            firstArea,
+        }),
+      );
 
       setLoading(false);
     }
@@ -170,47 +480,135 @@ function RequestMentorship() {
     return () => {
       isMounted = false;
     };
-  }, [mentorId, user?.id]);
+  }, [
+    mentorId,
+    user?.id,
+  ]);
 
-  const profileComplete = useMemo(() => {
-    if (!menteeProfile) {
-      return false;
-    }
+  const profileComplete =
+    useMemo(() => {
+      if (!menteeProfile) {
+        return false;
+      }
 
-    return Boolean(
-      menteeProfile.biography?.trim() &&
-        menteeProfile.mentorship_areas?.length > 0 &&
-        menteeProfile.development_goals?.trim() &&
-        menteeProfile.hopes_to_gain?.trim() &&
-        menteeProfile.conduct_agreed &&
-        menteeProfile.safety_agreed,
-    );
-  }, [menteeProfile]);
+      return Boolean(
+        menteeProfile.biography?.trim() &&
+          menteeProfile
+            .mentorship_areas
+            ?.length > 0 &&
+          menteeProfile
+            .development_goals
+            ?.trim() &&
+          menteeProfile
+            .hopes_to_gain
+            ?.trim() &&
+          menteeProfile
+            .conduct_agreed &&
+          menteeProfile
+            .safety_agreed,
+      );
+    }, [menteeProfile]);
 
-  const availableSpaces = mentor
-    ? Math.max(
-        (mentor.maximum_active_mentees ?? 0) -
-          (mentor.current_active_mentees ?? 0),
-        0,
-      )
-    : 0;
+  const availableSpaces =
+    mentor
+      ? Math.max(
+          Number(
+            mentor.maximum_active_mentees ??
+              0,
+          ) -
+            Number(
+              mentor.current_active_mentees ??
+                0,
+            ),
+          0,
+        )
+      : 0;
 
   const mentorUnavailable =
     !mentor?.accepting_requests ||
     availableSpaces <= 0;
 
-  function updateForm(event) {
-    const { name, value } = event.target;
+  const mentorProfile =
+    getProfile(mentor);
 
-    setForm((current) => ({
-      ...current,
-      [name]: value,
-    }));
+  const mentorName =
+    mentorProfile?.full_name ||
+    "this mentor";
+
+  const goalWordCount =
+    countWords(
+      form.goalStatement,
+    );
+
+  const reasonWordCount =
+    countWords(
+      form.reasonForChoosingMentor,
+    );
+
+  const goalComplete =
+    goalWordCount >=
+    MIN_GOAL_WORDS;
+
+  const reasonComplete =
+    reasonWordCount >=
+    MIN_REASON_WORDS;
+
+  const availableAreas =
+    useMemo(() => {
+      const mentorAreas =
+        mentor
+          ?.mentorship_categories ??
+        [];
+
+      if (
+        mentorAreas.length > 0
+      ) {
+        return mentorAreas;
+      }
+
+      return (
+        menteeProfile
+          ?.mentorship_areas ??
+        []
+      );
+    }, [
+      mentor,
+      menteeProfile,
+    ]);
+
+  const formDisabled =
+    submitting ||
+    !profileComplete ||
+    mentorUnavailable ||
+    Boolean(existingRequest);
+
+  const canSubmit =
+    Boolean(
+      form.mentoringArea,
+    ) &&
+    goalComplete &&
+    reasonComplete &&
+    !formDisabled;
+
+  function updateForm(event) {
+    const {
+      name,
+      value,
+    } = event.target;
+
+    setForm(
+      (current) => ({
+        ...current,
+        [name]: value,
+      }),
+    );
 
     setError("");
   }
 
-  async function handleSubmit(event) {
+  async function handleSubmit(
+    event,
+  ) {
     event.preventDefault();
 
     setError("");
@@ -219,38 +617,74 @@ function RequestMentorship() {
       setError(
         "Please complete your mentee profile before requesting mentorship.",
       );
+
+      return;
+    }
+
+    if (
+      mentorUnavailable
+    ) {
+      setError(
+        "This mentor is not currently accepting new mentorship requests.",
+      );
+
+      return;
+    }
+
+    if (existingRequest) {
+      setError(
+        "You already have an active request with this mentor.",
+      );
+
       return;
     }
 
     if (!form.mentoringArea) {
-      setError("Please select a mentoring area.");
-      return;
-    }
-
-    if (!form.goalStatement.trim()) {
-      setError("Please add a short goal statement.");
-      return;
-    }
-
-    if (!form.reasonForChoosingMentor.trim()) {
       setError(
-        "Please explain why you chose this mentor.",
+        "Please select a mentoring area.",
       );
+
+      return;
+    }
+
+    if (!goalComplete) {
+      setError(
+        `Your goal statement must contain at least ${MIN_GOAL_WORDS} words.`,
+      );
+
+      return;
+    }
+
+    if (!reasonComplete) {
+      setError(
+        `Please use at least ${MIN_REASON_WORDS} words to explain why you chose this mentor.`,
+      );
+
       return;
     }
 
     setSubmitting(true);
 
-    const { error: requestError } = await supabase.rpc(
+    const {
+      error: requestError,
+    } = await supabase.rpc(
       "submit_mentorship_request",
       {
-        p_mentor_id: mentorId,
-        p_mentoring_area: form.mentoringArea,
-        p_goal_statement: form.goalStatement.trim(),
+        p_mentor_id:
+          mentorId,
+
+        p_mentoring_area:
+          form.mentoringArea,
+
+        p_goal_statement:
+          form.goalStatement.trim(),
+
         p_reason_for_choosing_mentor:
           form.reasonForChoosingMentor.trim(),
+
         p_preferred_times:
-          form.preferredTimes.trim(),
+          form.preferredTimes.trim() ||
+          null,
       },
     );
 
@@ -279,16 +713,24 @@ function RequestMentorship() {
         title="Request mentorship"
         description="Tell this mentor what support you are looking for."
       >
-        <section className="dashboard-empty-state">
-          <div className="loader" />
+        <div className="mentee-request-flow">
+          <Progress />
 
-          <h2>Preparing your request</h2>
+          <section className="request-flow-panel">
+            <span className="request-flow-eyebrow">
+              MENTORSHIP REQUEST
+            </span>
 
-          <p>
-            Please wait while we prepare the mentorship
-            request form.
-          </p>
-        </section>
+            <h3>
+              Preparing your request
+            </h3>
+
+            <p>
+              Please wait while we prepare the mentorship
+              request form.
+            </p>
+          </section>
+        </div>
       </DashboardLayout>
     );
   }
@@ -299,76 +741,41 @@ function RequestMentorship() {
         title="Request mentorship"
         description="Tell this mentor what support you are looking for."
       >
-        <section className="dashboard-empty-state">
-          <h2>Mentor unavailable</h2>
+        <div className="mentee-request-flow">
+          <Progress />
 
-          <p>{error}</p>
+          <section className="request-flow-panel">
+            <span className="request-flow-eyebrow">
+              MENTOR UNAVAILABLE
+            </span>
 
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() =>
-              navigate("/mentee/find-mentor")
-            }
-          >
-            Back to mentors
-          </button>
-        </section>
-      </DashboardLayout>
-    );
-  }
+            <h3>
+              We cannot prepare this request
+            </h3>
 
-  const mentorName =
-    mentor.profiles?.full_name || "this mentor";
+            <p>{error}</p>
 
-  if (success) {
-    return (
-      <DashboardLayout
-        title="Request mentorship"
-        description="Your request has been sent."
-      >
-        <section className="mentorship-request-success">
-          <span className="mentorship-request-success-icon">
-            <CheckCircle2 size={28} />
-          </span>
-
-          <span className="eyebrow">
-            REQUEST SENT
-          </span>
-
-          <h2>
-            Your mentorship request has been sent to{" "}
-            {mentorName}.
-          </h2>
-
-          <p>
-            The mentor can now review your profile and request.
-            You will be able to see the response once they take
-            action.
-          </p>
-
-          <div className="mentorship-request-success-actions">
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() =>
-                navigate("/mentee/find-mentor")
-              }
+            <div
+              className="request-flow-bottom-action"
+              style={{
+                marginTop: "18px",
+                justifyContent: "flex-start",
+              }}
             >
-              Browse mentors
-            </button>
-
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() =>
-                navigate("/mentee/dashboard")
-              }
-            >
-              Go to dashboard
-            </button>
-          </div>
-        </section>
+              <button
+                type="button"
+                className="request-flow-secondary-button"
+                onClick={() =>
+                  navigate(
+                    "/mentee/find-mentor",
+                  )
+                }
+              >
+                Back to mentors
+              </button>
+            </div>
+          </section>
+        </div>
       </DashboardLayout>
     );
   }
@@ -378,60 +785,84 @@ function RequestMentorship() {
       title="Request mentorship"
       description={`Tell ${mentorName} what support you are looking for.`}
     >
-      <div className="mentorship-request-page">
+      <div className="mentee-request-flow">
         <button
           type="button"
-          className="mentor-profile-back"
+          className="request-flow-top-back"
+          disabled={submitting}
           onClick={() =>
             navigate(
               `/mentee/mentors/${mentorId}`,
             )
           }
         >
-          <ArrowLeft size={16} />
+          <ArrowLeft size={15} />
           Back to mentor profile
         </button>
 
-        <section className="mentorship-request-mentor">
-          <div>
-            <span className="eyebrow">
-              REQUESTING MENTOR
+        <Progress
+          submitted={success}
+        />
+
+        <div className="request-flow-screen">
+          <section className="request-flow-request-heading">
+            <span className="request-flow-eyebrow">
+              MENTORSHIP REQUEST
             </span>
 
-            <h2>{mentorName}</h2>
+            <h2>
+              Tell{" "}
+              {mentorName.split(
+                " ",
+              )[0]}{" "}
+              what you would like support with.
+            </h2>
 
             <p>
-              {mentor.job_title || "Mentor"}
-              {mentor.organisation
-                ? ` at ${mentor.organisation}`
-                : ""}
+              Keep your request focused. Your mentee
+              profile already provides the mentor with your
+              wider background and goals.
             </p>
-          </div>
+          </section>
 
-          <span
-            className={`mentorship-request-capacity ${
-              mentorUnavailable
-                ? "unavailable"
-                : ""
-            }`}
-          >
-            {mentorUnavailable
-              ? "Not accepting requests"
-              : `${availableSpaces} ${
-                  availableSpaces === 1
-                    ? "space"
-                    : "spaces"
-                } available`}
-          </span>
-        </section>
+          <section className="request-flow-selected-mentor">
+            <div className="request-flow-selected-mentor-main">
+              <MentorAvatar
+                profile={
+                  mentorProfile
+                }
+                name={
+                  mentorName
+                }
+              />
 
-        {!profileComplete && (
-          <section className="mentorship-profile-required">
-            <span>
-              <UserRoundCheck size={22} />
-            </span>
+              <div>
+                <small>
+                  REQUESTING MENTORSHIP FROM
+                </small>
 
-            <div>
+                <strong>
+                  {mentorName}
+                </strong>
+
+                <span>
+                  {mentor.job_title ||
+                    "Mentor"}
+
+                  {mentor.organisation
+                    ? ` · ${mentor.organisation}`
+                    : ""}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {!profileComplete && (
+            <section className="request-flow-panel">
+              <span className="request-flow-eyebrow">
+                PROFILE REQUIRED
+              </span>
+
               <h3>
                 Complete your mentee profile first
               </h3>
@@ -442,196 +873,333 @@ function RequestMentorship() {
                 the request.
               </p>
 
-              <button
-                type="button"
-                className="primary-button"
-                onClick={() =>
-                  navigate("/mentee/profile")
-                }
+              <div
+                className="request-flow-bottom-action"
+                style={{
+                  marginTop: "18px",
+                  justifyContent:
+                    "flex-start",
+                }}
               >
-                Complete my profile
-              </button>
-            </div>
-          </section>
-        )}
+                <button
+                  type="button"
+                  className="request-flow-primary-button"
+                  onClick={() =>
+                    navigate(
+                      "/mentee/profile",
+                    )
+                  }
+                >
+                  <UserRoundCheck
+                    size={16}
+                  />
+                  Complete my profile
+                </button>
+              </div>
+            </section>
+          )}
 
-        {existingRequest && (
-          <section className="mentorship-existing-request">
-            <HeartHandshake size={22} />
-
-            <div>
-              <h3>
-                You already have a request with this mentor
-              </h3>
+          {existingRequest && (
+            <aside
+              className="request-flow-note"
+              role="status"
+            >
+              <CircleAlert
+                size={18}
+              />
 
               <p>
-                Current status:{" "}
+                You already have an active request with this
+                mentor. Current status:{" "}
                 <strong>
                   {String(
                     existingRequest.status,
-                  ).replaceAll("_", " ")}
+                  ).replaceAll(
+                    "_",
+                    " ",
+                  )}
                 </strong>
+                .
               </p>
-            </div>
-          </section>
-        )}
+            </aside>
+          )}
 
-        {error && (
-          <p className="form-error">{error}</p>
-        )}
+          {mentorUnavailable && (
+            <aside
+              className="request-flow-note"
+              role="status"
+            >
+              <CircleAlert
+                size={18}
+              />
 
-        <form
-          className="mentorship-request-form"
-          onSubmit={handleSubmit}
-        >
-          <section className="mentorship-request-section">
-            <div className="mentorship-request-section-heading">
-              <Target size={20} />
+              <p>
+                This mentor is not currently accepting new
+                mentorship requests.
+              </p>
+            </aside>
+          )}
 
-              <div>
-                <h3>Your mentoring goal</h3>
+          <form
+            className="request-flow-form"
+            onSubmit={
+              handleSubmit
+            }
+          >
+            <label>
+              <span>
+                Desired mentoring area
+                <b>*</b>
+              </span>
 
-                <p>
-                  Be specific enough for the mentor to decide
-                  whether they are the right person to help.
-                </p>
+              <div className="request-flow-select-wrap">
+                <select
+                  name="mentoringArea"
+                  value={
+                    form.mentoringArea
+                  }
+                  onChange={
+                    updateForm
+                  }
+                  disabled={
+                    formDisabled
+                  }
+                  required
+                >
+                  <option value="">
+                    Select an area
+                  </option>
+
+                  {availableAreas.map(
+                    (area) => (
+                      <option
+                        key={area}
+                        value={area}
+                      >
+                        {area}
+                      </option>
+                    ),
+                  )}
+                </select>
+
+                <ChevronDown
+                  size={17}
+                  className="request-flow-select-icon"
+                  aria-hidden="true"
+                />
               </div>
-            </div>
 
-            <label className="mentorship-request-field">
-              Desired mentoring area
-
-              <select
-                name="mentoringArea"
-                value={form.mentoringArea}
-                onChange={updateForm}
-                disabled={
-                  submitting ||
-                  !profileComplete ||
-                  mentorUnavailable ||
-                  Boolean(existingRequest)
-                }
-                required
-              >
-                <option value="">
-                  Select an area
-                </option>
-
-                {(menteeProfile?.mentorship_areas ?? [])
-                  .map((area) => (
-                    <option
-                      key={area}
-                      value={area}
-                    >
-                      {area}
-                    </option>
-                  ))}
-              </select>
+              <small>
+                Choose the main area you want this mentor to
+                support you with.
+              </small>
             </label>
 
-            <label className="mentorship-request-field">
-              Short goal statement
+            <label>
+              <span>
+                Short goal statement
+                <b>*</b>
+              </span>
 
               <textarea
                 name="goalStatement"
-                value={form.goalStatement}
-                onChange={updateForm}
-                placeholder="What would you like to make progress on with this mentor?"
-                disabled={
-                  submitting ||
-                  !profileComplete ||
-                  mentorUnavailable ||
-                  Boolean(existingRequest)
+                rows={4}
+                value={
+                  form.goalStatement
                 }
+                onChange={
+                  updateForm
+                }
+                disabled={
+                  formDisabled
+                }
+                placeholder="For example: I want to become more confident leading meetings and communicating decisions."
                 required
               />
+
+              <div className="request-flow-field-footer">
+                <small>
+                  Explain what progress would look like for
+                  you.
+                </small>
+
+                <span
+                  className={
+                    goalComplete
+                      ? "is-complete"
+                      : ""
+                  }
+                >
+                  {goalWordCount}/
+                  {MIN_GOAL_WORDS} words minimum
+                </span>
+              </div>
             </label>
 
-            <label className="mentorship-request-field">
-              Why did you choose this mentor?
+            <label>
+              <span>
+                Why are you choosing this mentor?
+                <b>*</b>
+              </span>
 
               <textarea
                 name="reasonForChoosingMentor"
+                rows={4}
                 value={
                   form.reasonForChoosingMentor
                 }
-                onChange={updateForm}
-                placeholder="Explain what about this mentor's experience or profile feels relevant to your goal."
-                disabled={
-                  submitting ||
-                  !profileComplete ||
-                  mentorUnavailable ||
-                  Boolean(existingRequest)
+                onChange={
+                  updateForm
                 }
+                disabled={
+                  formDisabled
+                }
+                placeholder="Share what about this mentor's experience feels relevant to your goal."
                 required
               />
+
+              <div className="request-flow-field-footer">
+                <small>
+                  This helps the mentor understand why you
+                  think the match could work.
+                </small>
+
+                <span
+                  className={
+                    reasonComplete
+                      ? "is-complete"
+                      : ""
+                  }
+                >
+                  {reasonWordCount}/
+                  {MIN_REASON_WORDS} words minimum
+                </span>
+              </div>
             </label>
-          </section>
 
-          <section className="mentorship-request-section">
-            <div className="mentorship-request-section-heading">
-              <Clock3 size={20} />
+            <label>
+              <span>
+                Preferred times
+                <em>Optional</em>
+              </span>
 
-              <div>
-                <h3>Preferred times</h3>
+              <input
+                type="text"
+                name="preferredTimes"
+                value={
+                  form.preferredTimes
+                }
+                onChange={
+                  updateForm
+                }
+                disabled={
+                  formDisabled
+                }
+                placeholder="For example: Weekday evenings or Saturday mornings"
+              />
 
-                <p>
-                  Optional. Share times that generally work for
-                  you. Session scheduling will happen after a
-                  request is accepted.
-                </p>
+              <small>
+                This is only a preference. Booking happens
+                after the mentor accepts your request.
+              </small>
+            </label>
+
+            <aside className="request-flow-note">
+              <CalendarDays
+                size={18}
+              />
+
+              <p>
+                Sending this request does not book a session.
+                If the mentor accepts, you will choose from
+                their available session times.
+              </p>
+            </aside>
+
+            {error && (
+              <aside
+                className="request-flow-note"
+                role="alert"
+              >
+                <CircleAlert
+                  size={18}
+                />
+
+                <p>{error}</p>
+              </aside>
+            )}
+
+            <div className="request-flow-submit-row">
+              <p
+                className={
+                  canSubmit
+                    ? "request-flow-submit-hint is-ready"
+                    : "request-flow-submit-hint"
+                }
+                aria-live="polite"
+              >
+                {submitting
+                  ? "Sending your request..."
+                  : goalComplete &&
+                      reasonComplete &&
+                      form.mentoringArea &&
+                      !formDisabled
+                    ? "Your request is ready to send."
+                    : `Enter at least ${MIN_GOAL_WORDS} words for your goal and ${MIN_REASON_WORDS} words for why you chose this mentor.`}
+              </p>
+
+              <div className="request-flow-form-actions">
+                <button
+                  type="button"
+                  className="request-flow-secondary-button"
+                  onClick={() =>
+                    navigate(
+                      `/mentee/mentors/${mentorId}`,
+                    )
+                  }
+                  disabled={
+                    submitting
+                  }
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="request-flow-primary-button"
+                  disabled={
+                    !canSubmit
+                  }
+                >
+                  {submitting
+                    ? "Submitting..."
+                    : "Submit request"}
+                </button>
               </div>
             </div>
+          </form>
+        </div>
 
-            <label className="mentorship-request-field">
-              Preferred times{" "}
-              <small>(optional)</small>
-
-              <textarea
-                name="preferredTimes"
-                value={form.preferredTimes}
-                onChange={updateForm}
-                placeholder="For example, weekday evenings after 6 PM or Saturday mornings."
-                disabled={
-                  submitting ||
-                  !profileComplete ||
-                  mentorUnavailable ||
-                  Boolean(existingRequest)
-                }
-              />
-            </label>
-          </section>
-
-          <div className="mentorship-request-actions">
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() =>
-                navigate(
-                  `/mentee/mentors/${mentorId}`,
-                )
-              }
-              disabled={submitting}
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              className="primary-button"
-              disabled={
-                submitting ||
-                !profileComplete ||
-                mentorUnavailable ||
-                Boolean(existingRequest)
-              }
-            >
-              {submitting
-                ? "Sending request..."
-                : "Send mentorship request"}
-            </button>
-          </div>
-        </form>
+        {success && (
+          <SuccessModal
+            mentorName={
+              mentorName
+            }
+            mentoringArea={
+              form.mentoringArea
+            }
+            onBackToMentors={() =>
+              navigate(
+                "/mentee/find-mentor",
+              )
+            }
+            onViewRequests={() =>
+              navigate(
+                "/mentee/requests",
+              )
+            }
+          />
+        )}
       </div>
     </DashboardLayout>
   );

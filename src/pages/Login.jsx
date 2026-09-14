@@ -1,13 +1,32 @@
 import { useState } from "react";
-import { Eye, EyeOff, HeartHandshake } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
+import "./Login.css";
+
+const administratorRoles = [
+  "admin",
+  "safeguarding_lead",
+];
+
 function GoogleIcon() {
   return (
-    <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path
         fill="#4285F4"
         d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41Z"
@@ -30,19 +49,45 @@ function GoogleIcon() {
 
 function Login() {
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle } = useAuth();
 
-  const [form, setForm] = useState({
+  const {
+    signIn,
+    signInWithGoogle,
+  } = useAuth();
+
+  const [
+    form,
+    setForm,
+  ] = useState({
     email: "",
     password: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [googleSubmitting, setGoogleSubmitting] = useState(false);
-  const [error, setError] = useState("");
+
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
+
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
+
+  const [
+    googleSubmitting,
+    setGoogleSubmitting,
+  ] = useState(false);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
 
   function updateForm(event) {
-    const { name, value } = event.target;
+    const {
+      name,
+      value,
+    } = event.target;
 
     setForm((current) => ({
       ...current,
@@ -56,209 +101,438 @@ function Login() {
     setError("");
     setGoogleSubmitting(true);
 
-    const { error: googleError } = await signInWithGoogle();
+    const {
+      error: googleError,
+    } = await signInWithGoogle();
 
     if (googleError) {
-      console.error("Unable to sign in with Google:", googleError);
+      console.error(
+        "Unable to sign in with Google:",
+        googleError,
+      );
+
       setError(
         googleError.message ||
           "Google sign-in could not be started. Please try again.",
       );
+
       setGoogleSubmitting(false);
     }
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
+
     setSubmitting(true);
     setError("");
 
-    const { data, error: loginError } = await signIn(
+    const {
+      data,
+      error: loginError,
+    } = await signIn(
       form.email.trim(),
       form.password,
     );
 
-    if (loginError || !data?.user) {
+    if (
+      loginError ||
+      !data?.user
+    ) {
       setSubmitting(false);
-      setError("The email address or password you entered is incorrect.");
+
+      setError(
+        "The email address or password you entered is incorrect.",
+      );
+
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase
+    const {
+      data: profile,
+      error: profileError,
+    } = await supabase
       .from("profiles")
-      .select("role, account_status, onboarding_completed")
-      .eq("id", data.user.id)
+      .select(
+        "role, signup_intent, account_status, onboarding_completed",
+      )
+      .eq(
+        "id",
+        data.user.id,
+      )
       .single();
 
     setSubmitting(false);
 
-    if (profileError || !profile) {
-      setError("We could not load your profile.");
-      return;
-    }
+    if (
+      profileError ||
+      !profile
+    ) {
+      setError(
+        "We could not load your profile.",
+      );
 
-    if (profile.account_status === "suspended") {
-      navigate("/account-suspended");
-      return;
-    }
-
-    if (!profile.onboarding_completed) {
-      navigate("/complete-profile");
       return;
     }
 
     if (
-      profile.role === "admin" ||
-      profile.role === "super_admin" ||
-      profile.role === "safeguarding_lead"
+      profile.account_status ===
+      "suspended"
+    ) {
+      navigate(
+        "/account-suspended",
+        {
+          replace: true,
+        },
+      );
+
+      return;
+    }
+
+    if (
+      administratorRoles.includes(
+        profile.role,
+      )
     ) {
       setError(
         "This is the mentor and mentee sign-in page. Please use the administrator portal.",
       );
+
       return;
     }
 
     if (
-      profile.account_status === "pending" ||
-      profile.account_status === "rejected"
+      !profile.onboarding_completed
     ) {
-      navigate("/membership-pending");
+      navigate(
+        "/complete-profile",
+        {
+          replace: true,
+        },
+      );
+
       return;
     }
 
-    if (profile.role === "mentor") {
-      if (profile.account_status === "active") {
-        navigate("/mentor/dashboard");
-      } else {
-        navigate("/mentor/application-status");
+    if (
+      profile.account_status ===
+        "pending" ||
+      profile.account_status ===
+        "rejected"
+    ) {
+      navigate(
+        "/membership-pending",
+        {
+          replace: true,
+        },
+      );
+
+      return;
+    }
+
+    if (
+      profile.role === "mentor"
+    ) {
+      if (
+        profile.account_status ===
+        "active"
+      ) {
+        navigate(
+          "/mentor/dashboard",
+          {
+            replace: true,
+          },
+        );
+
+        return;
       }
 
+      navigate(
+        "/membership-pending",
+        {
+          replace: true,
+        },
+      );
+
       return;
     }
 
-    if (profile.role === "mentee") {
-      navigate("/mentee/dashboard");
+    if (
+      profile.role === "mentee"
+    ) {
+      if (
+        profile.signup_intent ===
+        "mentor"
+      ) {
+        navigate(
+          "/mentor/apply",
+          {
+            replace: true,
+          },
+        );
+
+        return;
+      }
+
+      navigate(
+        "/mentee/dashboard",
+        {
+          replace: true,
+        },
+      );
+
       return;
     }
 
-    setError("Your account does not have a recognised role.");
+    setError(
+      "Your account does not have a recognised role.",
+    );
   }
 
-  const authenticationInProgress = submitting || googleSubmitting;
+  const authenticationInProgress =
+    submitting ||
+    googleSubmitting;
 
   return (
-    <main className="auth-page">
-      <section className="auth-panel">
-        <div className="auth-brand">
-          <Link
-            to="/"
-            className="brand"
-            aria-label="Return to Mentor Connect homepage"
-          >
-            <span className="brand-icon">
-              <HeartHandshake size={22} />
-            </span>
-
-            <span className="brand-text">
-              <strong>Mentor Connect</strong>
-              <small>TCN IKEJA</small>
-            </span>
-          </Link>
-        </div>
-
-        <div className="auth-heading">
-          <span className="eyebrow">WELCOME BACK</span>
-          <h1>Continue your mentoring journey.</h1>
-          <p>Sign in using the email connected to your account.</p>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <label>
-            Email address
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={updateForm}
-              autoComplete="email"
-              disabled={authenticationInProgress}
-              required
-            />
-          </label>
-
-          <label>
-            Password
-            <div className="password-field">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={form.password}
-                onChange={updateForm}
-                autoComplete="current-password"
-                disabled={authenticationInProgress}
-                required
+    <main className="login-page">
+      <section className="login-form-side">
+        <div className="login-form-inner">
+          <div className="login-brand-row">
+            <Link
+              to="/"
+              className="login-brand"
+              aria-label="Return to Mentor Connect homepage"
+            >
+              <img
+                src="/images/hothub-logo.png"
+                alt="HOTHUB"
               />
 
-              <button
-                type="button"
-                onClick={() => setShowPassword((current) => !current)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                disabled={authenticationInProgress}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </label>
+              <span>
+                <strong>
+                  Mentor Connect
+                </strong>
 
-          <div className="form-options">
-            <span />
-
-            <Link to="/forgot-password" className="forgot-link">
-              Forgot password?
+                <small>
+                  TCN IKEJA
+                </small>
+              </span>
             </Link>
           </div>
 
+          <div className="login-heading">
+            <span>
+              WELCOME BACK
+            </span>
+
+            <h1>
+              Sign in to your account
+            </h1>
+
+            <p>
+              Continue your mentoring
+              journey from where you
+              left off.
+            </p>
+          </div>
+
           {error && (
-            <p className="form-error" role="alert">
+            <p
+              className="login-error"
+              role="alert"
+            >
               {error}
             </p>
           )}
 
-          <button
-            type="submit"
-            className="primary-button full-button"
-            disabled={authenticationInProgress}
+          <form
+            className="login-form"
+            onSubmit={
+              handleSubmit
+            }
           >
-            {submitting ? "Signing in..." : "Sign in"}
+            <label className="login-field">
+              <span>
+                Email address
+              </span>
+
+              <input
+                type="email"
+                name="email"
+                value={
+                  form.email
+                }
+                onChange={
+                  updateForm
+                }
+                placeholder="Enter your email address"
+                autoComplete="email"
+                disabled={
+                  authenticationInProgress
+                }
+                required
+              />
+            </label>
+
+            <label className="login-field">
+              <span>
+                Password
+              </span>
+
+              <div className="login-password-wrap">
+                <input
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  name="password"
+                  value={
+                    form.password
+                  }
+                  onChange={
+                    updateForm
+                  }
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  disabled={
+                    authenticationInProgress
+                  }
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPassword(
+                      (current) =>
+                        !current,
+                    )
+                  }
+                  aria-label={
+                    showPassword
+                      ? "Hide password"
+                      : "Show password"
+                  }
+                  disabled={
+                    authenticationInProgress
+                  }
+                >
+                  {showPassword ? (
+                    <EyeOff
+                      size={17}
+                    />
+                  ) : (
+                    <Eye
+                      size={17}
+                    />
+                  )}
+                </button>
+              </div>
+            </label>
+
+            <div className="login-options">
+              <Link
+                to="/forgot-password"
+                className="login-forgot"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            <button
+              type="submit"
+              className="login-submit"
+              disabled={
+                authenticationInProgress
+              }
+            >
+              <span>
+                {submitting
+                  ? "Signing in..."
+                  : "Sign in"}
+              </span>
+
+              {!submitting && (
+                <ArrowRight
+                  size={17}
+                />
+              )}
+            </button>
+          </form>
+
+          <div className="login-divider">
+            <span>
+              or
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="login-google"
+            onClick={
+              handleGoogleSignIn
+            }
+            disabled={
+              authenticationInProgress
+            }
+          >
+            <GoogleIcon />
+
+            {googleSubmitting
+              ? "Connecting to Google..."
+              : "Continue with Google"}
           </button>
-        </form>
 
-        <div className="auth-divider" aria-hidden="true">
-          <span>or</span>
+          <p className="login-account-copy">
+            New to Mentor Connect?{" "}
+
+            <Link to="/register">
+              Create an account
+            </Link>
+          </p>
         </div>
-
-        <button
-          type="button"
-          className="google-auth-button"
-          onClick={handleGoogleSignIn}
-          disabled={authenticationInProgress}
-        >
-          <GoogleIcon />
-
-          {googleSubmitting
-            ? "Connecting to Google..."
-            : "Continue with Google"}
-        </button>
-
-        <p className="account-copy">
-          New to Mentor Connect? <Link to="/register">Create an account</Link>
-        </p>
       </section>
 
-      <section className="auth-message">
-        <span className="eyebrow">GROW WITH GUIDANCE</span>
-        <h2>Purposeful conversations. Meaningful growth.</h2>
-      </section>
+      <aside
+        className="login-visual-side"
+        aria-hidden="true"
+      >
+        <div className="login-visual-canvas">
+          <div className="login-artwork">
+            <span className="login-artwork-halo" />
+            <span className="login-artwork-ring login-artwork-ring--one" />
+            <span className="login-artwork-ring login-artwork-ring--two" />
+            <span className="login-artwork-orb" />
+            <span className="login-artwork-reflection" />
+            <span className="login-artwork-dot login-artwork-dot--one" />
+            <span className="login-artwork-dot login-artwork-dot--two" />
+          </div>
+
+          <div className="login-side-note">
+            <span>
+              GROW WITH
+            </span>
+
+            <span>
+              GUIDANCE
+            </span>
+
+            <i />
+          </div>
+
+          <div className="login-right-message">
+            <p>
+              PURPOSEFUL CONVERSATIONS
+            </p>
+
+            <span />
+
+            <small>
+              MEANINGFUL GROWTH
+            </small>
+          </div>
+        </div>
+      </aside>
     </main>
   );
 }

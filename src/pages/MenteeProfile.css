@@ -1,0 +1,624 @@
+/* =========================================================
+   MENTEE PROFILE
+   Production stylesheet for MenteeProfile.jsx.
+   White canvas + dark neutral secondary + orange accents.
+   No green/teal styling on this page.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   PAGE CANVAS
+   --------------------------------------------------------- */
+
+html:has(.mentee-profile-page),
+body:has(.mentee-profile-page),
+body:has(.mentee-profile-page) #root,
+body:has(.mentee-profile-page) .dashboard-layout,
+body:has(.mentee-profile-page) .dashboard-content {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+body:has(.mentee-profile-page) .dashboard-content {
+  min-height: 100vh !important;
+}
+
+body:has(.mentee-profile-page)
+.dashboard-content > header h1 {
+  color: #101419 !important;
+}
+
+body:has(.mentee-profile-page)
+.dashboard-content > header p,
+body:has(.mentee-profile-page)
+.dashboard-content > header > span > small {
+  color: #4c5867 !important;
+}
+
+body:has(.mentee-profile-page)
+.dashboard-user small {
+  border: 1px solid #d7dee7 !important;
+
+  color: #2d353f !important;
+  background: #eef1f5 !important;
+
+  font-weight: 600 !important;
+}
+
+.mentee-profile-page {
+  width: 100%;
+  min-width: 0;
+
+  color: #101419;
+  background: #ffffff;
+}
+
+/* ---------------------------------------------------------
+   FORM
+   --------------------------------------------------------- */
+
+.mentee-profile-form {
+  display: grid;
+
+  gap: 20px;
+
+  width: 100%;
+  min-width: 0;
+
+  padding-bottom:
+    max(
+      72px,
+      calc(
+        52px +
+        env(safe-area-inset-bottom)
+      )
+    );
+}
+
+/* ---------------------------------------------------------
+   INTRO
+   Icon intentionally removed from the JSX.
+   --------------------------------------------------------- */
+
+.mentee-profile-intro {
+  display: block;
+
+  width: 100%;
+  min-width: 0;
+
+  padding: 24px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff !important;
+  background-image: none !important;
+
+  box-shadow:
+    0 8px 24px
+    rgba(16, 20, 25, 0.025);
+}
+
+/* Hide any old intro icon if stale markup is temporarily cached. */
+.mentee-profile-intro-icon {
+  display: none !important;
+}
+
+.mentee-profile-intro .eyebrow {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #ff5303 !important;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.mentee-profile-intro h2 {
+  max-width: 900px;
+
+  margin: 0 0 8px;
+
+  color: #101419;
+
+  font-size:
+    clamp(
+      23px,
+      3vw,
+      32px
+    );
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.025em;
+}
+
+.mentee-profile-intro p {
+  max-width: 920px;
+
+  margin: 0;
+
+  color: #4c5867;
+
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+/* ---------------------------------------------------------
+   SUCCESS / ERROR
+   --------------------------------------------------------- */
+
+.mentee-profile-success {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  margin: 0;
+  padding: 13px 15px;
+
+  border: 1px solid #ffcbc5;
+  border-radius: 11px;
+
+  color: #4c5867;
+  background: #fffaf9;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mentee-profile-success svg {
+  flex-shrink: 0;
+
+  color: #ff5303;
+}
+
+.mentee-profile-page .form-error {
+  margin: 0;
+
+  border: 1px solid #ffcbc5 !important;
+
+  color: #832600 !important;
+  background: #fff4f3 !important;
+}
+
+/* ---------------------------------------------------------
+   SECTION CARDS
+   --------------------------------------------------------- */
+
+.mentee-profile-section {
+  width: 100%;
+  min-width: 0;
+
+  padding: 24px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff !important;
+  background-image: none !important;
+
+  box-shadow:
+    0 8px 24px
+    rgba(16, 20, 25, 0.025);
+}
+
+.mentee-profile-section-heading {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 11px;
+
+  margin-bottom: 22px;
+}
+
+.mentee-profile-section-heading > svg {
+  flex-shrink: 0;
+
+  margin-top: 2px;
+
+  color: #ff5303 !important;
+}
+
+.mentee-profile-section-heading h3 {
+  margin: 0 0 4px;
+
+  color: #101419;
+
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.mentee-profile-section-heading p {
+  margin: 0;
+
+  color: #4c5867;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------
+   TEXTAREA FIELDS
+   Calm secondary focus treatment.
+   --------------------------------------------------------- */
+
+.mentee-profile-field {
+  display: block;
+
+  width: 100%;
+
+  color: #101419;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mentee-profile-field + .mentee-profile-field {
+  margin-top: 18px;
+}
+
+.mentee-profile-field small {
+  color: #6f8095;
+
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.mentee-profile-field textarea {
+  display: block;
+
+  width: 100%;
+  min-height: 120px;
+
+  margin-top: 7px;
+  padding: 13px 14px;
+
+  border: 1px solid #c9d2df !important;
+  border-radius: 10px;
+
+  outline: none !important;
+
+  color: #101419 !important;
+  background: #ffffff !important;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+
+  resize: vertical;
+
+  box-shadow: none !important;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.mentee-profile-field textarea:hover {
+  border-color: #97aac2 !important;
+}
+
+/*
+   This intentionally overrides old global orange/teal
+   textarea focus rules from index.css.
+*/
+.mentee-profile-page
+.mentee-profile-field textarea:focus,
+.mentee-profile-page
+.mentee-profile-field textarea:focus-visible,
+.mentee-profile-page
+.mentee-profile-field textarea:active {
+  border-color: #4c5867 !important;
+
+  outline: none !important;
+
+  color: #101419 !important;
+  background: #ffffff !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(
+      76,
+      88,
+      103,
+      0.10
+    ) !important;
+}
+
+.mentee-profile-field textarea::placeholder {
+  color: #97aac2 !important;
+
+  opacity: 1;
+}
+
+.mentee-profile-field textarea:disabled {
+  color: #8794a4 !important;
+  background: #f7f8fa !important;
+
+  cursor: not-allowed;
+
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------
+   MENTORSHIP AREA OPTIONS
+   --------------------------------------------------------- */
+
+.mentee-profile-options {
+  margin: 0 0 18px;
+  padding: 0;
+
+  border: 0;
+}
+
+.mentee-profile-options legend {
+  margin-bottom: 11px;
+
+  color: #101419;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mentee-profile-checkbox-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 10px;
+}
+
+.mentee-profile-checkbox-grid label,
+.mentee-profile-agreements label {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  min-width: 0;
+  padding: 12px;
+
+  border: 1px solid #e4e8ef !important;
+  border-radius: 10px;
+
+  color: #4c5867 !important;
+  background: #ffffff !important;
+
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.55;
+
+  cursor: pointer;
+
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.mentee-profile-checkbox-grid label:hover,
+.mentee-profile-agreements label:hover {
+  border-color: #c9d2df !important;
+
+  background: #f8f9fb !important;
+}
+
+/* Selected states use soft orange instead of teal/green. */
+.mentee-profile-checkbox-grid
+label:has(input:checked),
+.mentee-profile-agreements
+label:has(input:checked) {
+  border-color: #ffcbc5 !important;
+
+  color: #2d353f !important;
+  background: #fffaf9 !important;
+}
+
+.mentee-profile-checkbox-grid input,
+.mentee-profile-agreements input {
+  flex: 0 0 17px;
+
+  width: 17px;
+  height: 17px;
+
+  margin: 1px 0 0;
+
+  accent-color: #ff5303 !important;
+}
+
+/* Calm keyboard focus without bright orange/teal rings. */
+.mentee-profile-checkbox-grid
+input:focus-visible,
+.mentee-profile-agreements
+input:focus-visible {
+  outline:
+    2px solid
+    rgba(
+      76,
+      88,
+      103,
+      0.28
+    ) !important;
+
+  outline-offset: 2px !important;
+}
+
+.mentee-profile-agreements {
+  display: grid;
+
+  gap: 10px;
+}
+
+/* ---------------------------------------------------------
+   ACTION
+   --------------------------------------------------------- */
+
+.mentee-profile-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  padding-bottom: 10px;
+}
+
+.mentee-profile-actions
+.mentee-profile-button,
+.mentee-profile-actions
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 170px;
+  min-height: 42px;
+
+  padding: 0 16px;
+
+  border: 1px solid #ff5303 !important;
+  border-radius: 9px;
+
+  color: #ffffff !important;
+  background: #ff5303 !important;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+
+  cursor: pointer;
+
+  box-shadow: none !important;
+  transform: none !important;
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    opacity 160ms ease;
+}
+
+.mentee-profile-actions
+.mentee-profile-button:hover:not(:disabled),
+.mentee-profile-actions
+.primary-button:hover:not(:disabled) {
+  border-color: #c13c00 !important;
+
+  color: #ffffff !important;
+  background: #c13c00 !important;
+
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.mentee-profile-actions
+.mentee-profile-button:focus-visible,
+.mentee-profile-actions
+.primary-button:focus-visible {
+  outline:
+    2px solid
+    rgba(
+      76,
+      88,
+      103,
+      0.26
+    ) !important;
+
+  outline-offset: 2px;
+}
+
+.mentee-profile-actions
+.mentee-profile-button:disabled,
+.mentee-profile-actions
+.primary-button:disabled {
+  border-color: #dfe4eb !important;
+
+  color: #97aac2 !important;
+  background: #eef1f5 !important;
+
+  cursor: not-allowed;
+
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------
+   LOADING STATE
+   --------------------------------------------------------- */
+
+.mentee-profile-page
+.dashboard-empty-state {
+  min-height: 320px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff !important;
+}
+
+.mentee-profile-page
+.dashboard-empty-state h2 {
+  color: #101419;
+}
+
+.mentee-profile-page
+.dashboard-empty-state p {
+  color: #4c5867;
+}
+
+.mentee-profile-page .loader {
+  border-color: #e4e8ef;
+  border-top-color: #ff5303;
+}
+
+/* ---------------------------------------------------------
+   TABLET
+   --------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .mentee-profile-form {
+    gap: 18px;
+  }
+}
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .mentee-profile-intro,
+  .mentee-profile-section {
+    padding: 20px;
+
+    border-radius: 14px;
+  }
+
+  .mentee-profile-checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mentee-profile-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mentee-profile-actions
+  .mentee-profile-button,
+  .mentee-profile-actions
+  .primary-button {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .mentee-profile-intro,
+  .mentee-profile-section {
+    padding: 18px;
+  }
+
+  .mentee-profile-field textarea {
+    min-height: 112px;
+  }
+}

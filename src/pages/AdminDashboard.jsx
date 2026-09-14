@@ -1,55 +1,125 @@
-import { ClipboardCheck, GitPullRequest, UserCheck, Users } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  GitPullRequest,
+  Search,
+  UserCheck,
+  Users,
+  X,
+} from "lucide-react";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import { supabase } from "../lib/supabase";
 
+import "./AdminDashboard.css";
+
+const ATTENTION_PAGE_SIZE = 5;
+const PEOPLE_PAGE_SIZE = 10;
+const APPLICATION_PAGE_SIZE = 10;
+
+const ADMIN_ROUTES = {
+  overview: "/admin/dashboard",
+  people: "/admin/dashboard/people",
+  applications: "/admin/dashboard/mentor-applications",
+  requests: "/admin/dashboard/mentorship-requests",
+};
+
 const pageInformation = {
-  "/admin/dashboard": {
+  overview: {
     title: "Community overview",
     description:
       "Monitor registration, mentor applications and mentorship requests.",
   },
 
-  "/admin/dashboard/people": {
+  people: {
     title: "People",
-    description: "View the people who have registered on Mentor Connect.",
+    description:
+      "View the people who have registered on Mentor Connect.",
   },
 
-  "/admin/dashboard/applications": {
+  applications: {
     title: "Mentor applications",
-    description: "Review people who have applied to become mentors.",
+    description:
+      "Review people who have applied to become mentors.",
   },
 
-  "/admin/dashboard/requests": {
+  requests: {
     title: "Mentorship requests",
-    description: "Monitor the mentorship requests submitted by mentees.",
+    description:
+      "Monitor the mentorship requests submitted by mentees.",
   },
 };
+
+function getAdminSection(pathname) {
+  const cleanPath =
+    pathname.length > 1
+      ? pathname.replace(/\/+$/, "")
+      : pathname;
+
+  if (
+    cleanPath === ADMIN_ROUTES.people
+  ) {
+    return "people";
+  }
+
+  if (
+    cleanPath ===
+      ADMIN_ROUTES.applications ||
+    cleanPath ===
+      "/admin/dashboard/applications"
+  ) {
+    return "applications";
+  }
+
+  if (
+    cleanPath ===
+      ADMIN_ROUTES.requests ||
+    cleanPath ===
+      "/admin/dashboard/requests"
+  ) {
+    return "requests";
+  }
+
+  return "overview";
+}
 
 function AdminDashboard() {
   const location = useLocation();
 
+  const section =
+    getAdminSection(
+      location.pathname,
+    );
+
   const currentPage =
-    pageInformation[location.pathname] ?? pageInformation["/admin/dashboard"];
+    pageInformation[section];
 
   return (
     <DashboardLayout
       title={currentPage.title}
       description={currentPage.description}
     >
-      {location.pathname === "/admin/dashboard/people" && <PeoplePage />}
+      {section === "people" && (
+        <PeoplePage />
+      )}
 
-      {location.pathname === "/admin/dashboard/applications" && (
+      {section ===
+        "applications" && (
         <ApplicationsPage />
       )}
 
-      {location.pathname === "/admin/dashboard/requests" && <RequestsPage />}
+      {section === "requests" && (
+        <RequestsPage />
+      )}
 
-      {location.pathname === "/admin/dashboard" && <OverviewPage />}
+      {section === "overview" && (
+        <OverviewPage />
+      )}
     </DashboardLayout>
   );
 }
@@ -62,19 +132,23 @@ function OverviewPage() {
     pendingRequests: 0,
   });
 
+  const [attentionItems, setAttentionItems] = useState([]);
+  const [attentionPage, setAttentionPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadStatistics() {
+    async function loadOverview() {
       setLoading(true);
       setError("");
 
       const [
         peopleResult,
         approvedMentorsResult,
+        pendingApplicationsCountResult,
+        pendingRequestsCountResult,
         pendingApplicationsResult,
         pendingRequestsResult,
       ] = await Promise.all([
@@ -92,12 +166,12 @@ function OverviewPage() {
           .eq("approval_status", "approved"),
 
         supabase
-          .from("mentor_profiles")
+          .from("mentor_applications")
           .select("*", {
             count: "exact",
             head: true,
           })
-          .eq("approval_status", "pending"),
+          .eq("status", "pending"),
 
         supabase
           .from("mentorship_requests")
@@ -106,6 +180,50 @@ function OverviewPage() {
             head: true,
           })
           .eq("status", "pending"),
+
+        supabase
+          .from("mentor_applications")
+          .select(
+            `
+              id,
+              applicant_user_id,
+              expertise,
+              mentorship_categories,
+              status,
+              created_at,
+              applicant:profiles!mentor_applications_applicant_user_id_fkey (
+                full_name,
+                email
+              )
+            `,
+          )
+          .eq("status", "pending")
+          .order("created_at", {
+            ascending: false,
+          }),
+
+        supabase
+          .from("mentorship_requests")
+          .select(
+            `
+              id,
+              mentoring_area,
+              status,
+              created_at,
+              mentee:profiles!mentorship_requests_mentee_id_fkey (
+                full_name,
+                email
+              ),
+              mentor:profiles!mentorship_requests_mentor_id_fkey (
+                full_name,
+                email
+              )
+            `,
+          )
+          .eq("status", "pending")
+          .order("created_at", {
+            ascending: false,
+          }),
       ]);
 
       if (!isMounted) {
@@ -115,29 +233,80 @@ function OverviewPage() {
       const firstError =
         peopleResult.error ||
         approvedMentorsResult.error ||
+        pendingApplicationsCountResult.error ||
+        pendingRequestsCountResult.error ||
         pendingApplicationsResult.error ||
         pendingRequestsResult.error;
 
       if (firstError) {
-        console.error("Unable to load Admin statistics:", firstError);
+        console.error("Unable to load Admin overview:", firstError);
 
         setError("We could not load the dashboard information.");
-
         setLoading(false);
         return;
       }
 
+      const applicationItems = (pendingApplicationsResult.data ?? []).map(
+        (application) => {
+          const areas =
+            application.expertise?.length > 0
+              ? application.expertise
+              : application.mentorship_categories ?? [];
+
+          return {
+            id: `application-${application.id}`,
+            type: "Mentor application",
+            personName:
+              application.applicant?.full_name || "Applicant name not provided",
+            personEmail: application.applicant?.email || "",
+            detail:
+              areas.slice(0, 2).join(", ") || "Mentoring areas not provided",
+            submittedAt: application.created_at,
+            status: application.status,
+            reviewPath: ADMIN_ROUTES.applications,
+          };
+        },
+      );
+
+      const requestItems = (pendingRequestsResult.data ?? []).map((request) => ({
+        id: `request-${request.id}`,
+        type: "Mentorship request",
+        personName: request.mentee?.full_name || "Mentee",
+        personEmail: request.mentee?.email || "",
+        detail: request.mentoring_area || "Mentoring area not provided",
+        submittedAt: request.created_at,
+        status: request.status,
+        reviewPath: ADMIN_ROUTES.requests,
+      }));
+
+      const combinedAttentionItems = [
+        ...applicationItems,
+        ...requestItems,
+      ].sort((firstItem, secondItem) => {
+        const firstDate = firstItem.submittedAt
+          ? new Date(firstItem.submittedAt).getTime()
+          : 0;
+
+        const secondDate = secondItem.submittedAt
+          ? new Date(secondItem.submittedAt).getTime()
+          : 0;
+
+        return secondDate - firstDate;
+      });
+
       setStatistics({
         registeredPeople: peopleResult.count ?? 0,
         approvedMentors: approvedMentorsResult.count ?? 0,
-        pendingApplications: pendingApplicationsResult.count ?? 0,
-        pendingRequests: pendingRequestsResult.count ?? 0,
+        pendingApplications: pendingApplicationsCountResult.count ?? 0,
+        pendingRequests: pendingRequestsCountResult.count ?? 0,
       });
 
+      setAttentionItems(combinedAttentionItems);
+      setAttentionPage(1);
       setLoading(false);
     }
 
-    loadStatistics();
+    loadOverview();
 
     return () => {
       isMounted = false;
@@ -146,6 +315,29 @@ function OverviewPage() {
 
   const attentionCount =
     statistics.pendingApplications + statistics.pendingRequests;
+
+  const totalAttentionPages = Math.max(
+    1,
+    Math.ceil(attentionItems.length / ATTENTION_PAGE_SIZE),
+  );
+
+  const safeAttentionPage = Math.min(attentionPage, totalAttentionPages);
+
+  const firstAttentionIndex =
+    (safeAttentionPage - 1) * ATTENTION_PAGE_SIZE;
+
+  const visibleAttentionItems = attentionItems.slice(
+    firstAttentionIndex,
+    firstAttentionIndex + ATTENTION_PAGE_SIZE,
+  );
+
+  const visibleStart =
+    attentionItems.length === 0 ? 0 : firstAttentionIndex + 1;
+
+  const visibleEnd = Math.min(
+    firstAttentionIndex + ATTENTION_PAGE_SIZE,
+    attentionItems.length,
+  );
 
   if (loading) {
     return <AdminLoadingState />;
@@ -156,55 +348,198 @@ function OverviewPage() {
   }
 
   return (
-    <>
-      <section className="dashboard-hero">
-        <div>
-          <span className="eyebrow">MODERATED COMMUNITY</span>
+    <div className="admin-overview-page">
+      <section className="admin-overview-hero">
+        <div className="admin-overview-hero-copy">
+          <span className="admin-overview-eyebrow">MODERATED COMMUNITY</span>
 
           <h2>A trusted mentoring community, growing with care.</h2>
 
-          <p>
-            {attentionCount === 0
-              ? "There are no pending items requiring attention."
-              : `${attentionCount} ${
-                  attentionCount === 1 ? "item requires" : "items require"
-                } administrator attention.`}
-          </p>
+          <div className="admin-overview-attention-message">
+            <span className="admin-overview-attention-count">
+              {attentionCount}
+            </span>
+
+            <p>
+              {attentionCount === 0
+                ? "There are no pending items requiring administrator attention."
+                : `${attentionCount} ${
+                    attentionCount === 1 ? "item requires" : "items require"
+                  } administrator attention.`}
+            </p>
+          </div>
+        </div>
+
+        <div className="admin-overview-pattern" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
         </div>
       </section>
 
-      <section className="summary-grid four-columns">
+      <section className="admin-summary-grid" aria-label="Community summary">
         <SummaryCard
-          icon={<Users />}
+          icon={<Users size={19} />}
           label="Registered people"
           value={statistics.registeredPeople}
         />
 
         <SummaryCard
-          icon={<UserCheck />}
+          icon={<UserCheck size={19} />}
           label="Approved mentors"
           value={statistics.approvedMentors}
         />
 
         <SummaryCard
-          icon={<ClipboardCheck />}
+          icon={<ClipboardCheck size={19} />}
           label="Pending applications"
           value={statistics.pendingApplications}
+          attention={statistics.pendingApplications > 0}
         />
 
         <SummaryCard
-          icon={<GitPullRequest />}
+          icon={<GitPullRequest size={19} />}
           label="Pending requests"
           value={statistics.pendingRequests}
+          attention={statistics.pendingRequests > 0}
         />
       </section>
-    </>
+
+      <section
+        className="admin-attention-section"
+        id="admin-needs-attention"
+      >
+        <div className="admin-attention-heading">
+          <div>
+            <span className="admin-section-eyebrow">NEEDS ATTENTION</span>
+
+            <h2>Pending items</h2>
+
+            <p>
+              Mentor applications and mentorship requests waiting for
+              administrator review.
+            </p>
+          </div>
+
+        </div>
+
+        {attentionItems.length === 0 ? (
+          <div className="admin-attention-empty">
+            <span>
+              <ClipboardCheck size={21} />
+            </span>
+
+            <div>
+              <strong>You are all caught up.</strong>
+              <p>There are no pending applications or requests to review.</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="admin-attention-table-wrapper">
+              <table className="admin-attention-table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Person</th>
+                    <th>Details</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th aria-label="Action" />
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {visibleAttentionItems.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <span className="admin-attention-type">
+                          {item.type}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="admin-attention-person">
+                          <strong>{item.personName}</strong>
+
+                          {item.personEmail && <small>{item.personEmail}</small>}
+                        </div>
+                      </td>
+
+                      <td className="admin-attention-detail">{item.detail}</td>
+
+                      <td>{formatDate(item.submittedAt)}</td>
+
+                      <td>
+                        <StatusBadge value={item.status} />
+                      </td>
+
+                      <td className="admin-attention-action-cell">
+                        <Link
+                          to={item.reviewPath}
+                          className="admin-review-link"
+                        >
+                          Review
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="admin-table-pagination">
+              <p>
+                Showing {visibleStart}-{visibleEnd} of {attentionItems.length}
+              </p>
+
+              <div className="admin-pagination-controls">
+                <button
+                  type="button"
+                  aria-label="Previous page"
+                  onClick={() =>
+                    setAttentionPage((currentPage) =>
+                      Math.max(1, currentPage - 1),
+                    )
+                  }
+                  disabled={safeAttentionPage === 1}
+                >
+                  <ChevronLeft size={16} />
+                  Previous
+                </button>
+
+                <span>
+                  Page {safeAttentionPage} of {totalAttentionPages}
+                </span>
+
+                <button
+                  type="button"
+                  aria-label="Next page"
+                  onClick={() =>
+                    setAttentionPage((currentPage) =>
+                      Math.min(totalAttentionPages, currentPage + 1),
+                    )
+                  }
+                  disabled={safeAttentionPage === totalAttentionPages}
+                >
+                  Next
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </section>
+    </div>
   );
 }
 
 function PeoplePage() {
   const [people, setPeople] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [peoplePage, setPeoplePage] = useState(1);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [selectedAction, setSelectedAction] = useState("");
   const [loading, setLoading] = useState(true);
@@ -225,6 +560,7 @@ function PeoplePage() {
           email,
           phone_number,
           role,
+          signup_intent,
           account_status,
           membership_verified,
           email_verified,
@@ -312,12 +648,55 @@ function PeoplePage() {
       return true;
     }
 
-    return [person.full_name, person.email, person.role, person.account_status]
+    return [
+      person.full_name,
+      person.email,
+      person.role,
+      person.signup_intent,
+      getPersonAccountType(person),
+      person.account_status,
+    ]
       .filter(Boolean)
       .join(" ")
       .toLowerCase()
       .includes(searchValue);
   });
+
+  const totalPeoplePages = Math.max(
+    1,
+    Math.ceil(
+      filteredPeople.length /
+        PEOPLE_PAGE_SIZE,
+    ),
+  );
+
+  const safePeoplePage = Math.min(
+    peoplePage,
+    totalPeoplePages,
+  );
+
+  const firstPeopleIndex =
+    (safePeoplePage - 1) *
+    PEOPLE_PAGE_SIZE;
+
+  const visiblePeople =
+    filteredPeople.slice(
+      firstPeopleIndex,
+      firstPeopleIndex +
+        PEOPLE_PAGE_SIZE,
+    );
+
+  const visiblePeopleStart =
+    filteredPeople.length === 0
+      ? 0
+      : firstPeopleIndex + 1;
+
+  const visiblePeopleEnd =
+    Math.min(
+      firstPeopleIndex +
+        PEOPLE_PAGE_SIZE,
+      filteredPeople.length,
+    );
 
   if (loading) {
     return <AdminLoadingState />;
@@ -331,7 +710,12 @@ function PeoplePage() {
           value={searchTerm}
           placeholder="Search by name, email or role"
           aria-label="Search registered people"
-          onChange={(event) => setSearchTerm(event.target.value)}
+          onChange={(event) => {
+            setSearchTerm(
+              event.target.value,
+            );
+            setPeoplePage(1);
+          }}
         />
 
         <span>
@@ -361,7 +745,7 @@ function PeoplePage() {
               <tr>
                 <th>Name</th>
                 <th>Email address</th>
-                <th>Role</th>
+                <th>Account type</th>
                 <th>Account status</th>
                 <th>Membership</th>
                 <th>Registered</th>
@@ -370,7 +754,7 @@ function PeoplePage() {
             </thead>
 
             <tbody>
-              {filteredPeople.map((person) => (
+              {visiblePeople.map((person) => (
                 <tr key={person.id}>
                   <td>
                     <strong>{person.full_name || "Name not provided"}</strong>
@@ -379,7 +763,10 @@ function PeoplePage() {
                   <td>{person.email}</td>
 
                   <td>
-                    <StatusBadge value={person.role} />
+                    <StatusBadge
+                      value={getPersonAccountTypeValue(person)}
+                      label={getPersonAccountType(person)}
+                    />
                   </td>
 
                   <td>
@@ -409,6 +796,67 @@ function PeoplePage() {
               ))}
             </tbody>
           </table>
+
+          <div className="admin-table-pagination">
+            <p>
+              Showing{" "}
+              {visiblePeopleStart}-
+              {visiblePeopleEnd} of{" "}
+              {filteredPeople.length}
+            </p>
+
+            <div className="admin-pagination-controls">
+              <button
+                type="button"
+                aria-label="Previous people page"
+                onClick={() =>
+                  setPeoplePage(
+                    (currentPage) =>
+                      Math.max(
+                        1,
+                        currentPage - 1,
+                      ),
+                  )
+                }
+                disabled={
+                  safePeoplePage === 1
+                }
+              >
+                <ChevronLeft
+                  size={16}
+                />
+                Previous
+              </button>
+
+              <span>
+                Page {safePeoplePage} of{" "}
+                {totalPeoplePages}
+              </span>
+
+              <button
+                type="button"
+                aria-label="Next people page"
+                onClick={() =>
+                  setPeoplePage(
+                    (currentPage) =>
+                      Math.min(
+                        totalPeoplePages,
+                        currentPage + 1,
+                      ),
+                  )
+                }
+                disabled={
+                  safePeoplePage ===
+                  totalPeoplePages
+                }
+              >
+                Next
+                <ChevronRight
+                  size={16}
+                />
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -423,6 +871,50 @@ function PeoplePage() {
       )}
     </section>
   );
+}
+
+function getPersonAccountType(person) {
+  if (
+    person.role === "admin" ||
+    person.role === "safeguarding_lead"
+  ) {
+    return "Admin";
+  }
+
+  if (person.role === "mentor") {
+    return "Mentor";
+  }
+
+  if (
+    person.role === "mentee" &&
+    person.signup_intent === "mentor"
+  ) {
+    return "Mentor";
+  }
+
+  return "Mentee";
+}
+
+function getPersonAccountTypeValue(person) {
+  if (
+    person.role === "admin" ||
+    person.role === "safeguarding_lead"
+  ) {
+    return "admin";
+  }
+
+  if (person.role === "mentor") {
+    return "mentor";
+  }
+
+  if (
+    person.role === "mentee" &&
+    person.signup_intent === "mentor"
+  ) {
+    return "mentor_applicant";
+  }
+
+  return "mentee";
 }
 
 function MemberActions({ person, onAction }) {
@@ -592,128 +1084,610 @@ function getSuccessMessage(action) {
 
 function ApplicationsPage() {
   const [applications, setApplications] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [reviewMode, setReviewMode] = useState("");
+  const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadApplications() {
-      const { data, error: applicationError } = await supabase
-        .from("mentor_profiles")
-        .select(
-          `
-            mentor_id,
-            job_title,
-            organisation,
-            years_of_experience,
-            expertise,
-            mentorship_categories,
-            approval_status,
-            created_at,
-            profiles!mentor_profiles_mentor_id_fkey (
-              full_name,
-              email
-            )
-          `,
-        )
-        .order("created_at", {
-          ascending: false,
-        });
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (applicationError) {
-        console.error(applicationError);
-
-        setError("We could not load mentor applications.");
-
-        setLoading(false);
-        return;
-      }
-
-      setApplications(data ?? []);
-      setLoading(false);
+  async function loadApplications({ keepModalOpen = false } = {}) {
+    if (!keepModalOpen) {
+      setLoading(true);
     }
 
+    setError("");
+
+    const { data, error: applicationError } = await supabase
+      .from("mentor_applications")
+      .select(
+        `
+          id,
+          applicant_user_id,
+          biography,
+          job_title,
+          organisation,
+          expertise,
+          mentorship_categories,
+          languages,
+          meeting_formats,
+          session_lengths,
+          maximum_active_mentees,
+          years_of_experience,
+          status,
+          admin_feedback,
+          reviewed_at,
+          reviewed_by,
+          approved_at,
+          mentor_account_id,
+          created_at,
+          updated_at,
+          applicant:profiles!mentor_applications_applicant_user_id_fkey (
+            id,
+            full_name,
+            email,
+            phone_number,
+            account_status,
+            membership_verified
+          )
+        `,
+      )
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (applicationError) {
+      console.error(applicationError);
+      setError("We could not load mentor applications.");
+      setLoading(false);
+      return;
+    }
+
+    const nextApplications = data ?? [];
+    setApplications(nextApplications);
+
+    if (keepModalOpen && selectedApplication) {
+      const refreshedApplication = nextApplications.find(
+        (application) => application.id === selectedApplication.id,
+      );
+
+      setSelectedApplication(refreshedApplication ?? null);
+    }
+
+    setLoading(false);
+  }
+
+  useEffect(() => {
     loadApplications();
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
+  useEffect(() => {
+    if (!selectedApplication) {
+      return undefined;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleEscape(event) {
+      if (event.key === "Escape" && !processing) {
+        closeReview();
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
 
     return () => {
-      isMounted = false;
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleEscape);
     };
-  }, []);
+  }, [selectedApplication, processing]);
+
+  function openReview(application) {
+    setSelectedApplication(application);
+    setReviewMode("");
+    setFeedback(application.admin_feedback ?? "");
+    setError("");
+    setSuccess("");
+  }
+
+  function closeReview() {
+    if (processing) {
+      return;
+    }
+
+    setSelectedApplication(null);
+    setReviewMode("");
+    setFeedback("");
+    setError("");
+    setSuccess("");
+  }
+
+  async function submitReview(action) {
+    if (!selectedApplication || selectedApplication.status !== "pending") {
+      return;
+    }
+
+    if (action === "reject" && !feedback.trim()) {
+      setError("Please provide feedback before rejecting this application.");
+      setReviewMode("reject");
+      return;
+    }
+
+    setProcessing(true);
+    setError("");
+    setSuccess("");
+
+    const { error: reviewError } = await supabase.rpc(
+      "admin_review_mentor_application",
+      {
+        p_application_id: selectedApplication.id,
+        p_action: action,
+        p_feedback: action === "reject" ? feedback.trim() : null,
+      },
+    );
+
+    if (reviewError) {
+      console.error(reviewError);
+      setError(
+        reviewError.message || "We could not review this mentor application.",
+      );
+      setProcessing(false);
+      return;
+    }
+
+    setSuccess(
+      action === "approve"
+        ? "The mentor application has been approved."
+        : "The mentor application has been rejected.",
+    );
+
+    setReviewMode("");
+    await loadApplications({ keepModalOpen: true });
+    setProcessing(false);
+  }
+
+  const filteredApplications = useMemo(() => {
+    const searchValue = searchTerm.trim().toLowerCase();
+
+    return applications.filter((application) => {
+      const matchesStatus =
+        statusFilter === "all" || application.status === statusFilter;
+
+      if (!matchesStatus) {
+        return false;
+      }
+
+      if (!searchValue) {
+        return true;
+      }
+
+      return [
+        application.applicant?.full_name,
+        application.applicant?.email,
+        application.job_title,
+        application.organisation,
+        application.status,
+        ...(application.expertise ?? []),
+        ...(application.mentorship_categories ?? []),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(searchValue);
+    });
+  }, [applications, searchTerm, statusFilter]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredApplications.length / APPLICATION_PAGE_SIZE),
+  );
+
+  const safePage = Math.min(currentPage, totalPages);
+  const firstIndex = (safePage - 1) * APPLICATION_PAGE_SIZE;
+  const visibleApplications = filteredApplications.slice(
+    firstIndex,
+    firstIndex + APPLICATION_PAGE_SIZE,
+  );
+
+  const visibleStart =
+    filteredApplications.length === 0 ? 0 : firstIndex + 1;
+
+  const visibleEnd = Math.min(
+    firstIndex + APPLICATION_PAGE_SIZE,
+    filteredApplications.length,
+  );
 
   if (loading) {
     return <AdminLoadingState />;
   }
 
-  if (error) {
-    return <AdminErrorState message={error} />;
-  }
+  return (
+    <>
+      <section className="admin-list-section">
+        <div className="admin-application-toolbar">
+          <div className="admin-search-field">
+            <Search size={16} aria-hidden="true" />
 
-  if (applications.length === 0) {
-    return (
-      <AdminEmptyState
-        title="No mentor applications"
-        description="Applications will appear here after mentors complete and submit their profiles."
-      />
-    );
-  }
+            <input
+              type="search"
+              value={searchTerm}
+              placeholder="Search applicant, email or expertise"
+              aria-label="Search mentor applications"
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </div>
+
+          <div className="admin-application-filters">
+            {[
+              { value: "all", label: "All" },
+              { value: "pending", label: "Pending" },
+              { value: "approved", label: "Approved" },
+              { value: "rejected", label: "Rejected" },
+            ].map((filter) => (
+              <button
+                key={filter.value}
+                type="button"
+                className={statusFilter === filter.value ? "active" : ""}
+                onClick={() => setStatusFilter(filter.value)}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {success && <p className="admin-success-message">{success}</p>}
+
+        {error && !selectedApplication && (
+          <p className="form-error">{error}</p>
+        )}
+
+        {applications.length === 0 ? (
+          <AdminEmptyState
+            title="No mentor applications"
+            description="Applications will appear here after eligible members submit them."
+          />
+        ) : filteredApplications.length === 0 ? (
+          <AdminEmptyState
+            title="No matching applications"
+            description="Try another search term or status filter."
+          />
+        ) : (
+          <div className="admin-application-table-shell">
+            <div className="admin-table-wrapper admin-table-wrapper--flush">
+              <table className="admin-data-table admin-application-table">
+                <thead>
+                  <tr>
+                    <th>Applicant</th>
+                    <th>Current role</th>
+                    <th>Experience</th>
+                    <th>Mentoring areas</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th aria-label="Action" />
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {visibleApplications.map((application) => (
+                    <tr key={application.id}>
+                      <td>
+                        <strong>
+                          {application.applicant?.full_name ||
+                            "Name not provided"}
+                        </strong>
+                        <small>{application.applicant?.email || ""}</small>
+                      </td>
+
+                      <td>
+                        {application.job_title || "Not provided"}
+                        {application.organisation && (
+                          <small>{application.organisation}</small>
+                        )}
+                      </td>
+
+                      <td>{application.years_of_experience ?? 0} years</td>
+
+                      <td className="admin-application-areas-cell">
+                        {(application.expertise ?? []).slice(0, 3).join(", ") ||
+                          "Not provided"}
+                      </td>
+
+                      <td>
+                        <StatusBadge value={application.status} />
+                      </td>
+
+                      <td>{formatDate(application.created_at)}</td>
+
+                      <td className="admin-table-action-cell">
+                        <button
+                          type="button"
+                          className="admin-review-button"
+                          onClick={() => openReview(application)}
+                        >
+                          {application.status === "pending" ? "Review" : "View"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="admin-table-pagination">
+              <p>
+                Showing {visibleStart}-{visibleEnd} of {filteredApplications.length}
+              </p>
+
+              <div className="admin-pagination-controls">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((page) => Math.max(1, page - 1))
+                  }
+                  disabled={safePage === 1}
+                >
+                  <ChevronLeft size={16} />
+                  Previous
+                </button>
+
+                <span>
+                  Page {safePage} of {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((page) => Math.min(totalPages, page + 1))
+                  }
+                  disabled={safePage === totalPages}
+                >
+                  Next
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {selectedApplication && (
+        <ApplicationReviewModal
+          application={selectedApplication}
+          reviewMode={reviewMode}
+          setReviewMode={setReviewMode}
+          feedback={feedback}
+          setFeedback={setFeedback}
+          error={error}
+          success={success}
+          processing={processing}
+          onSubmitReview={submitReview}
+          onClose={closeReview}
+        />
+      )}
+    </>
+  );
+}
+
+function ApplicationReviewModal({
+  application,
+  reviewMode,
+  setReviewMode,
+  feedback,
+  setFeedback,
+  error,
+  success,
+  processing,
+  onSubmitReview,
+  onClose,
+}) {
+  const isPending = application.status === "pending";
 
   return (
-    <section className="admin-list-section">
-      <div className="admin-table-wrapper">
-        <table className="admin-data-table">
-          <thead>
-            <tr>
-              <th>Applicant</th>
-              <th>Job title</th>
-              <th>Experience</th>
-              <th>Expertise</th>
-              <th>Status</th>
-              <th>Submitted</th>
-            </tr>
-          </thead>
+    <div
+      className="admin-modal-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !processing) {
+          onClose();
+        }
+      }}
+    >
+      <section
+        className="admin-application-review-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mentor-application-review-title"
+      >
+        <div className="admin-review-modal-header">
+          <div>
+            <span className="admin-section-eyebrow">MENTOR APPLICATION</span>
+            <h2 id="mentor-application-review-title">
+              {application.applicant?.full_name || "Applicant"}
+            </h2>
+            <p>{application.applicant?.email || ""}</p>
+          </div>
 
-          <tbody>
-            {applications.map((application) => (
-              <tr key={application.mentor_id}>
-                <td>
-                  <strong>
-                    {application.profiles?.full_name || "Name not provided"}
-                  </strong>
+          <button
+            type="button"
+            className="admin-modal-close-button"
+            onClick={onClose}
+            disabled={processing}
+            aria-label="Close application review"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-                  <small>{application.profiles?.email}</small>
-                </td>
+        <div className="admin-review-status-row">
+          <StatusBadge value={application.status} />
+          <span>Submitted {formatDate(application.created_at)}</span>
+        </div>
 
-                <td>
-                  {application.job_title || "Not provided"}
+        <div className="admin-review-details-grid">
+          <ReviewDetail
+            label="Current role"
+            value={application.job_title || "Not provided"}
+          />
+          <ReviewDetail
+            label="Organisation"
+            value={application.organisation || "Not provided"}
+          />
+          <ReviewDetail
+            label="Experience"
+            value={`${application.years_of_experience ?? 0} years`}
+          />
+          <ReviewDetail
+            label="Maximum active mentees"
+            value={application.maximum_active_mentees ?? "Not provided"}
+          />
+          <ReviewDetail
+            label="Meeting format"
+            value={(application.meeting_formats ?? []).join(", ")}
+          />
+          <ReviewDetail
+            label="Session length"
+            value={(application.session_lengths ?? [])
+              .map((length) => `${length} minutes`)
+              .join(", ")}
+          />
+        </div>
 
-                  {application.organisation && (
-                    <small>{application.organisation}</small>
-                  )}
-                </td>
+        <ReviewList label="Areas of expertise" items={application.expertise} />
+        <ReviewList
+          label="Mentorship categories"
+          items={application.mentorship_categories}
+        />
+        <ReviewList label="Languages" items={application.languages} />
 
-                <td>{application.years_of_experience ?? 0} years</td>
+        <div className="admin-review-long-copy">
+          <span>BIOGRAPHY</span>
+          <p>{application.biography || "Not provided"}</p>
+        </div>
 
-                <td>
-                  {(application.expertise ?? []).slice(0, 3).join(", ") ||
-                    "Not provided"}
-                </td>
+        {application.admin_feedback && (
+          <div className="admin-review-existing-feedback">
+            <strong>Administrator feedback</strong>
+            <p>{application.admin_feedback}</p>
+          </div>
+        )}
 
-                <td>
-                  <StatusBadge value={application.approval_status} />
-                </td>
+        {error && (
+          <p className="form-error admin-review-message" role="alert">
+            {error}
+          </p>
+        )}
 
-                <td>{formatDate(application.created_at)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+        {success && (
+          <p className="admin-success-message admin-review-message">
+            {success}
+          </p>
+        )}
+
+        {isPending && reviewMode === "reject" && (
+          <label className="admin-rejection-field">
+            <span>Feedback for the applicant</span>
+            <textarea
+              value={feedback}
+              onChange={(event) => setFeedback(event.target.value)}
+              rows="4"
+              placeholder="Explain what needs to change before they apply again."
+              disabled={processing}
+            />
+          </label>
+        )}
+
+        <div className="admin-review-modal-actions">
+          {isPending ? (
+            reviewMode === "reject" ? (
+              <>
+                <button
+                  type="button"
+                  className="admin-modal-cancel-button"
+                  onClick={() => setReviewMode("")}
+                  disabled={processing}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="admin-modal-confirm-button danger"
+                  onClick={() => onSubmitReview("reject")}
+                  disabled={processing}
+                >
+                  {processing ? "Rejecting..." : "Reject application"}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="admin-modal-cancel-button admin-reject-application-button"
+                  onClick={() => setReviewMode("reject")}
+                  disabled={processing}
+                >
+                  Reject
+                </button>
+
+                <button
+                  type="button"
+                  className="admin-modal-confirm-button admin-approve-application-button"
+                  onClick={() => onSubmitReview("approve")}
+                  disabled={processing}
+                >
+                  {processing ? "Approving..." : "Approve application"}
+                </button>
+              </>
+            )
+          ) : (
+            <button
+              type="button"
+              className="admin-modal-confirm-button"
+              onClick={onClose}
+            >
+              Close
+            </button>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ReviewDetail({ label, value }) {
+  return (
+    <div className="admin-review-detail">
+      <span>{label}</span>
+      <strong>{value || "Not provided"}</strong>
+    </div>
+  );
+}
+
+function ReviewList({ label, items = [] }) {
+  return (
+    <div className="admin-review-list">
+      <span>{label}</span>
+
+      {items.length > 0 ? (
+        <div>
+          {items.map((item) => (
+            <small key={item}>{item}</small>
+          ))}
+        </div>
+      ) : (
+        <p>Not provided</p>
+      )}
+    </div>
   );
 }
 
@@ -830,10 +1804,19 @@ function RequestsPage() {
   );
 }
 
-function SummaryCard({ icon, label, value }) {
+function SummaryCard({ icon, label, value, attention = false }) {
   return (
-    <article className="summary-card">
-      <span>{icon}</span>
+    <article
+      className={`admin-summary-card ${
+        attention ? "admin-summary-card-attention" : ""
+      }`}
+    >
+      <div className="admin-summary-card-top">
+        <span className="admin-summary-card-icon">{icon}</span>
+
+        {attention && <span className="admin-summary-card-dot" />}
+      </div>
+
       <small>{label}</small>
       <strong>{value}</strong>
     </article>

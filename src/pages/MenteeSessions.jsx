@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import "./MenteeSessions.css";
 
 function MenteeSessions() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ function MenteeSessions() {
   const [sessions, setSessions] = useState([]);
   const [acceptedRequests, setAcceptedRequests] = useState([]);
   const [activeTab, setActiveTab] = useState("upcoming");
+  const [sessionPage, setSessionPage] = useState(0);
 
   const today = useMemo(() => new Date(), []);
 
@@ -218,6 +220,14 @@ function MenteeSessions() {
       ? upcomingSessions
       : pastSessions;
 
+  const safeSessionPage = Math.min(
+    sessionPage,
+    Math.max(displayedSessions.length - 1, 0),
+  );
+
+  const currentSession =
+    displayedSessions[safeSessionPage] ?? null;
+
   const sessionsForSelectedDate = useMemo(
     () =>
       sessions.filter((session) =>
@@ -258,6 +268,30 @@ function MenteeSessions() {
       ),
     [visibleMonth],
   );
+
+  function changeSessionTab(tab) {
+    setActiveTab(tab);
+    setSessionPage(0);
+  }
+
+  function goToPreviousSession() {
+    setSessionPage((current) =>
+      Math.max(current - 1, 0),
+    );
+  }
+
+  function goToNextSession() {
+    setSessionPage((current) =>
+      Math.min(
+        current + 1,
+        Math.max(displayedSessions.length - 1, 0),
+      ),
+    );
+  }
+
+  function goToSessionPage(index) {
+    setSessionPage(index);
+  }
 
   function goToPreviousMonth() {
     setVisibleMonth(
@@ -321,15 +355,59 @@ function MenteeSessions() {
         title="My sessions"
         description="View your upcoming and previous mentoring sessions."
       >
-        <section className="dashboard-empty-state">
-          <div className="loader" />
+        <section className="mentee-sessions-summary">
+          <div>
+            <span className="eyebrow">
+              YOUR MENTORING SCHEDULE
+            </span>
 
-          <h2>Loading your sessions</h2>
+            <h2>
+              Keep your mentoring commitments in one place.
+            </h2>
 
-          <p>
-            Please wait while we prepare your mentoring
-            schedule.
-          </p>
+            <p>
+              Upcoming sessions, meeting details and previous
+              sessions will appear here.
+            </p>
+          </div>
+        </section>
+
+        <section className="mentee-session-workspace">
+          <div className="mentee-session-main-column">
+            <div className="mentee-session-loading-state">
+              <article className="mentee-session-loading-card">
+                <span className="mentee-session-loading-date" />
+
+                <div>
+                  <span className="mentee-session-loading-line mentee-session-loading-line--title" />
+                  <span className="mentee-session-loading-line" />
+                  <span className="mentee-session-loading-line mentee-session-loading-line--short" />
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <aside className="mentee-session-calendar-panel">
+            <div className="mentee-session-calendar-heading">
+              <span className="eyebrow">
+                CHECK A DATE
+              </span>
+
+              <h3>
+                View sessions for a specific day
+              </h3>
+
+              <p>
+                Loading your mentoring schedule.
+              </p>
+            </div>
+
+            <div className="mentee-session-calendar-loading">
+              <span />
+              <span />
+              <span />
+            </div>
+          </aside>
         </section>
       </DashboardLayout>
     );
@@ -341,14 +419,40 @@ function MenteeSessions() {
         title="My sessions"
         description="View your upcoming and previous mentoring sessions."
       >
-        <section className="dashboard-empty-state">
+        <div
+          className="mentee-session-inline-error"
+          role="alert"
+        >
+          {error}
+        </div>
+
+        <section className="mentee-sessions-summary">
+          <div>
+            <span className="eyebrow">
+              YOUR MENTORING SCHEDULE
+            </span>
+
+            <h2>
+              Keep your mentoring commitments in one place.
+            </h2>
+
+            <p>
+              Upcoming sessions, meeting details and previous
+              sessions will appear here.
+            </p>
+          </div>
+        </section>
+
+        <section className="mentee-session-empty-state">
           <span className="empty-state-icon">
             <CalendarDays size={30} />
           </span>
 
           <h2>Unable to load your sessions</h2>
 
-          <p>{error}</p>
+          <p>
+            We could not load your mentoring schedule.
+          </p>
 
           <button
             type="button"
@@ -418,9 +522,7 @@ function MenteeSessions() {
                   type="button"
                   className="secondary-button"
                   onClick={() =>
-                    navigate(
-                      `/mentee/requests/${request.id}`,
-                    )
+                    navigate("/mentee/requests")
                   }
                 >
                   View request
@@ -440,7 +542,7 @@ function MenteeSessions() {
               : ""
           }
           onClick={() =>
-            setActiveTab("upcoming")
+            changeSessionTab("upcoming")
           }
         >
           Upcoming
@@ -455,7 +557,7 @@ function MenteeSessions() {
               : ""
           }
           onClick={() =>
-            setActiveTab("past")
+            changeSessionTab("past")
           }
         >
           Previous
@@ -463,10 +565,16 @@ function MenteeSessions() {
         </button>
       </div>
 
-      <section className="mentee-session-workspace">
+      <section
+        className={`mentee-session-workspace ${
+          displayedSessions.length === 0
+            ? "mentee-session-workspace--empty"
+            : ""
+        }`}
+      >
         <div className="mentee-session-main-column">
           {displayedSessions.length === 0 ? (
-            <section className="dashboard-empty-state mentee-session-empty-state">
+            <section className="mentee-session-empty-state">
               <span className="empty-state-icon">
                 <CalendarDays size={30} />
               </span>
@@ -499,21 +607,75 @@ function MenteeSessions() {
                 )}
             </section>
           ) : (
-            <section className="mentee-session-grid">
-              {displayedSessions.map(
-                (session) => (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    onViewMentor={() =>
-                      navigate(
-                        `/mentee/mentors/${session.mentor_id}`,
-                      )
-                    }
-                  />
-                ),
+            <div className="mentee-session-paged-shell">
+              {currentSession && (
+                <SessionCard
+                  key={currentSession.id}
+                  session={currentSession}
+                  paginated
+                  onViewMentor={() =>
+                    navigate(
+                      `/mentee/mentors/${currentSession.mentor_id}`,
+                    )
+                  }
+                />
               )}
-            </section>
+
+              {displayedSessions.length > 1 && (
+                <nav
+                  className="mentee-session-pagination"
+                  aria-label="Session pages"
+                >
+                  <button
+                    type="button"
+                    className="mentee-session-pagination-nav"
+                    disabled={safeSessionPage === 0}
+                    onClick={goToPreviousSession}
+                  >
+                    Previous
+                  </button>
+
+                  <div className="mentee-session-pagination-pages">
+                    {displayedSessions.map(
+                      (session, index) => (
+                        <button
+                          key={session.id}
+                          type="button"
+                          aria-label={`Show session ${index + 1}`}
+                          aria-current={
+                            safeSessionPage === index
+                              ? "page"
+                              : undefined
+                          }
+                          className={
+                            safeSessionPage === index
+                              ? "active"
+                              : ""
+                          }
+                          onClick={() =>
+                            goToSessionPage(index)
+                          }
+                        >
+                          {index + 1}
+                        </button>
+                      ),
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="mentee-session-pagination-nav"
+                    disabled={
+                      safeSessionPage ===
+                      displayedSessions.length - 1
+                    }
+                    onClick={goToNextSession}
+                  >
+                    Next
+                  </button>
+                </nav>
+              )}
+            </div>
           )}
         </div>
 
@@ -795,6 +957,7 @@ function SessionCalendarItem({
 function SessionCard({
   session,
   onViewMentor,
+  paginated = false,
 }) {
   const mentorName =
     session.mentor?.full_name || "Mentor";
@@ -820,7 +983,16 @@ function SessionCard({
     session.status === "scheduled";
 
   return (
-    <article className="mentee-session-card">
+    <article
+      className={[
+        "mentee-session-card",
+        paginated
+          ? "mentee-session-card--paginated"
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div className="mentee-session-card-header">
         <div className="mentee-session-mentor">
           {session.mentor?.profile_photo_url ? (
@@ -950,7 +1122,7 @@ function SessionCard({
       <div className="mentee-session-actions">
         <button
           type="button"
-          className="secondary-button"
+          className="secondary-button mentee-session-view-mentor"
           onClick={onViewMentor}
         >
           <UserRound size={16} />
@@ -962,7 +1134,7 @@ function SessionCard({
             href={session.meeting_link}
             target="_blank"
             rel="noreferrer noopener"
-            className="primary-button"
+            className="primary-button mentee-session-join-button"
           >
             Join meeting
             <ExternalLink size={16} />

@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
   ClipboardCheck,
   GitPullRequest,
-  HeartHandshake,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -12,10 +10,8 @@ import {
   Search,
   Sparkles,
   UserRound,
-  Users,
   X,
 } from "lucide-react";
-
 import {
   NavLink,
   useLocation,
@@ -23,6 +19,7 @@ import {
 } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
+import "./DashboardLayout.css";
 
 const menus = {
   mentee: [
@@ -66,6 +63,14 @@ const menus = {
     },
   ],
 
+  mentorOnboarding: [
+    {
+      label: "Mentor application",
+      icon: ClipboardCheck,
+      path: "/mentor/apply",
+    },
+  ],
+
   admin: [
     {
       label: "Overview",
@@ -74,21 +79,38 @@ const menus = {
     },
     {
       label: "People",
-      icon: Users,
+      icon: UserRound,
       path: "/admin/dashboard/people",
     },
     {
       label: "Mentor applications",
       icon: ClipboardCheck,
-      path: "/admin/dashboard/applications",
+      path: "/admin/dashboard/mentor-applications",
     },
     {
       label: "Mentorship requests",
       icon: GitPullRequest,
-      path: "/admin/dashboard/requests",
+      path: "/admin/dashboard/mentorship-requests",
     },
   ],
 };
+
+function DashboardBrand() {
+  return (
+    <div className="dashboard-brand">
+      <img
+        className="dashboard-brand-logo"
+        src="/images/hothub-logo.png"
+        alt=""
+      />
+
+      <span className="dashboard-brand-text">
+        <strong>Mentor Connect</strong>
+        <small>TCN IKEJA</small>
+      </span>
+    </div>
+  );
+}
 
 function DashboardLayout({
   title,
@@ -98,9 +120,6 @@ function DashboardLayout({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [isMenuOpen, setIsMenuOpen] =
-    useState(false);
-
   const {
     user,
     profile,
@@ -108,65 +127,65 @@ function DashboardLayout({
     signOut,
   } = useAuth();
 
-  /*
-    Remove stale scroll-lock styles left by earlier dashboard versions.
-    This runs once and does not alter responsive spacing or layout.
-  */
+  const [menuOpen, setMenuOpen] =
+    useState(false);
+
+  const [signOutOpen, setSignOutOpen] =
+    useState(false);
+
+  const [signingOut, setSigningOut] =
+    useState(false);
+
+  const dashboardContentRef =
+    useRef(null);
+
   useEffect(() => {
-    const body = document.body;
-    const html = document.documentElement;
+    setMenuOpen(false);
 
-    html.classList.remove("dashboard-drawer-open");
-    body.classList.remove("dashboard-drawer-open");
+    const resetScrollPosition = () => {
+      if (dashboardContentRef.current) {
+        dashboardContentRef.current.scrollTop = 0;
+        dashboardContentRef.current.scrollLeft = 0;
+      }
 
-    [
-      "position",
-      "top",
-      "right",
-      "bottom",
-      "left",
-      "width",
-      "height",
-      "max-height",
-      "overflow",
-      "overflow-x",
-      "overflow-y",
-      "touch-action",
-    ].forEach((property) => {
-      body.style.removeProperty(property);
-    });
+      window.scrollTo(0, 0);
+    };
 
-    [
-      "height",
-      "max-height",
-      "overflow",
-      "overflow-x",
-      "overflow-y",
-      "touch-action",
-    ].forEach((property) => {
-      html.style.removeProperty(property);
-    });
-  }, []);
+    resetScrollPosition();
 
-  /*
-    Close the drawer whenever the route changes.
-  */
-  useEffect(() => {
-    setIsMenuOpen(false);
+    let secondFrame;
+
+    const firstFrame =
+      window.requestAnimationFrame(() => {
+        secondFrame =
+          window.requestAnimationFrame(
+            resetScrollPosition,
+          );
+      });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+
+      if (secondFrame) {
+        window.cancelAnimationFrame(
+          secondFrame,
+        );
+      }
+    };
   }, [location.pathname]);
 
-  /*
-    The page always remains naturally scrollable.
-    Escape closes the drawer without changing html/body overflow.
-  */
   useEffect(() => {
     function handleEscape(event) {
-      if (
-        event.key === "Escape"
-        && isMenuOpen
-      ) {
-        setIsMenuOpen(false);
+      if (event.key !== "Escape") {
+        return;
       }
+
+      if (signOutOpen) {
+        setSignOutOpen(false);
+        return;
+      }
+
+      setMenuOpen(false);
     }
 
     window.addEventListener(
@@ -180,40 +199,280 @@ function DashboardLayout({
         handleEscape,
       );
     };
-  }, [isMenuOpen]);
+  }, [signOutOpen]);
+
 
   /*
-    If the screen becomes desktop width while the drawer is open,
-    close it and restore normal page scrolling.
+    Lock the page behind the responsive drawer.
+    The sidebar itself remains scrollable.
+    Restore the exact page position when the drawer closes.
   */
   useEffect(() => {
-    function handleResize() {
-      if (
-        window.innerWidth > 1180 &&
-        isMenuOpen
-      ) {
-        setIsMenuOpen(false);
-      }
+    if (!menuOpen) {
+      return undefined;
     }
 
-    window.addEventListener(
-      "resize",
-      handleResize,
+    const html = document.documentElement;
+    const body = document.body;
+    const scrollY = window.scrollY;
+
+    const previous = {
+      htmlOverflow:
+        html.style.getPropertyValue("overflow"),
+      htmlOverflowPriority:
+        html.style.getPropertyPriority("overflow"),
+      htmlOverscroll:
+        html.style.getPropertyValue("overscroll-behavior"),
+      htmlOverscrollPriority:
+        html.style.getPropertyPriority("overscroll-behavior"),
+      htmlScrollBehavior:
+        html.style.getPropertyValue("scroll-behavior"),
+      htmlScrollBehaviorPriority:
+        html.style.getPropertyPriority("scroll-behavior"),
+
+      bodyPosition:
+        body.style.getPropertyValue("position"),
+      bodyPositionPriority:
+        body.style.getPropertyPriority("position"),
+      bodyTop:
+        body.style.getPropertyValue("top"),
+      bodyTopPriority:
+        body.style.getPropertyPriority("top"),
+      bodyLeft:
+        body.style.getPropertyValue("left"),
+      bodyLeftPriority:
+        body.style.getPropertyPriority("left"),
+      bodyRight:
+        body.style.getPropertyValue("right"),
+      bodyRightPriority:
+        body.style.getPropertyPriority("right"),
+      bodyWidth:
+        body.style.getPropertyValue("width"),
+      bodyWidthPriority:
+        body.style.getPropertyPriority("width"),
+      bodyOverflow:
+        body.style.getPropertyValue("overflow"),
+      bodyOverflowPriority:
+        body.style.getPropertyPriority("overflow"),
+      bodyTouchAction:
+        body.style.getPropertyValue("touch-action"),
+      bodyTouchActionPriority:
+        body.style.getPropertyPriority("touch-action"),
+      bodyOverscroll:
+        body.style.getPropertyValue("overscroll-behavior"),
+      bodyOverscrollPriority:
+        body.style.getPropertyPriority("overscroll-behavior"),
+    };
+
+    html.classList.add(
+      "dashboard-menu-locked",
+    );
+
+    body.classList.add(
+      "dashboard-menu-locked",
+    );
+
+    html.style.setProperty(
+      "overflow",
+      "hidden",
+      "important",
+    );
+
+    html.style.setProperty(
+      "overscroll-behavior",
+      "none",
+      "important",
+    );
+
+    body.style.setProperty(
+      "position",
+      "fixed",
+      "important",
+    );
+
+    body.style.setProperty(
+      "top",
+      `-${scrollY}px`,
+      "important",
+    );
+
+    body.style.setProperty(
+      "left",
+      "0",
+      "important",
+    );
+
+    body.style.setProperty(
+      "right",
+      "0",
+      "important",
+    );
+
+    body.style.setProperty(
+      "width",
+      "100%",
+      "important",
+    );
+
+    body.style.setProperty(
+      "overflow",
+      "hidden",
+      "important",
+    );
+
+    body.style.setProperty(
+      "touch-action",
+      "none",
+      "important",
+    );
+
+    body.style.setProperty(
+      "overscroll-behavior",
+      "none",
+      "important",
     );
 
     return () => {
-      window.removeEventListener(
-        "resize",
-        handleResize,
+      html.classList.remove(
+        "dashboard-menu-locked",
+      );
+
+      body.classList.remove(
+        "dashboard-menu-locked",
+      );
+
+      function restoreStyle(
+        element,
+        property,
+        value,
+        priority,
+      ) {
+        if (value) {
+          element.style.setProperty(
+            property,
+            value,
+            priority,
+          );
+        } else {
+          element.style.removeProperty(
+            property,
+          );
+        }
+      }
+
+      restoreStyle(
+        html,
+        "overflow",
+        previous.htmlOverflow,
+        previous.htmlOverflowPriority,
+      );
+
+      restoreStyle(
+        html,
+        "overscroll-behavior",
+        previous.htmlOverscroll,
+        previous.htmlOverscrollPriority,
+      );
+
+      html.style.setProperty(
+        "scroll-behavior",
+        "auto",
+        "important",
+      );
+
+      restoreStyle(
+        body,
+        "position",
+        previous.bodyPosition,
+        previous.bodyPositionPriority,
+      );
+
+      restoreStyle(
+        body,
+        "top",
+        previous.bodyTop,
+        previous.bodyTopPriority,
+      );
+
+      restoreStyle(
+        body,
+        "left",
+        previous.bodyLeft,
+        previous.bodyLeftPriority,
+      );
+
+      restoreStyle(
+        body,
+        "right",
+        previous.bodyRight,
+        previous.bodyRightPriority,
+      );
+
+      restoreStyle(
+        body,
+        "width",
+        previous.bodyWidth,
+        previous.bodyWidthPriority,
+      );
+
+      restoreStyle(
+        body,
+        "overflow",
+        previous.bodyOverflow,
+        previous.bodyOverflowPriority,
+      );
+
+      restoreStyle(
+        body,
+        "touch-action",
+        previous.bodyTouchAction,
+        previous.bodyTouchActionPriority,
+      );
+
+      restoreStyle(
+        body,
+        "overscroll-behavior",
+        previous.bodyOverscroll,
+        previous.bodyOverscrollPriority,
+      );
+
+      window.scrollTo(0, scrollY);
+
+      window.requestAnimationFrame(
+        () => {
+          restoreStyle(
+            html,
+            "scroll-behavior",
+            previous.htmlScrollBehavior,
+            previous.htmlScrollBehaviorPriority,
+          );
+        },
       );
     };
-  }, [isMenuOpen]);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!signOutOpen) {
+      return undefined;
+    }
+
+    const body = document.body;
+    const previousOverflow =
+      body.style.overflow;
+
+    body.style.overflow =
+      "hidden";
+
+    return () => {
+      body.style.overflow =
+        previousOverflow;
+    };
+  }, [signOutOpen]);
 
   if (loading) {
     return (
       <main className="page-message">
         <div className="loader" />
-
         <p>Preparing your dashboard...</p>
       </main>
     );
@@ -232,7 +491,7 @@ function DashboardLayout({
 
         <button
           type="button"
-          className="primary-button"
+          className="dashboard-action-button"
           onClick={() =>
             navigate("/login")
           }
@@ -247,120 +506,141 @@ function DashboardLayout({
 
   const administratorRoles = [
     "admin",
-    "super_admin",
     "safeguarding_lead",
   ];
+
+  const isMentorOnboardingAccount =
+    role === "mentee" &&
+    profile.signup_intent === "mentor";
 
   const menuRole =
     administratorRoles.includes(role)
       ? "admin"
-      : role;
+      : isMentorOnboardingAccount
+        ? "mentorOnboarding"
+        : role;
 
   const navigationItems =
     menus[menuRole] ?? [];
 
+  const accountTypeLabel =
+    administratorRoles.includes(role)
+      ? "Admin"
+      : role === "mentor" ||
+          isMentorOnboardingAccount
+        ? "Mentor"
+        : "Mentee";
+
   const displayName =
     profile.full_name ||
+    profile.name ||
     user.user_metadata?.full_name ||
     user.email ||
     "Mentor Connect user";
 
-  function closeMenu() {
-    setIsMenuOpen(false);
+  function openSignOutConfirmation() {
+    setMenuOpen(false);
+    setSignOutOpen(true);
   }
 
-  async function handleSignOut() {
-    closeMenu();
+  function closeSignOutConfirmation() {
+    if (signingOut) {
+      return;
+    }
 
-    await signOut();
-
-    navigate("/", {
-      replace: true,
-    });
+    setSignOutOpen(false);
   }
 
-  function handleBecomeMentor() {
-    closeMenu();
+  async function confirmSignOut() {
+    if (signingOut) {
+      return;
+    }
 
-    navigate(
-      "/mentee/become-a-mentor",
-    );
+    setSigningOut(true);
+
+    try {
+      const {
+        error: signOutError,
+      } = await signOut({
+        redirectTo: "/",
+      });
+
+      if (signOutError) {
+        console.error(
+          "Unable to sign out:",
+          signOutError,
+        );
+
+        setSigningOut(false);
+      }
+    } catch (error) {
+      console.error(
+        "Unable to sign out:",
+        error,
+      );
+
+      setSigningOut(false);
+    }
   }
 
   return (
     <div className="dashboard-layout">
-      <div className="dashboard-mobile-header">
-        <div className="dashboard-brand">
-          <span className="dashboard-brand-icon">
-            <HeartHandshake size={22} />
-          </span>
-
-          <span className="dashboard-brand-text">
-            <strong>
-              Mentor Connect
-            </strong>
-
-            <small>
-              TCN IKEJA
-            </small>
-          </span>
-        </div>
+      <header className="dashboard-mobile-header">
+        <DashboardBrand />
 
         <button
           type="button"
           className="dashboard-menu-button"
-          aria-label="Open navigation menu"
-          aria-expanded={isMenuOpen}
-          aria-controls="dashboard-sidebar"
+          aria-label="Open dashboard menu"
+          aria-controls="dashboard-navigation"
+          aria-expanded={menuOpen}
           onClick={() =>
-            setIsMenuOpen(true)
+            setMenuOpen(true)
           }
         >
-          <Menu size={26} />
+          <Menu size={22} />
         </button>
-      </div>
+      </header>
 
-      {isMenuOpen && (
-        <button
-          type="button"
-          className="dashboard-menu-overlay"
-          aria-label="Close navigation menu"
-          onClick={closeMenu}
-        />
-      )}
+      <button
+        type="button"
+        className={`dashboard-menu-overlay${
+          menuOpen
+            ? " is-open"
+            : ""
+        }`}
+        aria-label="Close dashboard menu"
+        aria-hidden={!menuOpen}
+        tabIndex={
+          menuOpen
+            ? 0
+            : -1
+        }
+        onClick={() =>
+          setMenuOpen(false)
+        }
+      />
 
       <aside
-        id="dashboard-sidebar"
-        className={`dashboard-sidebar ${
-          isMenuOpen
-            ? "is-open"
+        id="dashboard-navigation"
+        className={`dashboard-sidebar${
+          menuOpen
+            ? " is-open"
             : ""
         }`}
       >
         <div className="dashboard-sidebar-top">
-          <div className="dashboard-brand">
-            <span className="dashboard-brand-icon">
-              <HeartHandshake size={22} />
-            </span>
-
-            <span className="dashboard-brand-text">
-              <strong>
-                Mentor Connect
-              </strong>
-
-              <small>
-                TCN IKEJA
-              </small>
-            </span>
-          </div>
+          <DashboardBrand />
 
           <button
             type="button"
             className="dashboard-menu-close"
-            aria-label="Close navigation menu"
-            onClick={closeMenu}
+            aria-label="Close dashboard menu"
+            onClick={() =>
+              setMenuOpen(false)
+            }
           >
-            <X size={24} />
+            <X size={22} />
           </button>
         </div>
 
@@ -374,10 +654,9 @@ function DashboardLayout({
               <NavLink
                 key={label}
                 to={path}
-                end={path.endsWith(
-                  "/dashboard",
-                )}
-                onClick={closeMenu}
+                end={
+                  label === "Overview"
+                }
                 className={({
                   isActive,
                 }) =>
@@ -386,39 +665,86 @@ function DashboardLayout({
                     : ""
                 }
               >
-                <Icon size={19} />
-                {label}
+                <span className="dashboard-nav-icon">
+                  <Icon
+                    size={19}
+                    strokeWidth={1.8}
+                  />
+                </span>
+
+                <span>
+                  {label}
+                </span>
               </NavLink>
             ),
           )}
         </nav>
 
         <div className="dashboard-sidebar-footer">
-          {role === "mentee" && (
+          {role === "mentee" &&
+            !isMentorOnboardingAccount && (
+              <button
+                type="button"
+                className="become-mentor-button"
+                onClick={() =>
+                  navigate(
+                    "/mentor/apply",
+                  )
+                }
+              >
+                <Sparkles
+                  size={18}
+                  strokeWidth={1.8}
+                />
+
+                <span>
+                  Become a mentor
+                </span>
+              </button>
+            )}
+
+          {role === "mentor" && (
             <button
               type="button"
               className="become-mentor-button"
-              onClick={
-                handleBecomeMentor
+              onClick={() =>
+                navigate(
+                  "/mentor/become-a-mentee",
+                )
               }
             >
-              <Sparkles size={18} />
-              Become a mentor
+              <UserRound
+                size={18}
+                strokeWidth={1.8}
+              />
+
+              <span>
+                Become a mentee
+              </span>
             </button>
           )}
 
           <button
             type="button"
             className="sign-out-button"
-            onClick={handleSignOut}
+            onClick={openSignOutConfirmation}
           >
-            <LogOut size={18} />
-            Sign out
+            <LogOut
+              size={18}
+              strokeWidth={1.8}
+            />
+
+            <span>
+              Sign out
+            </span>
           </button>
         </div>
       </aside>
 
-      <main className="dashboard-content">
+      <main
+        ref={dashboardContentRef}
+        className="dashboard-content"
+      >
         <header>
           <span>
             <small>
@@ -436,16 +762,104 @@ function DashboardLayout({
             </strong>
 
             <small>
-              {role.replaceAll(
-                "_",
-                " ",
-              )}
+              {accountTypeLabel}
             </small>
           </div>
         </header>
 
         {children}
       </main>
+
+      {signOutOpen && (
+        <div
+          className="dashboard-signout-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              closeSignOutConfirmation();
+            }
+          }}
+        >
+          <section
+            className="dashboard-signout-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dashboard-signout-title"
+            aria-describedby="dashboard-signout-description"
+          >
+            <div className="dashboard-signout-modal-header">
+              <div>
+                <span>
+                  ACCOUNT
+                </span>
+
+                <h2
+                  id="dashboard-signout-title"
+                >
+                  Sign out?
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                className="dashboard-signout-close"
+                aria-label="Close sign out confirmation"
+                onClick={
+                  closeSignOutConfirmation
+                }
+                disabled={signingOut}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p
+              id="dashboard-signout-description"
+              className="dashboard-signout-copy"
+            >
+              Are you sure you want to
+              sign out of Mentor
+              Connect?
+            </p>
+
+            <div className="dashboard-signout-actions">
+              <button
+                type="button"
+                className="dashboard-signout-cancel"
+                onClick={
+                  closeSignOutConfirmation
+                }
+                disabled={signingOut}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="dashboard-signout-confirm"
+                onClick={
+                  confirmSignOut
+                }
+                disabled={signingOut}
+              >
+                <LogOut
+                  size={16}
+                  strokeWidth={1.8}
+                />
+
+                <span>
+                  {signingOut
+                    ? "Signing out..."
+                    : "Sign out"}
+                </span>
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

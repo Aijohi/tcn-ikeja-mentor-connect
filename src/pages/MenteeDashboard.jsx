@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import "./MenteeDashboard.css";
 
 function MenteeDashboard() {
   const navigate = useNavigate();
@@ -227,13 +228,6 @@ function MenteeDashboard() {
         "accepted",
     ) ?? null;
 
-  const primaryAction =
-    getPrimaryAction({
-      profileCompletion,
-      activeRequest,
-      nextSession,
-    });
-
   const displayName =
     profile?.full_name ||
     user?.user_metadata?.full_name ||
@@ -249,16 +243,18 @@ function MenteeDashboard() {
         title="Overview"
         description="Your mentoring journey at a glance."
       >
-        <section className="dashboard-empty-state">
-          <div className="loader" />
+        <div className="mentee-overview-page">
+          <section className="dashboard-empty-state">
+            <div className="loader" />
 
-          <h2>Preparing your overview</h2>
+            <h2>Preparing your overview</h2>
 
-          <p>
-            Please wait while we bring your mentoring
-            information together.
-          </p>
-        </section>
+            <p>
+              Please wait while we bring your mentoring
+              information together.
+            </p>
+          </section>
+        </div>
       </DashboardLayout>
     );
   }
@@ -269,25 +265,27 @@ function MenteeDashboard() {
         title="Overview"
         description="Your mentoring journey at a glance."
       >
-        <section className="dashboard-empty-state">
-          <span className="empty-state-icon">
-            <HeartHandshake size={30} />
-          </span>
+        <div className="mentee-overview-page">
+          <section className="dashboard-empty-state">
+            <span className="empty-state-icon">
+              <HeartHandshake size={30} />
+            </span>
 
-          <h2>Unable to load your overview</h2>
+            <h2>Unable to load your overview</h2>
 
-          <p>{error}</p>
+            <p>{error}</p>
 
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() =>
-              window.location.reload()
-            }
-          >
-            Try again
-          </button>
-        </section>
+            <button
+              type="button"
+              className="primary-button mentee-button mentee-button--medium"
+              onClick={() =>
+                window.location.reload()
+              }
+            >
+              Try again
+            </button>
+          </section>
+        </div>
       </DashboardLayout>
     );
   }
@@ -297,7 +295,8 @@ function MenteeDashboard() {
       title="Overview"
       description="Your mentoring journey at a glance."
     >
-      <section className="mentee-overview-hero">
+      <div className="mentee-overview-page">
+        <section className="mentee-overview-hero">
         <div className="mentee-overview-hero-copy">
           <span className="eyebrow">
             PURPOSEFUL GROWTH
@@ -312,40 +311,6 @@ function MenteeDashboard() {
             requests and stay connected to your mentoring
             journey.
           </p>
-
-          <div className="mentee-overview-hero-actions">
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() =>
-                navigate(
-                  primaryAction.path,
-                )
-              }
-            >
-              {primaryAction.label}
-              <ArrowRight size={16} />
-            </button>
-
-            {primaryAction.path !==
-              "/mentee/find-mentor" && (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() =>
-                  navigate(
-                    "/mentee/find-mentor",
-                  )
-                }
-              >
-                Find a mentor
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="mentee-overview-hero-icon">
-          <HeartHandshake size={38} />
         </div>
       </section>
 
@@ -558,6 +523,7 @@ function MenteeDashboard() {
           </div>
         )}
       </section>
+      </div>
     </DashboardLayout>
   );
 }
@@ -638,7 +604,7 @@ function JourneyState({
 
           <button
             type="button"
-            className="primary-button"
+            className="primary-button mentee-button mentee-button--medium"
             onClick={onProfile}
           >
             Complete my profile
@@ -678,7 +644,7 @@ function JourneyState({
 
           <button
             type="button"
-            className="primary-button"
+            className="primary-button mentee-button mentee-button--medium"
             onClick={onSessions}
           >
             View session
@@ -724,7 +690,7 @@ function JourneyState({
 
           <button
             type="button"
-            className="primary-button"
+            className="primary-button mentee-button mentee-button--medium"
             onClick={onRequests}
           >
             View my request
@@ -753,7 +719,7 @@ function JourneyState({
 
         <button
           type="button"
-          className="primary-button"
+          className="primary-button mentee-button mentee-button--medium"
           onClick={onFindMentor}
         >
           Find a mentor
@@ -919,38 +885,6 @@ function getMentorMatchScore(
     },
     0,
   );
-}
-
-function getPrimaryAction({
-  profileCompletion,
-  activeRequest,
-  nextSession,
-}) {
-  if (profileCompletion < 100) {
-    return {
-      label: "Complete my profile",
-      path: "/mentee/profile",
-    };
-  }
-
-  if (nextSession) {
-    return {
-      label: "View next session",
-      path: "/mentee/sessions",
-    };
-  }
-
-  if (activeRequest) {
-    return {
-      label: "View my request",
-      path: "/mentee/requests",
-    };
-  }
-
-  return {
-    label: "Find a mentor",
-    path: "/mentee/find-mentor",
-  };
 }
 
 function getJourneyTitle({
