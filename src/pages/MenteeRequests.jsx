@@ -6,6 +6,8 @@ import {
 
 import {
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   GitPullRequest,
   Search,
@@ -22,6 +24,7 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
 import "./MenteeRequests.css";
+import "./MenteeRequestsTable.css";
 
 const PENDING_STATUSES = [
   "pending",
@@ -36,12 +39,15 @@ const ACTIVE_STATUSES = [
 const WITHDRAWABLE_STATUSES = [
   "pending",
   "clarification_requested",
+  "referred",
 ];
 
 const CLOSED_STATUSES = [
   "declined",
   "withdrawn",
 ];
+
+const REQUESTS_PER_PAGE = 8;
 
 function MenteeRequests() {
   const navigate =
@@ -59,6 +65,11 @@ function MenteeRequests() {
     activeTab,
     setActiveTab,
   ] = useState("all");
+
+  const [
+    currentPage,
+    setCurrentPage,
+  ] = useState(1);
 
   const [
     loading,
@@ -185,6 +196,10 @@ function MenteeRequests() {
     };
   }, [withdrawRequest]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
   const pendingRequests =
     useMemo(
       () =>
@@ -257,6 +272,31 @@ function MenteeRequests() {
       closedRequests,
       pendingRequests,
       requests,
+    ]);
+
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        displayedRequests.length /
+          REQUESTS_PER_PAGE,
+      ),
+    );
+
+  const paginatedRequests =
+    useMemo(() => {
+      const start =
+        (currentPage - 1) *
+        REQUESTS_PER_PAGE;
+
+      return displayedRequests.slice(
+        start,
+        start +
+          REQUESTS_PER_PAGE,
+      );
+    }, [
+      currentPage,
+      displayedRequests,
     ]);
 
   async function confirmWithdraw() {
@@ -368,8 +408,7 @@ function MenteeRequests() {
             </span>
 
             <h2>
-              Unable to load your
-              requests
+              Unable to load your requests
             </h2>
 
             <p>{error}</p>
@@ -414,16 +453,12 @@ function MenteeRequests() {
             </span>
 
             <h2>
-              No mentorship requests
-              yet
+              No mentorship requests yet
             </h2>
 
             <p>
-              When you request
-              mentorship from an
-              approved mentor, the
-              request and its status
-              will appear here.
+              When you send a mentorship request, the mentor
+              and its status will appear here.
             </p>
 
             <button
@@ -447,16 +482,13 @@ function MenteeRequests() {
                 </span>
 
                 <h2>
-                  Keep track of every
-                  mentorship request.
+                  Your mentorship requests in one place.
                 </h2>
 
                 <p>
-                  See what is waiting
-                  for review, what
-                  needs attention and
-                  which connections
-                  have moved forward.
+                  Only mentors you have already sent a request
+                  to appear here. Use the filters to review
+                  pending, active and closed requests.
                 </p>
               </div>
             </section>
@@ -512,49 +544,150 @@ function MenteeRequests() {
 
                 <div>
                   <h3>
-                    No requests in
-                    this view
+                    No requests in this view
                   </h3>
 
                   <p>
-                    Try another tab
-                    to see the rest
-                    of your
-                    mentorship
-                    requests.
+                    Try another tab to see the rest of your
+                    mentorship requests.
                   </p>
                 </div>
               </section>
             ) : (
-              <section className="mentee-request-list">
-                {displayedRequests.map(
-                  (request) => (
-                    <RequestCard
-                      key={
-                        request.id
+              <>
+                <div className="mentee-request-table-wrapper">
+                  <table className="mentee-request-table">
+                    <thead>
+                      <tr>
+                        <th>Mentor</th>
+                        <th>Mentoring area</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {paginatedRequests.map(
+                        (request) => (
+                          <RequestTableRow
+                            key={
+                              request.id
+                            }
+                            request={
+                              request
+                            }
+                            onViewMentor={() =>
+                              navigate(
+                                `/mentee/mentors/${request.mentor_id}`,
+                              )
+                            }
+                            onSessions={() =>
+                              navigate(
+                                "/mentee/sessions",
+                              )
+                            }
+                            onWithdraw={() =>
+                              setWithdrawRequest(
+                                request,
+                              )
+                            }
+                          />
+                        ),
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <section className="mentee-request-mobile-list">
+                  {paginatedRequests.map(
+                    (request) => (
+                      <RequestMobileCard
+                        key={
+                          request.id
+                        }
+                        request={
+                          request
+                        }
+                        onViewMentor={() =>
+                          navigate(
+                            `/mentee/mentors/${request.mentor_id}`,
+                          )
+                        }
+                        onSessions={() =>
+                          navigate(
+                            "/mentee/sessions",
+                          )
+                        }
+                        onWithdraw={() =>
+                          setWithdrawRequest(
+                            request,
+                          )
+                        }
+                      />
+                    ),
+                  )}
+                </section>
+
+                {totalPages > 1 && (
+                  <div className="mentee-request-pagination">
+                    <button
+                      type="button"
+                      className="mentee-request-button mentee-request-button--secondary"
+                      disabled={
+                        currentPage === 1
                       }
-                      request={
-                        request
-                      }
-                      onViewMentor={() =>
-                        navigate(
-                          `/mentee/mentors/${request.mentor_id}`,
+                      onClick={() =>
+                        setCurrentPage(
+                          (
+                            current,
+                          ) =>
+                            Math.max(
+                              1,
+                              current -
+                                1,
+                            ),
                         )
                       }
-                      onSessions={() =>
-                        navigate(
-                          "/mentee/sessions",
+                    >
+                      <ChevronLeft
+                        size={15}
+                      />
+                      Previous
+                    </button>
+
+                    <span>
+                      Page {currentPage} of {totalPages}
+                    </span>
+
+                    <button
+                      type="button"
+                      className="mentee-request-button mentee-request-button--secondary"
+                      disabled={
+                        currentPage ===
+                        totalPages
+                      }
+                      onClick={() =>
+                        setCurrentPage(
+                          (
+                            current,
+                          ) =>
+                            Math.min(
+                              totalPages,
+                              current +
+                                1,
+                            ),
                         )
                       }
-                      onWithdraw={() =>
-                        setWithdrawRequest(
-                          request,
-                        )
-                      }
-                    />
-                  ),
+                    >
+                      Next
+                      <ChevronRight
+                        size={15}
+                      />
+                    </button>
+                  </div>
                 )}
-              </section>
+              </>
             )}
           </>
         )}
@@ -601,21 +734,18 @@ function MenteeRequests() {
               </div>
 
               <h2 id="withdraw-request-title">
-                Withdraw this
-                mentorship request?
+                Withdraw this mentorship request?
               </h2>
 
               <p>
-                This will close your
-                request to{" "}
+                This will close your request to{" "}
                 <strong>
                   {withdrawRequest
                     .mentor
                     ?.full_name ||
                     "this mentor"}
                 </strong>
-                . You can still find
-                and request another
+                . You can still find and request another
                 mentor afterwards.
               </p>
 
@@ -691,17 +821,9 @@ function RequestTab({
   );
 }
 
-function RequestCard({
+function MentorIdentity({
   request,
-  onViewMentor,
-  onSessions,
-  onWithdraw,
 }) {
-  const status = String(
-    request.status ||
-      "pending",
-  );
-
   const mentorName =
     request.mentor
       ?.full_name ||
@@ -720,122 +842,87 @@ function RequestCard({
       .join("");
 
   return (
-    <article className="mentee-request-card">
-      <div className="mentee-request-card-top">
-        <div className="mentee-request-mentor">
-          {request.mentor
-            ?.profile_photo_url ? (
-            <img
-              src={
-                request.mentor
-                  .profile_photo_url
-              }
-              alt=""
-              className="mentee-request-avatar"
-            />
-          ) : (
-            <span className="mentee-request-avatar mentee-request-initials">
-              {initials ||
-                "MC"}
-            </span>
-          )}
+    <div className="mentee-request-table-mentor">
+      {request.mentor
+        ?.profile_photo_url ? (
+        <img
+          src={
+            request.mentor
+              .profile_photo_url
+          }
+          alt=""
+        />
+      ) : (
+        <span>
+          {initials || "MC"}
+        </span>
+      )}
 
-          <div>
-            <small>
-              REQUEST TO
-            </small>
+      <strong>
+        {mentorName}
+      </strong>
+    </div>
+  );
+}
 
-            <h2>
-              {mentorName}
-            </h2>
+function RequestTableRow({
+  request,
+  onViewMentor,
+  onSessions,
+  onWithdraw,
+}) {
+  const status = String(
+    request.status ||
+      "pending",
+  );
 
-            <p>
-              {request.mentoring_area ||
-                "Mentorship"}
-            </p>
-          </div>
-        </div>
+  return (
+    <tr>
+      <td>
+        <MentorIdentity
+          request={request}
+        />
+      </td>
 
+      <td>
+        {request.mentoring_area ||
+          "Mentorship"}
+      </td>
+
+      <td>
         <RequestStatus
           status={status}
         />
-      </div>
+      </td>
 
-      <div className="mentee-request-card-body">
-        <div className="mentee-request-details">
-          <RequestDetail
-            label="YOUR GOAL"
-            value={
-              request.goal_statement ||
-              "No goal statement was provided."
+      <td>
+        {formatDate(
+          request.created_at,
+        )}
+      </td>
+
+      <td>
+        <div className="mentee-request-table-actions">
+          <button
+            type="button"
+            className="mentee-request-table-link"
+            onClick={
+              onViewMentor
             }
-          />
+          >
+            View mentor
+          </button>
 
-          {request.reason_for_choosing_mentor && (
-            <RequestDetail
-              label="WHY YOU CHOSE THIS MENTOR"
-              value={
-                request.reason_for_choosing_mentor
-              }
-            />
-          )}
-
-          {request.preferred_times && (
-            <RequestDetail
-              label="PREFERRED TIMES"
-              value={
-                request.preferred_times
-              }
-            />
-          )}
-        </div>
-
-        <div className="mentee-request-meta">
-          <span className="mentee-request-submitted">
-            <Clock3 size={15} />
-
-            Submitted{" "}
-            {formatDate(
-              request.created_at,
-            )}
-          </span>
-
-          <StatusMessage
-            status={status}
-          />
-        </div>
-      </div>
-
-      <div className="mentee-request-card-actions">
-        <button
-          type="button"
-          className="mentee-request-text-button"
-          onClick={
-            onViewMentor
-          }
-        >
-          <UserRound
-            size={15}
-          />
-
-          View mentor
-        </button>
-
-        <div>
           {status ===
             "accepted" && (
             <button
               type="button"
-              className="mentee-request-button mentee-request-button--primary"
+              className="mentee-request-table-link"
               onClick={
                 onSessions
               }
             >
-              My sessions
-
-              <ArrowRight
-                size={15}
-              />
+              Sessions
             </button>
           )}
 
@@ -844,30 +931,113 @@ function RequestCard({
           ) && (
             <button
               type="button"
-              className="mentee-request-button mentee-request-button--withdraw"
+              className="mentee-request-table-link is-withdraw"
               onClick={
                 onWithdraw
               }
             >
-              Withdraw request
+              Withdraw
             </button>
           )}
         </div>
-      </div>
-    </article>
+      </td>
+    </tr>
   );
 }
 
-function RequestDetail({
-  label,
-  value,
+function RequestMobileCard({
+  request,
+  onViewMentor,
+  onSessions,
+  onWithdraw,
 }) {
-  return (
-    <div className="mentee-request-goal">
-      <small>{label}</small>
+  const status = String(
+    request.status ||
+      "pending",
+  );
 
-      <p>{value}</p>
-    </div>
+  const mentorName =
+    request.mentor
+      ?.full_name ||
+    "Approved mentor";
+
+  return (
+    <article className="mentee-request-mobile-card">
+      <div className="mentee-request-mobile-card-top">
+        <div>
+          <small>
+            REQUEST TO
+          </small>
+
+          <h3>
+            {mentorName}
+          </h3>
+
+          <p>
+            {request.mentoring_area ||
+              "Mentorship"}
+          </p>
+        </div>
+
+        <RequestStatus
+          status={status}
+        />
+      </div>
+
+      <div className="mentee-request-mobile-meta">
+        <Clock3 size={14} />
+
+        Submitted{" "}
+        {formatDate(
+          request.created_at,
+        )}
+      </div>
+
+      <div className="mentee-request-mobile-actions">
+        <button
+          type="button"
+          className="mentee-request-table-link"
+          onClick={
+            onViewMentor
+          }
+        >
+          <UserRound
+            size={14}
+          />
+          View mentor
+        </button>
+
+        {status ===
+          "accepted" && (
+          <button
+            type="button"
+            className="mentee-request-table-link"
+            onClick={
+              onSessions
+            }
+          >
+            My sessions
+            <ArrowRight
+              size={14}
+            />
+          </button>
+        )}
+
+        {WITHDRAWABLE_STATUSES.includes(
+          status,
+        ) && (
+          <button
+            type="button"
+            className="mentee-request-table-link is-withdraw"
+            onClick={
+              onWithdraw
+            }
+          >
+            Withdraw
+          </button>
+        )}
+      </div>
+    </article>
   );
 }
 
@@ -882,83 +1052,6 @@ function RequestStatus({
       )}`}
     >
       {formatStatus(status)}
-    </span>
-  );
-}
-
-function StatusMessage({
-  status,
-}) {
-  const content = {
-    pending: {
-      title:
-        "Waiting for mentor review",
-
-      text:
-        "The mentor has not responded yet.",
-    },
-
-    accepted: {
-      title:
-        "Request accepted",
-
-      text:
-        "You can continue to session scheduling.",
-    },
-
-    clarification_requested: {
-      title:
-        "More information needed",
-
-      text:
-        "The mentor needs clarification before making a decision.",
-    },
-
-    referred: {
-      title:
-        "Request referred",
-
-      text:
-        "Your request has been referred for matching support.",
-    },
-
-    declined: {
-      title:
-        "Request declined",
-
-      text:
-        "You can explore another approved mentor.",
-    },
-
-    withdrawn: {
-      title:
-        "Request withdrawn",
-
-      text:
-        "This request is no longer active.",
-    },
-  };
-
-  const message =
-    content[status] ?? {
-      title:
-        formatStatus(
-          status,
-        ),
-
-      text:
-        "Your request status has been updated.",
-    };
-
-  return (
-    <span className="mentee-request-status-copy">
-      <strong>
-        {message.title}
-      </strong>
-
-      <small>
-        {message.text}
-      </small>
     </span>
   );
 }
@@ -980,7 +1073,7 @@ function formatStatus(value) {
 
 function formatDate(value) {
   if (!value) {
-    return "recently";
+    return "Recently";
   }
 
   return new Intl.DateTimeFormat(

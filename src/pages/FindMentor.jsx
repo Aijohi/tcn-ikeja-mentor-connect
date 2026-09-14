@@ -7,6 +7,8 @@ import {
 import {
   BadgeCheck,
   BriefcaseBusiness,
+  ChevronLeft,
+  ChevronRight,
   Monitor,
   Search,
   UsersRound,
@@ -20,6 +22,9 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { supabase } from "../lib/supabase";
 
 import "./MenteeRequestFlow.css";
+import "./FindMentorSearch.css";
+
+const RESULTS_PER_PAGE = 6;
 
 function formatLabel(value) {
   return String(value || "")
@@ -312,6 +317,11 @@ function FindMentor() {
   ] = useState("");
 
   const [
+    currentPage,
+    setCurrentPage,
+  ] = useState(1);
+
+  const [
     loading,
     setLoading,
   ] = useState(true);
@@ -363,6 +373,10 @@ function FindMentor() {
           "approval_status",
           "approved",
         )
+        .eq(
+          "accepting_requests",
+          true,
+        )
         .order(
           "approved_at",
           {
@@ -383,17 +397,25 @@ function FindMentor() {
         setMentors([]);
 
         setError(
-          "We could not load approved mentors. Please try again.",
+          "We could not load available mentors. Please try again.",
         );
 
         setLoading(false);
         return;
       }
 
+      const availableMentors =
+        (data ?? [])
+          .map(
+            normaliseMentor,
+          )
+          .filter(
+            (mentor) =>
+              mentor.spaces > 0,
+          );
+
       setMentors(
-        (data ?? []).map(
-          normaliseMentor,
-        ),
+        availableMentors,
       );
 
       setLoading(false);
@@ -406,29 +428,22 @@ function FindMentor() {
     };
   }, [reloadKey]);
 
-  const availableMentors =
-    useMemo(
-      () =>
-        mentors.filter(
-          (mentor) =>
-            mentor.acceptingRequests &&
-            mentor.spaces > 0,
-        ),
-      [mentors],
-    );
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const query =
+    searchTerm
+      .trim()
+      .toLowerCase();
 
   const filteredMentors =
     useMemo(() => {
-      const query =
-        searchTerm
-          .trim()
-          .toLowerCase();
-
       if (!query) {
-        return availableMentors;
+        return [];
       }
 
-      return availableMentors.filter(
+      return mentors.filter(
         (mentor) => {
           const searchableValues = [
             mentor.name,
@@ -453,8 +468,33 @@ function FindMentor() {
         },
       );
     }, [
-      availableMentors,
-      searchTerm,
+      mentors,
+      query,
+    ]);
+
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        filteredMentors.length /
+          RESULTS_PER_PAGE,
+      ),
+    );
+
+  const paginatedMentors =
+    useMemo(() => {
+      const start =
+        (currentPage - 1) *
+        RESULTS_PER_PAGE;
+
+      return filteredMentors.slice(
+        start,
+        start +
+          RESULTS_PER_PAGE,
+      );
+    }, [
+      currentPage,
+      filteredMentors,
     ]);
 
   function viewMentor(
@@ -473,7 +513,7 @@ function FindMentor() {
   return (
     <DashboardLayout
       title="Find a mentor"
-      description="Find an approved mentor whose experience fits your goals."
+      description="Search for an approved mentor whose experience fits your goals."
     >
       <div className="mentee-request-flow">
         <Progress />
@@ -485,13 +525,14 @@ function FindMentor() {
             </span>
 
             <h2>
-              Choose someone whose experience fits your goals.
+              Search for the right mentor when you are ready.
             </h2>
 
             <p>
-              Browse approved mentors, review their profile
-              and request mentorship when you find a suitable
-              match.
+              Search by mentor name, expertise, role or
+              mentorship area. Only mentors who are currently
+              accepting new requests and have available space
+              will appear.
             </p>
           </section>
 
@@ -512,7 +553,7 @@ function FindMentor() {
                   event.target.value,
                 )
               }
-              placeholder="Search by name, expertise or keyword"
+              placeholder="Search by name, expertise or mentorship area"
               aria-label="Search mentors"
             />
           </div>
@@ -524,12 +565,12 @@ function FindMentor() {
               </span>
 
               <h3>
-                Finding approved mentors
+                Preparing mentor search
               </h3>
 
               <p>
                 We are loading mentors who are currently
-                available to receive mentorship requests.
+                available for new mentorship requests.
               </p>
             </section>
           ) : error ? (
@@ -572,62 +613,132 @@ function FindMentor() {
                 </button>
               </div>
             </section>
+          ) : !query ? (
+            <section className="request-flow-search-empty">
+              <Search
+                size={24}
+              />
+
+              <div>
+                <h3>
+                  Start with a search
+                </h3>
+
+                <p>
+                  Enter a mentor name, profession, expertise
+                  or mentorship area. We will only show
+                  matching mentors who can currently receive
+                  a request.
+                </p>
+              </div>
+            </section>
           ) : filteredMentors.length ===
             0 ? (
             <section className="request-flow-panel">
-              {searchTerm.trim() ? (
-                <>
-                  <span className="request-flow-eyebrow">
-                    NO MATCH FOUND
-                  </span>
+              <span className="request-flow-eyebrow">
+                NO MATCH FOUND
+              </span>
 
-                  <h3>
-                    No mentor found for “
-                    {searchTerm.trim()}
-                    ”
-                  </h3>
+              <h3>
+                No available mentor found for “
+                {searchTerm.trim()}
+                ”
+              </h3>
 
-                  <p>
-                    Try another name, area of expertise or
-                    mentorship category.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <span className="request-flow-eyebrow">
-                    NO MENTORS AVAILABLE
-                  </span>
-
-                  <h3>
-                    There are no mentors accepting requests
-                    right now.
-                  </h3>
-
-                  <p>
-                    Approved mentors will appear here when
-                    they are available for new mentees.
-                  </p>
-                </>
-              )}
+              <p>
+                Try another name, profession, area of
+                expertise or mentorship category.
+              </p>
             </section>
           ) : (
-            <section className="request-flow-directory-grid">
-              {filteredMentors.map(
-                (mentor) => (
-                  <MentorCard
-                    key={
-                      mentor.id
+            <>
+              <div className="request-flow-result-summary">
+                <span>
+                  {filteredMentors.length}{" "}
+                  {filteredMentors.length === 1
+                    ? "mentor"
+                    : "mentors"}{" "}
+                  found
+                </span>
+              </div>
+
+              <section className="request-flow-directory-grid">
+                {paginatedMentors.map(
+                  (mentor) => (
+                    <MentorCard
+                      key={
+                        mentor.id
+                      }
+                      mentor={
+                        mentor
+                      }
+                      onView={
+                        viewMentor
+                      }
+                    />
+                  ),
+                )}
+              </section>
+
+              {totalPages > 1 && (
+                <div className="request-flow-pagination">
+                  <button
+                    type="button"
+                    className="request-flow-secondary-button"
+                    disabled={
+                      currentPage === 1
                     }
-                    mentor={
-                      mentor
+                    onClick={() =>
+                      setCurrentPage(
+                        (
+                          current,
+                        ) =>
+                          Math.max(
+                            1,
+                            current -
+                              1,
+                          ),
+                      )
                     }
-                    onView={
-                      viewMentor
+                  >
+                    <ChevronLeft
+                      size={15}
+                    />
+                    Previous
+                  </button>
+
+                  <span>
+                    Page {currentPage} of {totalPages}
+                  </span>
+
+                  <button
+                    type="button"
+                    className="request-flow-secondary-button"
+                    disabled={
+                      currentPage ===
+                      totalPages
                     }
-                  />
-                ),
+                    onClick={() =>
+                      setCurrentPage(
+                        (
+                          current,
+                        ) =>
+                          Math.min(
+                            totalPages,
+                            current +
+                              1,
+                          ),
+                      )
+                    }
+                  >
+                    Next
+                    <ChevronRight
+                      size={15}
+                    />
+                  </button>
+                </div>
               )}
-            </section>
+            </>
           )}
         </div>
       </div>

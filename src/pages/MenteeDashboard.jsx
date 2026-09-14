@@ -161,7 +161,26 @@ function MenteeDashboard() {
       const mentorAreas =
         profileData?.mentorship_areas ?? [];
 
-      const mentors = mentorsResult.data ?? [];
+      const mentors = (mentorsResult.data ?? []).filter(
+        (mentor) => {
+          const maximumActive =
+            Number(
+              mentor.maximum_active_mentees ??
+                0,
+            );
+
+          const currentActive =
+            Number(
+              mentor.current_active_mentees ??
+                0,
+            );
+
+          return (
+            mentor.accepting_requests === true &&
+            maximumActive - currentActive > 0
+          );
+        },
+      );
 
       const rankedMentors = [...mentors].sort(
         (first, second) => {
@@ -471,7 +490,8 @@ function MenteeDashboard() {
 
             <p>
               Recommendations are based on your selected
-              mentorship areas where possible.
+              mentorship areas and mentors who currently
+              have space for a new mentee.
             </p>
           </div>
 
@@ -501,7 +521,7 @@ function MenteeDashboard() {
 
               <p>
                 Approved mentors who are accepting requests
-                will appear here.
+                and have available space will appear here.
               </p>
             </div>
           </div>

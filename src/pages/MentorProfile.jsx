@@ -1,17 +1,13 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 import {
   ArrowLeft,
-  BadgeCheck,
   BriefcaseBusiness,
-  Check,
+  Building2,
   Clock3,
   Languages,
-  Monitor,
-  UsersRound,
+  Users,
+  Video,
 } from "lucide-react";
 
 import {
@@ -22,111 +18,13 @@ import {
 import DashboardLayout from "../layouts/DashboardLayout";
 import { supabase } from "../lib/supabase";
 
-import "./MenteeRequestFlow.css";
-
-function formatLabel(value) {
-  return String(value || "")
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (character) =>
-      character.toUpperCase(),
-    );
-}
-
-function getProfile(row) {
-  if (Array.isArray(row?.profiles)) {
-    return row.profiles[0] ?? null;
-  }
-
-  return row?.profiles ?? null;
-}
-
-function Progress() {
-  const items = [
-    "Find mentor",
-    "View profile",
-    "Send request",
-  ];
-
-  return (
-    <div className="request-flow-progress">
-      {items.map((label, index) => {
-        const number = index + 1;
-        const complete = number < 2;
-        const active = number === 2;
-
-        return (
-          <div
-            key={label}
-            className={[
-              "request-flow-progress-item",
-              active ? "is-active" : "",
-              complete ? "is-complete" : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            <span>
-              {complete ? (
-                <Check
-                  size={14}
-                  strokeWidth={2.5}
-                />
-              ) : (
-                number
-              )}
-            </span>
-
-            <small>{label}</small>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function MentorAvatar({
-  profile,
-  initials,
-}) {
-  return (
-    <span className="request-flow-avatar request-flow-avatar--large">
-      {profile?.profile_photo_url ? (
-        <img
-          src={profile.profile_photo_url}
-          alt=""
-          style={{
-            width: "100%",
-            height: "100%",
-            borderRadius: "inherit",
-            objectFit: "cover",
-          }}
-        />
-      ) : (
-        initials || "MC"
-      )}
-    </span>
-  );
-}
-
 function MentorProfile() {
-  const { mentorId } =
-    useParams();
+  const { mentorId } = useParams();
+  const navigate = useNavigate();
 
-  const navigate =
-    useNavigate();
-
-  const [
-    mentor,
-    setMentor,
-  ] = useState(null);
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-  const [error, setError] =
-    useState("");
+  const [mentor, setMentor] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -135,40 +33,32 @@ function MentorProfile() {
       setLoading(true);
       setError("");
 
-      const {
-        data,
-        error: mentorError,
-      } = await supabase
-        .from("mentor_profiles")
-        .select(`
-          mentor_id,
-          biography,
-          job_title,
-          organisation,
-          expertise,
-          mentorship_categories,
-          languages,
-          meeting_formats,
-          session_lengths,
-          maximum_active_mentees,
-          current_active_mentees,
-          years_of_experience,
-          accepting_requests,
-          approval_status,
-          profiles!mentor_profiles_mentor_id_fkey (
-            full_name,
-            profile_photo_url
-          )
-        `)
-        .eq(
-          "mentor_id",
-          mentorId,
-        )
-        .eq(
-          "approval_status",
-          "approved",
-        )
-        .maybeSingle();
+      const { data, error: mentorError } =
+        await supabase
+          .from("mentor_profiles")
+          .select(`
+            mentor_id,
+            biography,
+            job_title,
+            organisation,
+            expertise,
+            mentorship_categories,
+            languages,
+            meeting_formats,
+            session_lengths,
+            maximum_active_mentees,
+            current_active_mentees,
+            years_of_experience,
+            accepting_requests,
+            approval_status,
+            profiles!mentor_profiles_mentor_id_fkey (
+              full_name,
+              profile_photo_url
+            )
+          `)
+          .eq("mentor_id", mentorId)
+          .eq("approval_status", "approved")
+          .maybeSingle();
 
       if (!isMounted) {
         return;
@@ -214,24 +104,16 @@ function MentorProfile() {
         title="Mentor profile"
         description="Learn more about this mentor."
       >
-        <div className="mentee-request-flow">
-          <Progress />
+        <section className="dashboard-empty-state">
+          <div className="loader" />
 
-          <section className="request-flow-panel">
-            <span className="request-flow-eyebrow">
-              MENTOR PROFILE
-            </span>
+          <h2>Loading mentor profile</h2>
 
-            <h3>
-              Loading mentor profile
-            </h3>
-
-            <p>
-              Please wait while we prepare this mentor&apos;s
-              information.
-            </p>
-          </section>
-        </div>
+          <p>
+            Please wait while we prepare this mentor's
+            information.
+          </p>
+        </section>
       </DashboardLayout>
     );
   }
@@ -242,449 +124,344 @@ function MentorProfile() {
         title="Mentor profile"
         description="Learn more about this mentor."
       >
-        <div className="mentee-request-flow">
-          <Progress />
+        <section className="dashboard-empty-state">
+          <h2>Mentor profile unavailable</h2>
 
-          <section className="request-flow-panel">
-            <span className="request-flow-eyebrow">
-              PROFILE UNAVAILABLE
-            </span>
+          <p>{error}</p>
 
-            <h3>
-              Mentor profile unavailable
-            </h3>
-
-            <p>{error}</p>
-
-            <div
-              className="request-flow-bottom-action"
-              style={{
-                marginTop: "18px",
-                justifyContent: "flex-start",
-              }}
-            >
-              <button
-                type="button"
-                className="request-flow-secondary-button"
-                onClick={() =>
-                  navigate(
-                    "/mentee/find-mentor",
-                  )
-                }
-              >
-                Back to mentors
-              </button>
-            </div>
-          </section>
-        </div>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() =>
+              navigate("/mentee/find-mentor")
+            }
+          >
+            Back to mentors
+          </button>
+        </section>
       </DashboardLayout>
     );
   }
 
-  const profile =
-    getProfile(mentor);
+  const profile = mentor.profiles;
 
   const fullName =
-    profile?.full_name ||
-    "Approved mentor";
+    profile?.full_name || "Approved mentor";
 
-  const initials =
-    fullName
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((name) =>
-        name
-          .charAt(0)
-          .toUpperCase(),
-      )
-      .join("");
+  const initials = fullName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((name) =>
+      name.charAt(0).toUpperCase(),
+    )
+    .join("");
 
   const maximumActiveMentees =
     Number(
-      mentor.maximum_active_mentees ??
-        0,
+      mentor.maximum_active_mentees ?? 0,
     );
 
   const currentActiveMentees =
     Number(
-      mentor.current_active_mentees ??
-        0,
+      mentor.current_active_mentees ?? 0,
     );
 
-  const availableSpaces =
-    Math.max(
-      maximumActiveMentees -
-        currentActiveMentees,
-      0,
-    );
+  const availableSpaces = Math.max(
+    maximumActiveMentees -
+      currentActiveMentees,
+    0,
+  );
 
-  const atCapacity =
-    availableSpaces <= 0 ||
-    mentor.accepting_requests !==
-      true;
+  const hasCapacity =
+    availableSpaces > 0;
+
+  const acceptingRequests =
+    mentor.accepting_requests === true;
+
+  const canRequest =
+    hasCapacity &&
+    acceptingRequests;
 
   const meetingFormats =
-    mentor.meeting_formats ?? [];
-
-  const sessionLengths =
-    mentor.session_lengths ?? [];
+    mentor.meeting_formats?.length > 0
+      ? mentor.meeting_formats.join(", ")
+      : "Not specified";
 
   const languages =
-    mentor.languages ?? [];
+    mentor.languages?.length > 0
+      ? mentor.languages.join(", ")
+      : "Not specified";
 
-  const categories =
-    mentor.mentorship_categories ??
-    [];
+  const sessionLengths =
+    mentor.session_lengths?.length > 0
+      ? mentor.session_lengths
+          .map((length) =>
+            typeof length === "number"
+              ? `${length} minutes`
+              : length,
+          )
+          .join(", ")
+      : "Not specified";
 
-  const expertise =
-    mentor.expertise ?? [];
+  function getAvailabilityTitle() {
+    if (!hasCapacity) {
+      return "Currently at capacity";
+    }
+
+    return `${availableSpaces} ${
+      availableSpaces === 1
+        ? "space"
+        : "spaces"
+    } available`;
+  }
+
+  function getAvailabilityMessage() {
+    if (!hasCapacity) {
+      return "This mentor does not have an open mentoring space right now.";
+    }
+
+    if (!acceptingRequests) {
+      return "This mentor has available capacity but is not accepting new requests right now.";
+    }
+
+    return "This mentor is currently accepting mentorship requests.";
+  }
+
+  function getRequestButtonLabel() {
+    if (!hasCapacity) {
+      return "Mentor at capacity";
+    }
+
+    if (!acceptingRequests) {
+      return "Not accepting requests";
+    }
+
+    return "Request mentorship";
+  }
 
   return (
     <DashboardLayout
       title="Mentor profile"
       description="Learn more about this mentor before deciding to request mentorship."
     >
-      <div className="mentee-request-flow">
-        <Progress />
+      <div className="mentor-profile-page">
+        <button
+          type="button"
+          className="mentor-profile-back"
+          onClick={() =>
+            navigate("/mentee/find-mentor")
+          }
+        >
+          <ArrowLeft size={16} />
+          Back to mentors
+        </button>
 
-        <div className="request-flow-screen">
-          <button
-            type="button"
-            className="request-flow-back"
-            onClick={() =>
-              navigate(
-                "/mentee/find-mentor",
-              )
-            }
-          >
-            <ArrowLeft size={16} />
-            Back to mentors
-          </button>
-
-          <section className="request-flow-profile-hero">
-            <div className="request-flow-profile-main">
-              <MentorAvatar
-                profile={profile}
-                initials={initials}
+        <section className="mentor-profile-hero">
+          <div className="mentor-profile-identity">
+            {profile?.profile_photo_url ? (
+              <img
+                src={profile.profile_photo_url}
+                alt=""
+                className="mentor-profile-avatar"
               />
+            ) : (
+              <span className="mentor-profile-avatar mentor-profile-initials">
+                {initials || "MC"}
+              </span>
+            )}
 
-              <div>
-                <span className="request-flow-approved">
-                  <BadgeCheck
-                    size={15}
-                  />
-                  TCN Ikeja approved mentor
-                </span>
-
-                <h2>
-                  {fullName}
-                </h2>
-
-                <p>
-                  {mentor.job_title ||
-                    "Mentor"}
-
-                  {mentor.organisation
-                    ? ` · ${mentor.organisation}`
-                    : ""}
-                </p>
-              </div>
-            </div>
-
-            <div className="request-flow-profile-action">
-              <span>
-                {atCapacity
-                  ? "Not currently accepting new requests"
-                  : `${availableSpaces} ${
-                      availableSpaces ===
-                      1
-                        ? "mentoring space"
-                        : "mentoring spaces"
-                    } available`}
+            <div className="mentor-profile-copy">
+              <span className="mentor-profile-label">
+                Approved mentor
               </span>
 
-              {!atCapacity && (
-                <button
-                  type="button"
-                  className="request-flow-primary-button"
-                  onClick={() =>
-                    navigate(
-                      `/mentee/mentors/${mentor.mentor_id}/request`,
-                    )
-                  }
-                >
-                  Request mentorship
-                </button>
-              )}
-            </div>
-          </section>
+              <h2>{fullName}</h2>
 
-          <section className="request-flow-stat-grid">
-            <article>
-              <BriefcaseBusiness
-                size={18}
-              />
+              <p className="mentor-profile-role">
+                {mentor.job_title || "Mentor"}
 
-              <strong>
-                {mentor.years_of_experience ??
-                  "—"}
-              </strong>
-
-              <span>
-                {mentor.years_of_experience ===
-                1
-                  ? "year of experience"
-                  : "years of experience"}
-              </span>
-            </article>
-
-            <article>
-              <UsersRound
-                size={18}
-              />
-
-              <strong>
-                {availableSpaces}
-              </strong>
-
-              <span>
-                mentoring{" "}
-                {availableSpaces === 1
-                  ? "space"
-                  : "spaces"}{" "}
-                available
-              </span>
-            </article>
-
-            <article>
-              <Clock3 size={18} />
-
-              <strong>
-                {sessionLengths.length >
-                0
-                  ? sessionLengths[0]
-                  : "—"}
-              </strong>
-
-              <span>
-                preferred session length
-                {sessionLengths.length >
-                0
-                  ? " minutes"
+                {mentor.organisation
+                  ? ` at ${mentor.organisation}`
                   : ""}
-              </span>
-            </article>
-          </section>
+              </p>
+            </div>
+          </div>
 
-          <div className="request-flow-profile-grid">
-            <section className="request-flow-panel">
-              <span className="request-flow-eyebrow">
-                ABOUT
-              </span>
+          <div
+            className={`mentor-profile-availability ${
+              canRequest
+                ? ""
+                : "at-capacity"
+            }`}
+          >
+            <strong>
+              {getAvailabilityTitle()}
+            </strong>
 
-              <h3>
-                About{" "}
-                {fullName.split(" ")[0]}
-              </h3>
+            <small>
+              {getAvailabilityMessage()}
+            </small>
+          </div>
+        </section>
+
+        <div className="mentor-profile-grid">
+          <section className="mentor-profile-card">
+            <div className="mentor-profile-section">
+              <h3>About this mentor</h3>
 
               <p>
                 {mentor.biography ||
                   "This mentor has not added a biography yet."}
               </p>
+            </div>
 
-              <div className="request-flow-detail">
-                <BriefcaseBusiness
-                  size={18}
-                />
-
-                <div>
-                  <small>
-                    Areas of mentorship
-                  </small>
-
-                  {categories.length >
-                  0 ? (
-                    <div className="request-flow-tags">
-                      {categories.map(
-                        (category) => (
-                          <span
-                            key={
-                              category
-                            }
-                          >
-                            {category}
-                          </span>
-                        ),
-                      )}
-                    </div>
-                  ) : (
-                    <strong>
-                      Not specified
-                    </strong>
-                  )}
-                </div>
-              </div>
-
-              {expertise.length >
-                0 && (
-                <div className="request-flow-detail">
-                  <BriefcaseBusiness
-                    size={18}
-                  />
-
-                  <div>
-                    <small>
-                      Areas of expertise
-                    </small>
-
-                    <div className="request-flow-tags">
-                      {expertise.map(
-                        (item) => (
-                          <span
-                            key={item}
-                          >
-                            {item}
-                          </span>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="request-flow-detail">
-                <Languages
-                  size={18}
-                />
-
-                <div>
-                  <small>
-                    Languages
-                  </small>
-
-                  <strong>
-                    {languages.length >
-                    0
-                      ? languages.join(
-                          ", ",
-                        )
-                      : "Not specified"}
-                  </strong>
-                </div>
-              </div>
-
-              <div className="request-flow-detail">
-                <Monitor size={18} />
-
-                <div>
-                  <small>
-                    Session format
-                  </small>
-
-                  <strong>
-                    {meetingFormats.length >
-                    0
-                      ? meetingFormats
-                          .map(
-                            formatLabel,
-                          )
-                          .join(" / ")
-                      : "To be agreed"}
-                  </strong>
-                </div>
-              </div>
-            </section>
-
-            <aside className="request-flow-panel">
-              <span className="request-flow-eyebrow">
-                SESSION PREFERENCES
-              </span>
-
-              <h3>
-                How mentoring sessions work
+            <div className="mentor-profile-section">
+              <h3 className="mentor-profile-section-heading">
+                Areas of expertise
               </h3>
 
-              <p>
-                Final booking happens only after your
-                mentorship request has been accepted.
-              </p>
-
-              <div className="request-flow-availability">
-                {meetingFormats.length >
-                0 ? (
-                  meetingFormats.map(
-                    (format) => (
-                      <span
-                        key={format}
-                      >
-                        <Monitor
-                          size={16}
-                        />
-
-                        {formatLabel(
-                          format,
-                        )}
+              {mentor.expertise?.length > 0 ? (
+                <div className="mentor-profile-tags">
+                  {mentor.expertise.map(
+                    (expertise) => (
+                      <span key={expertise}>
+                        {expertise}
                       </span>
                     ),
-                  )
-                ) : (
-                  <span>
-                    <Monitor
-                      size={16}
-                    />
-                    Session format to be agreed
-                  </span>
-                )}
-              </div>
+                  )}
+                </div>
+              ) : (
+                <p>
+                  No areas of expertise have been provided.
+                </p>
+              )}
+            </div>
 
-              <div className="request-flow-session-length">
-                <Clock3 size={17} />
+            <div className="mentor-profile-section">
+              <h3 className="mentor-profile-section-heading">
+                Mentorship categories
+              </h3>
+
+              {mentor.mentorship_categories?.length > 0 ? (
+                <div className="mentor-profile-tags">
+                  {mentor.mentorship_categories.map(
+                    (category) => (
+                      <span key={category}>
+                        {category}
+                      </span>
+                    ),
+                  )}
+                </div>
+              ) : (
+                <p>
+                  No mentorship categories have been provided.
+                </p>
+              )}
+            </div>
+          </section>
+
+          <aside className="mentor-profile-card">
+            <div className="mentor-profile-detail-list">
+              <div className="mentor-profile-detail-row">
+                <BriefcaseBusiness size={18} />
 
                 <div>
-                  <small>
-                    Preferred session length
-                  </small>
+                  <strong>Experience</strong>
 
-                  <strong>
-                    {sessionLengths.length >
-                    0
-                      ? sessionLengths
-                          .map(
-                            (length) =>
-                              `${length} minutes`,
-                          )
-                          .join(", ")
-                      : "To be agreed"}
-                  </strong>
+                  <span>
+                    {mentor.years_of_experience
+                      ? `${mentor.years_of_experience} years`
+                      : "Not specified"}
+                  </span>
                 </div>
               </div>
-            </aside>
-          </div>
 
-          <div className="request-flow-bottom-action">
-            {!atCapacity ? (
-              <button
-                type="button"
-                className="request-flow-primary-button"
-                onClick={() =>
-                  navigate(
-                    `/mentee/mentors/${mentor.mentor_id}/request`,
-                  )
-                }
-              >
-                Request mentorship
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="request-flow-primary-button"
-                disabled
-              >
-                Mentor at capacity
-              </button>
-            )}
-          </div>
+              <div className="mentor-profile-detail-row">
+                <Building2 size={18} />
+
+                <div>
+                  <strong>Organisation</strong>
+
+                  <span>
+                    {mentor.organisation ||
+                      "Not specified"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mentor-profile-detail-row">
+                <Languages size={18} />
+
+                <div>
+                  <strong>Languages</strong>
+                  <span>{languages}</span>
+                </div>
+              </div>
+
+              <div className="mentor-profile-detail-row">
+                <Video size={18} />
+
+                <div>
+                  <strong>Meeting format</strong>
+                  <span>{meetingFormats}</span>
+                </div>
+              </div>
+
+              <div className="mentor-profile-detail-row">
+                <Clock3 size={18} />
+
+                <div>
+                  <strong>
+                    Preferred session length
+                  </strong>
+
+                  <span>{sessionLengths}</span>
+                </div>
+              </div>
+
+              <div className="mentor-profile-detail-row">
+                <Users size={18} />
+
+                <div>
+                  <strong>
+                    Mentorship capacity
+                  </strong>
+
+                  <span>
+                    {currentActiveMentees} of{" "}
+                    {maximumActiveMentees} active
+                    mentee spaces currently used
+                  </span>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div className="mentor-profile-actions">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() =>
+              navigate("/mentee/find-mentor")
+            }
+          >
+            Back to mentors
+          </button>
+
+          <button
+            type="button"
+            className="primary-button"
+            disabled={!canRequest}
+            onClick={() =>
+              navigate(
+                `/mentee/mentors/${mentor.mentor_id}/request`,
+              )
+            }
+          >
+            {getRequestButtonLabel()}
+          </button>
         </div>
       </div>
     </DashboardLayout>

@@ -1,0 +1,206 @@
+/* =========================================================
+   MY REQUESTS TABLE + PAGINATION
+   Imported after MenteeRequests.css.
+   Desktop/tablet uses table. Mobile uses compact cards.
+   ========================================================= */
+
+.mentee-request-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.mentee-request-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.mentee-request-table th,
+.mentee-request-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #eef1f5;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.mentee-request-table th {
+  color: #6f8095;
+  background: #fbfcfd;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mentee-request-table td {
+  color: #2d353f;
+  font-size: 12px;
+}
+
+.mentee-request-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.mentee-request-table tbody tr:hover {
+  background: #fcfcfd;
+}
+
+.mentee-request-table-mentor {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 180px;
+}
+
+.mentee-request-table-mentor img,
+.mentee-request-table-mentor > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e4e8ef;
+  border-radius: 9px;
+  background: #f3f5f7;
+  color: #101419;
+  object-fit: cover;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.mentee-request-table-mentor strong {
+  color: #101419;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mentee-request-table-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.mentee-request-table-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  color: #4c5867;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mentee-request-table-link:hover {
+  color: #101419;
+}
+
+.mentee-request-table-link.is-withdraw {
+  color: #832600;
+}
+
+.mentee-request-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.mentee-request-pagination > span {
+  color: #6f8095;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mentee-request-mobile-list {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .mentee-request-table-wrapper {
+    display: none;
+  }
+
+  .mentee-request-mobile-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .mentee-request-mobile-card {
+    padding: 16px;
+    border: 1px solid #e4e8ef;
+    border-radius: 14px;
+    background: #ffffff;
+  }
+
+  .mentee-request-mobile-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .mentee-request-mobile-card-top small {
+    color: #6f8095;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+  }
+
+  .mentee-request-mobile-card-top h3 {
+    margin: 4px 0 2px;
+    color: #101419;
+    font-size: 15px;
+    font-weight: 650;
+  }
+
+  .mentee-request-mobile-card-top p {
+    margin: 0;
+    color: #4c5867;
+    font-size: 11px;
+  }
+
+  .mentee-request-mobile-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    color: #6f8095;
+    font-size: 10px;
+  }
+
+  .mentee-request-mobile-meta svg {
+    color: #ff5303;
+  }
+
+  .mentee-request-mobile-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #eef1f5;
+  }
+
+  .mentee-request-pagination {
+    justify-content: space-between;
+  }
+
+  .mentee-request-pagination
+  .mentee-request-button {
+    width: auto !important;
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: 11px;
+  }
+}

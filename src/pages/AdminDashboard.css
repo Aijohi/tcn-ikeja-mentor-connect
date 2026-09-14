@@ -1702,3 +1702,103 @@ body:has(.admin-list-section) .dashboard-content {
   transform: none !important;
 }
 
+/* =========================================================
+   ADMIN STATUS TEXT SYSTEM
+   Clean text + small semantic dot.
+   No pill/canvas around account type, account status,
+   membership status or review status.
+   ========================================================= */
+
+.admin-status-badge,
+.admin-status-badge.status-pending,
+.admin-status-badge.status-approved,
+.admin-status-badge.status-accepted,
+.admin-status-badge.status-active,
+.admin-status-badge.status-declined,
+.admin-status-badge.status-rejected,
+.admin-status-badge.status-suspended,
+.admin-status-badge.status-withdrawn,
+.admin-status-badge.status-mentor-applicant {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+
+  min-height: auto !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  background: transparent !important;
+  background-image: none !important;
+
+  box-shadow: none !important;
+
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+
+  text-transform: capitalize !important;
+  white-space: nowrap !important;
+}
+
+.admin-status-dot {
+  display: inline-block;
+  flex: 0 0 6px;
+
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: currentColor;
+}
+
+/* Account type */
+
+.admin-status-badge.status-mentor,
+.admin-status-badge.status-mentor-applicant {
+  color: #c94a11 !important;
+}
+
+.admin-status-badge.status-mentee {
+  color: #315f8c !important;
+}
+
+.admin-status-badge.status-admin,
+.admin-status-badge.status-safeguarding-lead {
+  color: #475569 !important;
+}
+
+/* Account + workflow status */
+
+.admin-status-badge.status-active {
+  color: #087967 !important;
+}
+
+.admin-status-badge.status-verified,
+.admin-status-badge.status-approved,
+.admin-status-badge.status-accepted {
+  color: #2f7d4a !important;
+}
+
+.admin-status-badge.status-pending {
+  color: #b56a00 !important;
+}
+
+.admin-status-badge.status-not-verified,
+.admin-status-badge.status-withdrawn {
+  color: #8794a4 !important;
+}
+
+.admin-status-badge.status-declined,
+.admin-status-badge.status-rejected,
+.admin-status-badge.status-suspended {
+  color: #a63d46 !important;
+}
+
+/* Keep the People table visually light. */
+.admin-data-table td .admin-status-badge {
+  vertical-align: middle;
+}
+

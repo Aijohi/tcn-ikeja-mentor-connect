@@ -247,214 +247,220 @@ function MenteeProfile() {
           className="mentee-profile-form"
           onSubmit={handleSubmit}
         >
-        <section className="mentee-profile-intro">
-          <div>
-            <span className="eyebrow">
-              MENTEE PROFILE
-            </span>
+          <section className="mentee-profile-intro">
+            <div>
+              <span className="eyebrow">
+                MENTEE PROFILE
+              </span>
 
-            <h2>Help a mentor understand how to support you.</h2>
+              <h2>
+                Help a mentor understand how to support you.
+              </h2>
 
-            <p>
-              Keep your profile focused on your goals and the
-              guidance you need. You do not need to share
-              unnecessary private information.
+              <p>
+                Keep your profile focused on your goals and the
+                guidance you need. You do not need to share
+                unnecessary private information.
+              </p>
+            </div>
+          </section>
+
+          {error && (
+            <p className="form-error">
+              {error}
             </p>
-          </div>
-        </section>
+          )}
 
-        {error && <p className="form-error">{error}</p>}
+          {success && (
+            <p className="mentee-profile-success">
+              <CheckCircle2 size={17} />
+              {success}
+            </p>
+          )}
 
-        {success && (
-          <p className="mentee-profile-success">
-            <CheckCircle2 size={17} />
-            {success}
-          </p>
-        )}
+          <section className="mentee-profile-section">
+            <div className="mentee-profile-section-heading">
+              <BookOpenText size={19} />
 
-        <section className="mentee-profile-section">
-          <div className="mentee-profile-section-heading">
-            <BookOpenText size={19} />
-
-            <div>
-              <h3>About you</h3>
-              <p>
-                Give potential mentors a short introduction.
-              </p>
+              <div>
+                <h3>About you</h3>
+                <p>
+                  Give potential mentors a short introduction.
+                </p>
+              </div>
             </div>
-          </div>
 
-          <label className="mentee-profile-field">
-            Short biography
-            <textarea
-              name="biography"
-              value={form.biography}
-              onChange={updateForm}
-              placeholder="Share a little about your background, current stage and what is important to you."
-              disabled={submitting}
-              required
-            />
-          </label>
-        </section>
-
-        <section className="mentee-profile-section">
-          <div className="mentee-profile-section-heading">
-            <Target size={19} />
-
-            <div>
-              <h3>Your mentorship goals</h3>
-              <p>
-                Tell mentors where you would like guidance and
-                what progress would look like for you.
-              </p>
-            </div>
-          </div>
-
-          <fieldset className="mentee-profile-options">
-            <legend>
-              Areas where you need mentorship
-            </legend>
-
-            <div className="mentee-profile-checkbox-grid">
-              {mentorshipAreas.map((area) => (
-                <label key={area}>
-                  <input
-                    type="checkbox"
-                    checked={form.mentorshipAreas.includes(
-                      area,
-                    )}
-                    onChange={() =>
-                      toggleMentorshipArea(area)
-                    }
-                    disabled={submitting}
-                  />
-
-                  <span>{area}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <label className="mentee-profile-field">
-            Development goals
-            <textarea
-              name="developmentGoals"
-              value={form.developmentGoals}
-              onChange={updateForm}
-              placeholder="What are you currently trying to improve, achieve or understand?"
-              disabled={submitting}
-              required
-            />
-          </label>
-
-          <label className="mentee-profile-field">
-            What do you hope to gain from mentorship?
-            <textarea
-              name="hopesToGain"
-              value={form.hopesToGain}
-              onChange={updateForm}
-              placeholder="For example, clearer direction, accountability, practical guidance or help building confidence."
-              disabled={submitting}
-              required
-            />
-          </label>
-        </section>
-
-        <section className="mentee-profile-section">
-          <div className="mentee-profile-section-heading">
-            <HeartHandshake size={19} />
-
-            <div>
-              <h3>Availability and mentoring history</h3>
-              <p>
-                These details are optional, but they can help
-                with matching and planning.
-              </p>
-            </div>
-          </div>
-
-          <label className="mentee-profile-field">
-            Preferred availability
-            <textarea
-              name="preferredAvailability"
-              value={form.preferredAvailability}
-              onChange={updateForm}
-              placeholder="For example, weekday evenings or Saturday mornings."
-              disabled={submitting}
-            />
-          </label>
-
-          <label className="mentee-profile-field">
-            Previous mentoring history{" "}
-            <small>(optional)</small>
-            <textarea
-              name="previousMentoringHistory"
-              value={form.previousMentoringHistory}
-              onChange={updateForm}
-              placeholder="If you have had previous mentoring on Mentor Connect, you can briefly describe it here."
-              disabled={submitting}
-            />
-          </label>
-        </section>
-
-        <section className="mentee-profile-section">
-          <div className="mentee-profile-section-heading">
-            <CheckCircle2 size={19} />
-
-            <div>
-              <h3>Conduct and safety</h3>
-              <p>
-                Mentorship works best when both people respect
-                the platform's boundaries and safety guidance.
-              </p>
-            </div>
-          </div>
-
-          <div className="mentee-profile-agreements">
-            <label>
-              <input
-                type="checkbox"
-                name="conductAgreed"
-                checked={form.conductAgreed}
+            <label className="mentee-profile-field">
+              Short biography
+              <textarea
+                name="biography"
+                value={form.biography}
                 onChange={updateForm}
+                placeholder="Share a little about your background, current stage and what is important to you."
                 disabled={submitting}
+                required
               />
+            </label>
+          </section>
 
-              <span>
-                I agree to follow the mentee code of conduct
-                and participate respectfully.
-              </span>
+          <section className="mentee-profile-section">
+            <div className="mentee-profile-section-heading">
+              <Target size={19} />
+
+              <div>
+                <h3>Your mentorship goals</h3>
+                <p>
+                  Tell mentors where you would like guidance and
+                  what progress would look like for you.
+                </p>
+              </div>
+            </div>
+
+            <fieldset className="mentee-profile-options">
+              <legend>
+                Areas where you need mentorship
+              </legend>
+
+              <div className="mentee-profile-checkbox-grid">
+                {mentorshipAreas.map((area) => (
+                  <label key={area}>
+                    <input
+                      type="checkbox"
+                      checked={form.mentorshipAreas.includes(
+                        area,
+                      )}
+                      onChange={() =>
+                        toggleMentorshipArea(area)
+                      }
+                      disabled={submitting}
+                    />
+
+                    <span>{area}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <label className="mentee-profile-field">
+              Development goals
+              <textarea
+                name="developmentGoals"
+                value={form.developmentGoals}
+                onChange={updateForm}
+                placeholder="What are you currently trying to improve, achieve or understand?"
+                disabled={submitting}
+                required
+              />
             </label>
 
-            <label>
-              <input
-                type="checkbox"
-                name="safetyAgreed"
-                checked={form.safetyAgreed}
+            <label className="mentee-profile-field">
+              What do you hope to gain from mentorship?
+              <textarea
+                name="hopesToGain"
+                value={form.hopesToGain}
                 onChange={updateForm}
+                placeholder="For example, clearer direction, accountability, practical guidance or help building confidence."
+                disabled={submitting}
+                required
+              />
+            </label>
+          </section>
+
+          <section className="mentee-profile-section">
+            <div className="mentee-profile-section-heading">
+              <HeartHandshake size={19} />
+
+              <div>
+                <h3>Availability and mentoring history</h3>
+                <p>
+                  These details are optional, but they can help
+                  with matching and planning.
+                </p>
+              </div>
+            </div>
+
+            <label className="mentee-profile-field">
+              Preferred availability
+              <textarea
+                name="preferredAvailability"
+                value={form.preferredAvailability}
+                onChange={updateForm}
+                placeholder="For example, weekday evenings or Saturday mornings."
                 disabled={submitting}
               />
-
-              <span>
-                I agree to follow Mentor Connect safety
-                guidelines and keep sensitive or financial
-                requests outside the mentoring relationship.
-              </span>
             </label>
-          </div>
-        </section>
 
-        <div className="mentee-profile-actions">
-          <button
-            type="submit"
-            className="primary-button mentee-profile-button mentee-profile-button--medium"
-            disabled={submitting}
-          >
-            {submitting
-              ? "Saving profile..."
-              : "Save profile"}
-          </button>
-        </div>
+            <label className="mentee-profile-field">
+              Previous mentoring history{" "}
+              <small>(optional)</small>
+              <textarea
+                name="previousMentoringHistory"
+                value={form.previousMentoringHistory}
+                onChange={updateForm}
+                placeholder="If you have had previous mentoring on Mentor Connect, you can briefly describe it here."
+                disabled={submitting}
+              />
+            </label>
+          </section>
+
+          <section className="mentee-profile-section">
+            <div className="mentee-profile-section-heading">
+              <CheckCircle2 size={19} />
+
+              <div>
+                <h3>Conduct and safety</h3>
+                <p>
+                  Mentorship works best when both people respect
+                  the platform's boundaries and safety guidance.
+                </p>
+              </div>
+            </div>
+
+            <div className="mentee-profile-agreements">
+              <label>
+                <input
+                  type="checkbox"
+                  name="conductAgreed"
+                  checked={form.conductAgreed}
+                  onChange={updateForm}
+                  disabled={submitting}
+                />
+
+                <span>
+                  I agree to follow the mentee code of conduct
+                  and participate respectfully.
+                </span>
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  name="safetyAgreed"
+                  checked={form.safetyAgreed}
+                  onChange={updateForm}
+                  disabled={submitting}
+                />
+
+                <span>
+                  I agree to follow Mentor Connect safety
+                  guidelines and keep sensitive or financial
+                  requests outside the mentoring relationship.
+                </span>
+              </label>
+            </div>
+          </section>
+
+          <div className="mentee-profile-actions">
+            <button
+              type="submit"
+              className="primary-button mentee-profile-button mentee-profile-button--medium"
+              disabled={submitting}
+            >
+              {submitting
+                ? "Saving profile..."
+                : "Save profile"}
+            </button>
+          </div>
         </form>
       </div>
     </DashboardLayout>

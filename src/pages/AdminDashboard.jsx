@@ -781,7 +781,18 @@ function PeoplePage() {
                   </td>
 
                   <td>
-                    {person.membership_verified ? "Verified" : "Not verified"}
+                    <StatusBadge
+                      value={
+                        person.membership_verified
+                          ? "verified"
+                          : "not_verified"
+                      }
+                      label={
+                        person.membership_verified
+                          ? "Verified"
+                          : "Not verified"
+                      }
+                    />
                   </td>
 
                   <td>{formatDate(person.created_at)}</td>
@@ -1824,15 +1835,27 @@ function SummaryCard({ icon, label, value, attention = false }) {
 }
 
 function StatusBadge({ value, label }) {
-  const text = label || String(value || "unknown").replaceAll("_", " ");
+  const normalizedValue = String(
+    value || "unknown",
+  ).replaceAll("_", "-");
+
+  const text =
+    label ||
+    String(value || "unknown").replaceAll(
+      "_",
+      " ",
+    );
 
   return (
     <span
-      className={`admin-status-badge status-${String(
-        value || "unknown",
-      ).replaceAll("_", "-")}`}
+      className={`admin-status-badge status-${normalizedValue}`}
     >
-      {text}
+      <i
+        className="admin-status-dot"
+        aria-hidden="true"
+      />
+
+      <span>{text}</span>
     </span>
   );
 }
