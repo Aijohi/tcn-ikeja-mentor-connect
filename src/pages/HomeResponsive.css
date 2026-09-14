@@ -1,0 +1,383 @@
+/* =========================================================
+   HOME RESPONSIVE
+   Only adjusts:
+   1. Hero + final CTA buttons
+   2. Mobile/tablet spacing
+   3. Smooth anchor scrolling
+
+   Card layouts are intentionally NOT changed here.
+   Home.css remains in control of the cards.
+   ========================================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+#top,
+#how,
+#mentors,
+#trust,
+#accountability {
+  scroll-margin-top: 92px;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (min-width: 681px) and (max-width: 1100px) {
+  .hmc-home .hmc-hero {
+    min-height: auto !important;
+  }
+
+  .hmc-home .hmc-hero-content {
+    min-height: auto !important;
+
+    padding:
+      126px 0
+      48px !important;
+  }
+
+  .hmc-home .hmc-hero-copy {
+    width: min(100%, 700px) !important;
+    max-width: 700px !important;
+
+    margin-inline: auto !important;
+
+    text-align: center !important;
+  }
+
+  .hmc-home .hmc-hero h1 {
+    max-width: 680px !important;
+
+    margin-inline: auto !important;
+
+    font-size:
+      clamp(
+        44px,
+        7vw,
+        58px
+      ) !important;
+
+    line-height: 1.04 !important;
+  }
+
+  .hmc-home .hmc-hero-description {
+    max-width: 620px !important;
+
+    margin:
+      24px auto
+      0 !important;
+  }
+
+  .hmc-home .hmc-hero .hmc-hero-actions,
+  .hmc-home .hmc-cta .hmc-hero-actions {
+    display: grid !important;
+
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      ) !important;
+
+    gap: 10px !important;
+
+    width: min(100%, 410px) !important;
+    max-width: 410px !important;
+
+    margin:
+      22px auto
+      0 !important;
+  }
+
+  .hmc-home .hmc-hero .hmc-hero-actions .hmc-pill,
+  .hmc-home .hmc-cta .hmc-hero-actions .hmc-pill {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    height: 46px !important;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      34px !important;
+
+    padding:
+      5px
+      5px
+      5px
+      13px !important;
+
+    font-size: 11px !important;
+  }
+
+  .hmc-home .hmc-hero-actions .hmc-pill > i {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .hmc-home .hmc-hero-note {
+    text-align: center !important;
+  }
+
+  .hmc-home .hmc-hero-art {
+    display: none !important;
+  }
+
+  .hmc-home .hmc-section {
+    padding:
+      54px 0 !important;
+  }
+
+  .hmc-home .hmc-cta {
+    padding:
+      34px
+      28px !important;
+
+    text-align: center !important;
+  }
+}
+
+/* =========================================================
+   PHONE
+   ========================================================= */
+
+@media (max-width: 680px) {
+  .hmc-home .hmc-shell {
+    width:
+      min(
+        calc(100% - 28px),
+        1240px
+      ) !important;
+  }
+
+  .hmc-home .hmc-nav {
+    min-height: 68px !important;
+  }
+
+  .hmc-home .hmc-hero {
+    min-height: auto !important;
+  }
+
+  .hmc-home .hmc-hero-content {
+    display: block !important;
+
+    min-height: auto !important;
+
+    padding:
+      116px 0
+      42px !important;
+  }
+
+  .hmc-home .hmc-hero-copy {
+    width: 100% !important;
+    max-width: 100% !important;
+
+    margin-inline: auto !important;
+
+    text-align: center !important;
+  }
+
+  .hmc-home .hmc-kicker {
+    margin:
+      0 auto
+      18px !important;
+  }
+
+  .hmc-home .hmc-hero h1 {
+    max-width: 365px !important;
+
+    margin-inline: auto !important;
+
+    font-size:
+      clamp(
+        32px,
+        9.2vw,
+        40px
+      ) !important;
+
+    line-height: 1.08 !important;
+  }
+
+  .hmc-home .hmc-hero-description {
+    max-width: 345px !important;
+
+    margin:
+      22px auto
+      0 !important;
+
+    font-size: 12px !important;
+    line-height: 1.65 !important;
+  }
+
+  /* Keep the two main CTA buttons on ONE line. */
+  .hmc-home .hmc-hero .hmc-hero-actions,
+  .hmc-home .hmc-cta .hmc-hero-actions {
+    display: grid !important;
+
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      ) !important;
+
+    gap: 7px !important;
+
+    width: min(100%, 292px) !important;
+    max-width: 292px !important;
+
+    margin:
+      18px auto
+      0 !important;
+  }
+
+  .hmc-home .hmc-hero .hmc-hero-actions .hmc-pill,
+  .hmc-home .hmc-cta .hmc-hero-actions .hmc-pill {
+    display: grid !important;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      30px !important;
+
+    gap: 4px !important;
+
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    height: 42px !important;
+
+    padding:
+      4px
+      4px
+      4px
+      9px !important;
+
+    border-radius: 999px !important;
+
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+  }
+
+  .hmc-home .hmc-hero-actions .hmc-pill > span {
+    min-width: 0 !important;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hmc-home .hmc-hero-actions .hmc-pill > i {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .hmc-home .hmc-hero-actions .hmc-pill > i svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .hmc-home .hmc-hero-note {
+    margin-top: 20px !important;
+
+    text-align: center !important;
+  }
+
+  .hmc-home .hmc-hero-art {
+    display: none !important;
+  }
+
+  /*
+    Keep the cards exactly as Home.css designed them.
+    Only reduce section spacing so the page feels lighter.
+  */
+  .hmc-home .hmc-section {
+    padding:
+      40px 0 !important;
+  }
+
+  .hmc-home .hmc-how-cards-head,
+  .hmc-home .hmc-section-heading,
+  .hmc-home .hmc-trust-intro {
+    margin-bottom: 18px !important;
+  }
+
+  .hmc-home .hmc-cta-section {
+    padding:
+      34px 0
+      38px !important;
+  }
+
+  .hmc-home .hmc-cta {
+    padding:
+      24px
+      16px !important;
+
+    border-radius: 18px !important;
+
+    text-align: center !important;
+  }
+
+  .hmc-home .hmc-cta > p {
+    max-width: 330px !important;
+
+    margin-inline: auto !important;
+  }
+
+  .hmc-home .hmc-footer {
+    padding-top: 32px !important;
+  }
+}
+
+/* =========================================================
+   SMALL PHONE
+   ========================================================= */
+
+@media (max-width: 380px) {
+  .hmc-home .hmc-shell {
+    width:
+      min(
+        calc(100% - 22px),
+        1240px
+      ) !important;
+  }
+
+  .hmc-home .hmc-hero .hmc-hero-actions,
+  .hmc-home .hmc-cta .hmc-hero-actions {
+    width: min(100%, 270px) !important;
+    max-width: 270px !important;
+
+    gap: 6px !important;
+  }
+
+  .hmc-home .hmc-hero .hmc-hero-actions .hmc-pill,
+  .hmc-home .hmc-cta .hmc-hero-actions .hmc-pill {
+    grid-template-columns:
+      minmax(0, 1fr)
+      28px !important;
+
+    height: 40px !important;
+
+    padding:
+      4px
+      4px
+      4px
+      8px !important;
+
+    font-size: 9px !important;
+  }
+
+  .hmc-home .hmc-hero-actions .hmc-pill > i {
+    width: 28px !important;
+    height: 28px !important;
+  }
+}
+
+/* Respect users who prefer less motion. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

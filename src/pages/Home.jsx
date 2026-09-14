@@ -24,6 +24,7 @@ import {
 import { Link } from "react-router-dom";
 
 import "./Home.css";
+import "./HomeResponsive.css";
 
 const howSteps = [
   {
