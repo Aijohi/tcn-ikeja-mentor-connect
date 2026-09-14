@@ -1,0 +1,1252 @@
+/* =========================================================
+   MENTOR MESSAGES
+   Approved filled-state design transferred to production.
+   White canvas + neutral secondary styling + orange accents.
+   ========================================================= */
+
+html:has(.mentor-messages-page),
+body:has(.mentor-messages-page),
+body:has(.mentor-messages-page) #root,
+body:has(.mentor-messages-page) .dashboard-layout,
+body:has(.mentor-messages-page) .dashboard-content {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+body:has(.mentor-messages-page) .dashboard-content {
+  min-height: 100vh !important;
+}
+
+body:has(.mentor-messages-page)
+.dashboard-content > header h1 {
+  color: #101419 !important;
+}
+
+body:has(.mentor-messages-page)
+.dashboard-content > header p,
+body:has(.mentor-messages-page)
+.dashboard-content > header > span > small {
+  color: #4c5867 !important;
+}
+
+body:has(.mentor-messages-page)
+.dashboard-user small {
+  border: 1px solid #d7dee7 !important;
+
+  color: #2d353f !important;
+  background: #eef1f5 !important;
+
+  font-weight: 600 !important;
+}
+
+.mentor-messages-page {
+  width: 100%;
+  min-width: 0;
+
+  padding-top: 22px;
+
+  color: #101419;
+  background: #ffffff;
+}
+
+/* ---------------------------------------------------------
+   PAGE TOOLBAR
+   --------------------------------------------------------- */
+
+.mentor-message-page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-bottom: 14px;
+}
+
+.mentor-message-toolbar-eyebrow {
+  display: block;
+
+  color: #ff5303;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.mentor-message-page-toolbar p {
+  margin: 5px 0 0;
+
+  color: #6f8095;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.mentor-message-start-button,
+.mentor-message-primary-button {
+  min-height: 42px;
+  padding: 0 16px;
+
+  border: 1px solid #ff5303;
+  border-radius: 9px;
+
+  color: #ffffff;
+  background: #ff5303;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.mentor-message-start-button:hover,
+.mentor-message-primary-button:hover {
+  border-color: #c13c00;
+  background: #c13c00;
+}
+
+/* ---------------------------------------------------------
+   MAIN CHAT WORKSPACE
+   The history scrolls internally. The whole page does not
+   become extremely tall because of messages.
+   --------------------------------------------------------- */
+
+.mentor-messages-layout {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 260px)
+    minmax(0, 1fr);
+
+  width: 100%;
+  min-width: 0;
+
+  height:
+    clamp(
+      480px,
+      62vh,
+      600px
+    );
+
+  min-height: 0;
+
+  overflow: hidden;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 24px rgba(16, 20, 25, 0.035);
+}
+
+/* ---------------------------------------------------------
+   THREAD LIST
+   --------------------------------------------------------- */
+
+.mentor-message-threads {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+
+  min-width: 0;
+  min-height: 0;
+
+  border-right: 1px solid #e4e8ef;
+
+  background: #ffffff;
+}
+
+.mentor-message-threads-heading {
+  padding: 18px;
+
+  border-bottom: 1px solid #eef1f5;
+
+  background: #ffffff;
+}
+
+.mentor-message-threads-heading .eyebrow {
+  color: #ff5303;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.mentor-message-threads-heading h2 {
+  margin: 5px 0 0;
+
+  color: #101419;
+
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.mentor-message-thread-list {
+  min-height: 0;
+
+  padding: 0;
+
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+}
+
+.mentor-message-thread {
+  position: relative;
+
+  display: grid;
+  grid-template-columns:
+    42px
+    minmax(0, 1fr);
+  align-items: center;
+
+  gap: 10px;
+
+  width: 100%;
+  padding: 13px 14px;
+
+  border: 0;
+  border-bottom: 1px solid #eef1f5;
+  border-radius: 0;
+
+  color: inherit;
+  background: #ffffff;
+
+  font-family: inherit;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease;
+}
+
+.mentor-message-thread:hover {
+  background: #f8f9fb;
+}
+
+.mentor-message-thread.active {
+  background: #f3f5f7;
+}
+
+.mentor-message-thread.active::before {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: 0;
+
+  width: 3px;
+
+  border-radius: 0 4px 4px 0;
+
+  background: #ff5303;
+
+  content: "";
+}
+
+.mentor-message-thread-avatar {
+  display: grid;
+  place-items: center;
+
+  width: 42px;
+  height: 42px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 11px;
+
+  object-fit: cover;
+}
+
+.mentor-message-thread-avatar--large {
+  width: 56px;
+  height: 56px;
+
+  border-radius: 14px;
+}
+
+.mentor-message-thread-initials {
+  color: #101419;
+  background: #f3f5f7;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mentor-message-thread-copy {
+  display: grid;
+
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.mentor-message-thread-copy strong {
+  overflow: hidden;
+
+  color: #101419;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mentor-message-thread-copy small {
+  overflow: hidden;
+
+  color: #6f8095;
+
+  font-size: 10px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   EMPTY THREAD LIST
+   --------------------------------------------------------- */
+
+.mentor-message-empty-list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  min-height: 100%;
+  padding: 24px 18px;
+
+  color: #6f8095;
+
+  text-align: center;
+}
+
+.mentor-message-empty-list > svg {
+  color: #ff5303;
+}
+
+.mentor-message-empty-list h3 {
+  margin: 10px 0 0;
+
+  color: #101419;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mentor-message-empty-list p {
+  max-width: 200px;
+  margin: 6px 0 14px;
+
+  color: #6f8095;
+
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.mentor-message-empty-list button,
+.mentor-message-no-selection button {
+  min-height: 38px;
+  padding: 0 12px;
+
+  border: 1px solid #ff5303;
+  border-radius: 8px;
+
+  color: #ffffff;
+  background: #ff5303;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------
+   CONVERSATION
+   --------------------------------------------------------- */
+
+.mentor-message-conversation {
+  display: grid;
+  grid-template-rows:
+    auto
+    minmax(0, 1fr)
+    auto
+    auto;
+
+  min-width: 0;
+  min-height: 0;
+
+  background: #ffffff;
+}
+
+.mentor-message-conversation-header {
+  display: grid;
+  grid-template-columns:
+    auto
+    minmax(0, 1fr)
+    auto;
+  align-items: center;
+
+  gap: 12px;
+
+  min-height: 78px;
+  padding: 14px 16px;
+
+  border-bottom: 1px solid #e4e8ef;
+
+  background: #ffffff;
+}
+
+.mentor-message-conversation-title {
+  min-width: 0;
+}
+
+.mentor-message-conversation-title small {
+  display: block;
+
+  color: #ff5303;
+
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.mentor-message-conversation-title h2 {
+  margin: 4px 0 2px;
+
+  overflow: hidden;
+
+  color: #101419;
+
+  font-size: 16px;
+  font-weight: 650;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mentor-message-conversation-title p {
+  margin: 0;
+
+  overflow: hidden;
+
+  color: #6f8095;
+
+  font-size: 10px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mentor-message-mobile-back {
+  display: none;
+  place-items: center;
+
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 8px;
+
+  color: #4c5867;
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+.mentor-message-view-mentee {
+  flex-shrink: 0;
+
+  min-height: 34px;
+  padding: 0 10px;
+
+  border: 0;
+  border-radius: 7px;
+
+  color: #c13c00;
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.mentor-message-view-mentee:hover {
+  color: #832600;
+  background: #fff4f3;
+}
+
+/* ---------------------------------------------------------
+   MESSAGE HISTORY
+   --------------------------------------------------------- */
+
+.mentor-message-history {
+  min-height: 0;
+
+  padding: 18px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  background: #fbfcfd;
+
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+.mentor-message-row {
+  display: flex;
+
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.mentor-message-row.mine {
+  justify-content: flex-end;
+}
+
+.mentor-message-row.theirs {
+  justify-content: flex-start;
+}
+
+.mentor-message-bubble {
+  width: fit-content;
+  max-width: min(72%, 560px);
+
+  padding: 10px 12px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 3px 10px rgba(16, 20, 25, 0.02);
+}
+
+.mentor-message-row.mine
+.mentor-message-bubble {
+  border-color: #101419;
+
+  color: #ffffff;
+  background: #101419;
+}
+
+.mentor-message-bubble p {
+  margin: 0;
+
+  color: #2d353f;
+
+  font-size: 12px;
+  line-height: 1.55;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mentor-message-row.mine
+.mentor-message-bubble p {
+  color: #ffffff;
+}
+
+.mentor-message-bubble small {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #8794a4;
+
+  font-size: 8px;
+  line-height: 1.3;
+}
+
+.mentor-message-row.mine
+.mentor-message-bubble small {
+  color: #d7dee7;
+
+  text-align: right;
+}
+
+.mentor-message-new-thread,
+.mentor-message-no-selection,
+.mentor-message-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  min-height: 100%;
+  padding: 28px;
+
+  text-align: center;
+}
+
+.mentor-message-new-thread h3,
+.mentor-message-no-selection h3 {
+  margin: 12px 0 0;
+
+  color: #101419;
+
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.mentor-message-new-thread p,
+.mentor-message-no-selection p {
+  max-width: 390px;
+
+  margin: 7px 0 0;
+
+  color: #6f8095;
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.mentor-message-no-selection > svg {
+  color: #ff5303;
+}
+
+.mentor-message-no-selection button {
+  margin-top: 14px;
+}
+
+/* ---------------------------------------------------------
+   MESSAGE LOADING
+   --------------------------------------------------------- */
+
+.mentor-message-loading {
+  gap: 9px;
+}
+
+.mentor-message-loading span {
+  display: block;
+
+  width: min(360px, 70%);
+  height: 34px;
+
+  border-radius: 12px;
+
+  background: #eef1f5;
+
+  animation:
+    mentor-message-skeleton 1.2s ease-in-out infinite;
+}
+
+.mentor-message-loading span:nth-child(2) {
+  width: min(260px, 54%);
+  align-self: flex-end;
+}
+
+.mentor-message-loading span:nth-child(3) {
+  width: min(310px, 62%);
+}
+
+.mentor-message-loading-page {
+  display: grid;
+
+  gap: 12px;
+
+  min-height: 420px;
+  padding: 24px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff;
+}
+
+.mentor-message-loading-block {
+  display: block;
+
+  width: 100%;
+  height: 92px;
+
+  border-radius: 14px;
+
+  background: #eef1f5;
+
+  animation:
+    mentor-message-skeleton 1.2s ease-in-out infinite;
+}
+
+.mentor-message-loading-block--short {
+  width: 46%;
+  height: 42px;
+}
+
+@keyframes mentor-message-skeleton {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------
+   ERROR
+   --------------------------------------------------------- */
+
+.mentor-message-error {
+  margin: 0;
+  padding: 8px 14px;
+
+  border-top: 1px solid #ffcbc5;
+
+  color: #832600;
+  background: #fff4f3;
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------------
+   COMPOSER
+   Compact auto-grow. Textarea and Send begin at 44px.
+   --------------------------------------------------------- */
+
+.mentor-message-composer {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+  align-items: end;
+
+  gap: 9px;
+
+  padding: 12px 14px;
+
+  border-top: 1px solid #e4e8ef;
+
+  background: #ffffff;
+}
+
+.mentor-message-composer textarea {
+  box-sizing: border-box;
+
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  max-height: 96px;
+
+  padding: 11px 13px;
+
+  border: 1px solid #c9d2df;
+  border-radius: 10px;
+  outline: none;
+
+  color: #101419;
+  background: #ffffff;
+
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 20px;
+
+  overflow-y: auto;
+
+  resize: none;
+
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.mentor-message-composer textarea:focus,
+.mentor-message-composer textarea:focus-visible {
+  border-color: #4c5867;
+  outline: none;
+
+  box-shadow:
+    0 0 0 2px rgba(76, 88, 103, 0.10);
+}
+
+.mentor-message-composer textarea::placeholder {
+  color: #8794a4;
+}
+
+.mentor-message-send-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  height: 44px;
+  min-height: 44px;
+
+  padding: 0 15px;
+
+  border: 1px solid #ff5303;
+  border-radius: 9px;
+
+  color: #ffffff;
+  background: #ff5303;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    opacity 150ms ease;
+}
+
+.mentor-message-send-button:hover:not(:disabled) {
+  border-color: #c13c00;
+  background: #c13c00;
+}
+
+.mentor-message-send-button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.5;
+}
+
+/* ---------------------------------------------------------
+   FULL PAGE EMPTY STATE
+   --------------------------------------------------------- */
+
+.mentor-message-page-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  min-height: 380px;
+  padding: 48px 24px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #f8f9fb;
+
+  text-align: center;
+}
+
+.mentor-message-page-empty-icon {
+  display: grid;
+  place-items: center;
+
+  width: 54px;
+  height: 54px;
+
+  margin-bottom: 16px;
+
+  border: 1px solid #ffe5e3;
+  border-radius: 14px;
+
+  color: #ff5303;
+  background: #fff4f3;
+}
+
+.mentor-message-page-empty h2 {
+  margin: 0 0 8px;
+
+  color: #101419;
+
+  font-size: 19px;
+  font-weight: 650;
+}
+
+.mentor-message-page-empty p {
+  max-width: 510px;
+
+  margin: 0;
+
+  color: #4c5867;
+
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.mentor-message-page-empty
+.mentor-message-primary-button {
+  margin-top: 20px;
+}
+
+/* ---------------------------------------------------------
+   START CONVERSATION MODAL
+   --------------------------------------------------------- */
+
+.mentor-message-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background:
+    rgba(3, 4, 5, 0.34);
+
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.mentor-start-conversation-modal {
+  width:
+    min(
+      100%,
+      520px
+    );
+
+  max-height:
+    min(
+      78vh,
+      650px
+    );
+
+  overflow-y: auto;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 28px 80px rgba(16, 20, 25, 0.18);
+}
+
+.mentor-start-conversation-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  padding: 22px;
+
+  border-bottom: 1px solid #eef1f5;
+}
+
+.mentor-start-conversation-header span {
+  display: block;
+
+  color: #ff5303;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.mentor-start-conversation-header h2 {
+  margin: 5px 0 0;
+
+  color: #101419;
+
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.mentor-start-conversation-header p {
+  margin: 6px 0 0;
+
+  color: #6f8095;
+
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.mentor-start-conversation-header > button {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 36px;
+
+  width: 36px;
+  height: 36px;
+
+  padding: 0;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 9px;
+
+  color: #4c5867;
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+.mentor-start-conversation-list {
+  display: grid;
+
+  padding: 8px;
+}
+
+.mentor-start-conversation-option {
+  display: grid;
+  grid-template-columns:
+    44px
+    minmax(0, 1fr)
+    auto;
+  align-items: center;
+
+  gap: 11px;
+
+  width: 100%;
+  padding: 12px;
+
+  border: 0;
+  border-radius: 11px;
+
+  color: inherit;
+  background: transparent;
+
+  font-family: inherit;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.mentor-start-conversation-option:hover {
+  background: #f8f9fb;
+}
+
+.mentor-start-conversation-option
+.mentor-message-thread-avatar {
+  width: 44px;
+  height: 44px;
+}
+
+.mentor-start-conversation-copy {
+  display: grid;
+
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.mentor-start-conversation-copy strong {
+  overflow: hidden;
+
+  color: #101419;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mentor-start-conversation-copy small {
+  overflow: hidden;
+
+  color: #6f8095;
+
+  font-size: 10px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mentor-start-conversation-action {
+  color: #c13c00;
+
+  font-size: 10px;
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   TABLET
+   --------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .mentor-messages-layout {
+    grid-template-columns:
+      minmax(210px, 250px)
+      minmax(0, 1fr);
+  }
+
+  .mentor-message-bubble {
+    max-width: 80%;
+  }
+}
+
+/* ---------------------------------------------------------
+   MOBILE
+   Approved compact structure: thread list remains short,
+   conversation gets the remaining workspace.
+   --------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .mentor-messages-page {
+    padding-top: 14px;
+  }
+
+  .mentor-message-page-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mentor-message-start-button {
+    width: 100%;
+  }
+
+  .mentor-messages-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows:
+      auto
+      minmax(0, 1fr);
+
+    height:
+      min(
+        640px,
+        calc(100dvh - 170px)
+      );
+
+    min-height: 500px;
+
+    border-radius: 14px;
+  }
+
+  .mentor-message-threads {
+    grid-template-rows:
+      auto
+      minmax(0, 1fr);
+
+    max-height: 180px;
+
+    border-right: 0;
+    border-bottom: 1px solid #e4e8ef;
+  }
+
+  .mentor-message-threads-heading {
+    padding: 12px 14px;
+  }
+
+  .mentor-message-threads-heading h2 {
+    font-size: 14px;
+  }
+
+  .mentor-message-thread-list {
+    display: block;
+
+    padding: 0;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .mentor-message-empty-list {
+    min-height: 118px;
+    padding: 14px;
+  }
+
+  .mentor-message-empty-list p {
+    margin-bottom: 10px;
+  }
+
+  .mentor-message-conversation {
+    min-height: 0;
+  }
+
+  .mentor-message-conversation-header {
+    min-height: 68px;
+    padding: 10px 12px;
+  }
+
+  .mentor-message-mobile-back {
+    display: grid;
+  }
+
+  .mentor-message-conversation-title h2 {
+    font-size: 14px;
+  }
+
+  .mentor-message-view-mentee {
+    width: auto;
+    min-height: 34px;
+
+    padding: 0 8px;
+
+    font-size: 10px;
+  }
+
+  .mentor-message-history {
+    padding: 14px 12px;
+  }
+
+  .mentor-message-bubble {
+    max-width: 88%;
+  }
+
+  .mentor-message-composer {
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto;
+
+    padding: 10px;
+  }
+
+  .mentor-message-send-button {
+    width: auto;
+    min-width: 82px;
+    padding: 0 14px;
+
+    font-size: 12px;
+  }
+
+  .mentor-message-send-button span {
+    display: inline;
+  }
+
+  .mentor-message-modal-backdrop {
+    align-items: flex-end;
+
+    padding: 12px;
+  }
+
+  .mentor-start-conversation-modal {
+    width: 100%;
+
+    border-radius:
+      18px 18px 14px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mentor-start-conversation-option {
+    grid-template-columns:
+      40px
+      minmax(0, 1fr);
+  }
+
+  .mentor-start-conversation-action {
+    grid-column: 2;
+
+    justify-self: start;
+  }
+
+  .mentor-start-conversation-option
+  .mentor-message-thread-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .mentor-messages-layout {
+    min-height: 520px;
+  }
+}

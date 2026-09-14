@@ -1,0 +1,334 @@
+/* =========================================================
+   MENTOR MY PROFILE
+   ========================================================= */
+
+.mentor-my-profile-page {
+  width: 100%;
+  display: grid;
+  gap: 20px;
+  padding-bottom:
+    max(
+      80px,
+      calc(
+        60px +
+        env(safe-area-inset-bottom)
+      )
+    );
+}
+
+.mentor-profile-availability-section,
+.mentor-profile-form-section {
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.mentor-profile-availability-section {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 0.9fr)
+    minmax(320px, 1.1fr);
+  gap: 28px;
+  padding: 26px;
+}
+
+.mentor-profile-section-copy > span,
+.mentor-profile-section-heading > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #ff5303;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.mentor-profile-section-copy h2,
+.mentor-profile-section-heading h2 {
+  margin: 0;
+  color: #101419;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.mentor-profile-section-copy p,
+.mentor-profile-section-heading p {
+  max-width: 620px;
+  margin: 8px 0 0;
+  color: #6f8095;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.mentor-profile-availability-control {
+  display: grid;
+  gap: 14px;
+}
+
+.mentor-profile-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.mentor-profile-switch-row > span {
+  min-width: 0;
+}
+
+.mentor-profile-switch-row strong {
+  display: block;
+  color: #101419;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mentor-profile-switch-row small {
+  display: block;
+  margin-top: 5px;
+  color: #6f8095;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.mentor-profile-switch-row input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 24px;
+  margin: 0;
+  border: 1px solid #c9d2df;
+  border-radius: 999px;
+  background: #e9edf2;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.mentor-profile-switch-row input::after {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  content: "";
+  background: #ffffff;
+  box-shadow:
+    0 1px 4px
+    rgba(16, 20, 25, 0.18);
+  transition:
+    transform 0.18s ease;
+}
+
+.mentor-profile-switch-row input:checked {
+  border-color: #ff5303;
+  background: #ff5303;
+}
+
+.mentor-profile-switch-row input:checked::after {
+  transform:
+    translateX(18px);
+}
+
+.mentor-profile-switch-row input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.mentor-profile-capacity-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  gap: 10px;
+}
+
+.mentor-profile-metric {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid #edf0f4;
+  border-radius: 11px;
+  background: #fbfcfd;
+}
+
+.mentor-profile-metric > span {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  color: #ff5303;
+  background: #fff4ef;
+}
+
+.mentor-profile-metric small {
+  display: block;
+  color: #6f8095;
+  font-size: 9px;
+}
+
+.mentor-profile-metric strong {
+  display: block;
+  margin-top: 3px;
+  color: #101419;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.mentor-profile-form-section {
+  padding: 26px;
+}
+
+.mentor-profile-section-heading {
+  margin-bottom: 22px;
+}
+
+.mentor-profile-form-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  gap: 17px;
+}
+
+.mentor-profile-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.mentor-profile-field-full {
+  margin-top: 18px;
+}
+
+.mentor-profile-field > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #2d353f;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.mentor-profile-field input,
+.mentor-profile-field textarea {
+  width: 100%;
+  border: 1px solid #c9d2df;
+  border-radius: 9px;
+  outline: none;
+  color: #101419;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.mentor-profile-field input {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.mentor-profile-field textarea {
+  min-height: 132px;
+  padding: 11px 12px;
+  resize: vertical;
+}
+
+.mentor-profile-field input::placeholder,
+.mentor-profile-field textarea::placeholder {
+  color: #97a4b4;
+}
+
+.mentor-profile-field input:focus,
+.mentor-profile-field input:focus-visible,
+.mentor-profile-field textarea:focus,
+.mentor-profile-field textarea:focus-visible {
+  border-color: #4c5867;
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.10);
+}
+
+.mentor-profile-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid #dfe8e3;
+  border-radius: 9px;
+  color: #2f7d4a;
+  background: #f7fbf8;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.mentor-profile-save-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mentor-profile-save-button {
+  display: inline-flex;
+  width: auto;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 17px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .mentor-profile-availability-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .mentor-my-profile-page {
+    gap: 15px;
+  }
+
+  .mentor-profile-availability-section,
+  .mentor-profile-form-section {
+    padding: 19px 17px;
+    border-radius: 14px;
+  }
+
+  .mentor-profile-form-grid,
+  .mentor-profile-capacity-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mentor-profile-switch-row {
+    align-items: flex-start;
+  }
+
+  .mentor-profile-field input,
+  .mentor-profile-field textarea {
+    font-size: 16px;
+  }
+
+  .mentor-profile-save-row {
+    justify-content: flex-start;
+  }
+}

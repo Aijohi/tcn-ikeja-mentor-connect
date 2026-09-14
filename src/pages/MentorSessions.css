@@ -1,0 +1,2688 @@
+/* =========================================================
+   MENTOR SESSIONS
+   Complete replacement file.
+   Approved filled-state design:
+   white canvas + neutral secondary styling + orange accents.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   PAGE CANVAS
+   --------------------------------------------------------- */
+
+html:has(.mentor-sessions-summary),
+body:has(.mentor-sessions-summary),
+body:has(.mentor-sessions-summary) #root,
+body:has(.mentor-sessions-summary) .dashboard-layout,
+body:has(.mentor-sessions-summary) .dashboard-content {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+body:has(.mentor-sessions-summary) .dashboard-content {
+  min-height: 100vh !important;
+}
+
+body:has(.mentor-sessions-summary)
+.dashboard-content > header h1 {
+  color: #101419 !important;
+}
+
+body:has(.mentor-sessions-summary)
+.dashboard-content > header p,
+body:has(.mentor-sessions-summary)
+.dashboard-content > header > span > small {
+  color: #4c5867 !important;
+}
+
+body:has(.mentor-sessions-summary)
+.dashboard-user small {
+  border: 1px solid #d7dee7 !important;
+
+  color: #2d353f !important;
+  background: #eef1f5 !important;
+
+  font-weight: 600 !important;
+}
+
+/* ---------------------------------------------------------
+   SUMMARY
+   --------------------------------------------------------- */
+
+.mentor-sessions-summary {
+  display: block;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 18px;
+  padding: 24px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 24px rgba(16, 20, 25, 0.025);
+}
+
+.mentor-sessions-summary .eyebrow,
+.mentor-session-calendar-heading .eyebrow {
+  color: #ff5303;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.mentor-sessions-summary h2 {
+  max-width: 660px;
+
+  margin: 8px 0 8px;
+
+  color: #101419;
+
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.03em;
+}
+
+.mentor-sessions-summary p {
+  max-width: 720px;
+  margin: 0;
+
+  color: #4c5867;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------
+   INLINE ERROR
+   --------------------------------------------------------- */
+
+.mentor-session-inline-error {
+  margin-bottom: 14px;
+  padding: 10px 13px;
+
+  border: 1px solid #ffcbc5;
+  border-radius: 10px;
+
+  color: #832600;
+  background: #fff4f3;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------
+   ACCEPTED REQUEST / READY TO SCHEDULE
+   --------------------------------------------------------- */
+
+.mentor-session-ready-list {
+  display: grid;
+
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+.mentor-session-ready-card {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 14px;
+
+  padding: 18px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 24px rgba(16, 20, 25, 0.03);
+}
+
+.mentor-session-ready-icon {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 44px;
+
+  width: 44px;
+  height: 44px;
+
+  border: 1px solid #ffe5e3;
+  border-radius: 12px;
+
+  color: #ff5303;
+  background: #fff4f3;
+}
+
+.mentor-session-ready-card > div {
+  min-width: 0;
+}
+
+.mentor-session-ready-card small {
+  color: #ff5303;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.mentor-session-ready-card h3 {
+  margin: 5px 0 6px;
+
+  color: #101419;
+
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.mentor-session-ready-card p {
+  max-width: 680px;
+
+  margin: 0 0 14px;
+
+  color: #4c5867;
+
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------
+   TABS
+   --------------------------------------------------------- */
+
+.mentor-session-tabs {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  width: fit-content;
+  max-width: 100%;
+
+  margin-bottom: 18px;
+  padding: 4px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 12px;
+
+  background: #f8f9fb;
+}
+
+.mentor-session-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 38px;
+  padding: 0 13px;
+
+  border: 0;
+  border-radius: 9px;
+
+  color: #4c5867;
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.mentor-session-tabs button span {
+  display: grid;
+  place-items: center;
+
+  min-width: 22px;
+  height: 22px;
+
+  padding: 0 6px;
+
+  border-radius: 999px;
+
+  color: #4c5867;
+  background: #e4e8ef;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.mentor-session-tabs button.active {
+  color: #ffffff;
+  background: #101419;
+}
+
+.mentor-session-tabs button.active span {
+  color: #101419;
+  background: #ffffff;
+}
+
+/* ---------------------------------------------------------
+   SESSION + CALENDAR WORKSPACE
+   --------------------------------------------------------- */
+
+.mentor-session-workspace {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(300px, 0.75fr);
+
+  align-items: start;
+
+  gap: 18px;
+
+  width: 100%;
+  min-width: 0;
+}
+
+.mentor-session-main-column {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.mentor-session-main-column > .mentor-session-empty-state {
+  width: 100%;
+  min-height: 0;
+  height: auto;
+}
+
+/* ---------------------------------------------------------
+   PAGED SESSION SHELL
+   One session card at a time + pagination footer.
+   --------------------------------------------------------- */
+
+.mentor-session-paged-shell {
+  overflow: hidden;
+
+  width: 100%;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 24px rgba(16, 20, 25, 0.035);
+}
+
+.mentor-session-paged-shell
+.mentor-session-card--paginated {
+  margin: 0;
+
+  border: 0;
+  border-radius: 0;
+
+  box-shadow: none;
+}
+
+.mentor-session-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  padding: 14px 18px;
+
+  border-top: 1px solid #eef1f5;
+
+  background: #fbfcfd;
+}
+
+.mentor-session-pagination-pages {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+.mentor-session-pagination button {
+  appearance: none;
+  -webkit-appearance: none;
+
+  min-width: 34px;
+  min-height: 34px;
+
+  padding: 0 10px;
+
+  border: 1px solid #dfe4eb;
+  border-radius: 8px;
+
+  color: #4c5867;
+  background: #ffffff;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.mentor-session-pagination button:hover:not(:disabled) {
+  border-color: #97aac2;
+
+  color: #101419;
+  background: #f7f8fa;
+}
+
+.mentor-session-pagination-pages button.active {
+  border-color: #101419;
+
+  color: #ffffff;
+  background: #101419;
+}
+
+.mentor-session-pagination button:disabled {
+  color: #97aac2;
+  background: #f7f8fa;
+
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.mentor-session-pagination-nav {
+  min-width: 76px !important;
+}
+
+/* ---------------------------------------------------------
+   SESSION CARD
+   --------------------------------------------------------- */
+
+.mentor-session-card {
+  width: 100%;
+  min-width: 0;
+
+  padding: 22px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 24px rgba(16, 20, 25, 0.03);
+}
+
+.mentor-session-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-bottom: 18px;
+}
+
+.mentor-session-mentor {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  min-width: 0;
+}
+
+.mentor-session-avatar {
+  flex: 0 0 46px;
+
+  width: 46px;
+  height: 46px;
+
+  border-radius: 12px;
+
+  object-fit: cover;
+}
+
+.mentor-session-initials {
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #e4e8ef;
+
+  color: #101419;
+  background: #f3f5f7;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mentor-session-mentor small {
+  display: block;
+
+  color: #6f8095;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.mentor-session-mentor h2 {
+  margin: 4px 0 0;
+
+  color: #101419;
+
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.mentor-session-status {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 28px;
+
+  padding: 0 10px;
+
+  border: 1px solid #ffcbc5;
+  border-radius: 999px;
+
+  color: #c13c00;
+  background: #fff4f3;
+
+  font-size: 10px;
+  font-weight: 500;
+
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.mentor-session-status.status-completed,
+.mentor-session-status.status-cancelled,
+.mentor-session-status.status-no-show {
+  border-color: #dfe4eb;
+
+  color: #4c5867;
+  background: #f7f8fa;
+}
+
+.mentor-session-date {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  margin-bottom: 18px;
+  padding: 14px;
+
+  border: 1px solid #eef1f5;
+  border-radius: 13px;
+
+  background: #fbfcfd;
+}
+
+.mentor-session-date-badge {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 58px;
+
+  width: 58px;
+  min-height: 62px;
+
+  padding: 8px;
+
+  border-radius: 12px;
+
+  color: #ffffff;
+  background: #101419;
+
+  text-align: center;
+}
+
+.mentor-session-date-badge span {
+  color: #d7dee7;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.mentor-session-date-badge strong {
+  margin-top: 2px;
+
+  color: #ffffff;
+
+  font-size: 20px;
+  line-height: 1;
+}
+
+.mentor-session-date-copy {
+  display: grid;
+
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.mentor-session-date-copy strong {
+  color: #101419;
+
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.mentor-session-date-copy span {
+  color: #4c5867;
+
+  font-size: 11px;
+}
+
+.mentor-session-date-copy small {
+  color: #8794a4;
+
+  font-size: 9px;
+}
+
+.mentor-session-information {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin-bottom: 14px;
+}
+
+.mentor-session-information > div {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 0;
+  padding: 12px;
+
+  border: 1px solid #eef1f5;
+  border-radius: 11px;
+
+  background: #ffffff;
+}
+
+.mentor-session-information svg {
+  flex-shrink: 0;
+
+  color: #ff5303;
+}
+
+.mentor-session-information span {
+  display: grid;
+
+  gap: 2px;
+
+  min-width: 0;
+}
+
+.mentor-session-information small {
+  color: #8794a4;
+
+  font-size: 9px;
+}
+
+.mentor-session-information strong {
+  color: #2d353f;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  overflow-wrap: anywhere;
+}
+
+.mentor-session-topic {
+  padding: 13px 14px;
+
+  border: 1px solid #eef1f5;
+  border-radius: 11px;
+
+  background: #fbfcfd;
+}
+
+.mentor-session-topic small {
+  color: #8794a4;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mentor-session-topic p {
+  margin: 5px 0 0;
+
+  color: #2d353f;
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.mentor-session-location {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 8px;
+
+  margin-top: 12px;
+  padding: 12px;
+
+  border: 1px solid #eef1f5;
+  border-radius: 10px;
+
+  color: #4c5867;
+  background: #fbfcfd;
+}
+
+.mentor-session-location svg {
+  flex-shrink: 0;
+
+  color: #ff5303;
+}
+
+.mentor-session-location p {
+  margin: 0;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.mentor-session-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 14px;
+
+  margin-top: 20px;
+  padding-top: 18px;
+
+  border-top: 1px solid #eef1f5;
+}
+
+/* ---------------------------------------------------------
+   BUTTONS
+   --------------------------------------------------------- */
+
+body:has(.mentor-sessions-summary)
+.primary-button,
+body:has(.mentor-sessions-summary)
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 42px;
+  padding: 0 16px;
+
+  border-radius: 10px;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+body:has(.mentor-sessions-summary)
+.primary-button {
+  border: 1px solid #ff5303;
+
+  color: #ffffff;
+  background: #ff5303;
+}
+
+body:has(.mentor-sessions-summary)
+.primary-button:hover {
+  border-color: #c13c00;
+
+  color: #ffffff;
+  background: #c13c00;
+}
+
+body:has(.mentor-sessions-summary)
+.secondary-button {
+  border: 1px solid #c9d2df;
+
+  color: #101419;
+  background: #ffffff;
+}
+
+body:has(.mentor-sessions-summary)
+.secondary-button:hover {
+  border-color: #97aac2;
+
+  background: #f7f8fa;
+}
+
+.mentor-session-view-mentor {
+  border-color: #101419 !important;
+
+  color: #ffffff !important;
+  background: #101419 !important;
+}
+
+.mentor-session-view-mentor:hover {
+  border-color: #2d353f !important;
+
+  color: #ffffff !important;
+  background: #2d353f !important;
+}
+
+.mentor-session-join-button {
+  border-color: #ff5303 !important;
+
+  color: #ffffff !important;
+  background: #ff5303 !important;
+}
+
+.mentor-session-join-button:hover {
+  border-color: #c13c00 !important;
+
+  background: #c13c00 !important;
+}
+
+/* ---------------------------------------------------------
+   EMPTY STATE
+   --------------------------------------------------------- */
+
+.mentor-session-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  width: 100%;
+  min-height: 0;
+  height: auto;
+
+  padding: 34px 24px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  text-align: center;
+
+  box-shadow:
+    0 8px 24px rgba(16, 20, 25, 0.03);
+}
+
+.mentor-session-empty-state .empty-state-icon {
+  display: grid;
+  place-items: center;
+
+  width: 54px;
+  height: 54px;
+
+  margin-bottom: 16px;
+
+  border: 1px solid #ffe5e3;
+  border-radius: 14px;
+
+  color: #ff5303;
+  background: #fff4f3;
+}
+
+.mentor-session-empty-state h2 {
+  margin: 0 0 8px;
+
+  color: #101419;
+
+  font-size: 19px;
+  font-weight: 650;
+}
+
+.mentor-session-empty-state p {
+  max-width: 500px;
+  margin: 0;
+
+  color: #4c5867;
+
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.mentor-session-empty-state
+.primary-button {
+  margin-top: 20px;
+}
+
+/* ---------------------------------------------------------
+   CALENDAR PANEL
+   Keeps the approved empty-state calendar structure.
+   --------------------------------------------------------- */
+
+.mentor-session-calendar-panel {
+  position: relative;
+
+  align-self: start;
+
+  width: 100%;
+  min-width: 0;
+
+  padding: 22px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 24px rgba(16, 20, 25, 0.03);
+}
+
+.mentor-session-calendar-heading h3 {
+  margin: 6px 0 4px;
+
+  color: #101419;
+
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.mentor-session-calendar-heading p {
+  margin: 0;
+
+  color: #4c5867;
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.mentor-custom-date-field-wrap {
+  position: relative;
+
+  margin-top: 18px;
+}
+
+.mentor-custom-date-label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #2d353f;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mentor-custom-date-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  width: 100%;
+  height: 46px;
+  padding: 0 13px;
+
+  border: 1px solid #c9d2df;
+  border-radius: 11px;
+
+  color: #101419;
+  background: #ffffff;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.mentor-custom-date-field:hover,
+.mentor-custom-date-field:focus-visible {
+  border-color: #97aac2;
+
+  outline: none;
+
+  box-shadow:
+    0 0 0 3px rgba(16, 20, 25, 0.05);
+}
+
+.mentor-custom-date-field svg {
+  flex-shrink: 0;
+
+  color: #ff5303;
+}
+
+.mentor-session-today-button {
+  width: 100%;
+
+  margin-top: 10px;
+}
+
+.mentor-session-selected-date {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  min-height: 76px;
+
+  margin-top: 16px;
+  padding: 15px 16px;
+
+  border: 1px solid #eef1f5;
+  border-radius: 12px;
+
+  color: #2d353f;
+  background: #f8f9fb;
+}
+
+.mentor-session-selected-date svg {
+  flex-shrink: 0;
+
+  color: #ff5303;
+}
+
+.mentor-session-selected-date div {
+  display: grid;
+
+  gap: 3px;
+}
+
+.mentor-session-selected-date small {
+  color: #8794a4;
+
+  font-size: 9px;
+}
+
+.mentor-session-selected-date strong {
+  color: #101419;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------
+   CALENDAR RESULTS
+   --------------------------------------------------------- */
+
+.mentor-session-calendar-results {
+  display: grid;
+
+  gap: 8px;
+
+  margin-top: 12px;
+}
+
+.mentor-session-calendar-result {
+  display: grid;
+
+  grid-template-columns:
+    auto
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 10px;
+
+  min-height: 68px;
+  padding: 12px 14px;
+
+  border: 1px solid #eef1f5;
+  border-radius: 11px;
+
+  background: #ffffff;
+}
+
+.mentor-session-calendar-time {
+  min-width: 62px;
+
+  color: #101419;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.mentor-session-calendar-result > div {
+  min-width: 0;
+}
+
+.mentor-session-calendar-result strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #101419;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mentor-session-calendar-result p {
+  margin: 3px 0 0;
+
+  overflow: hidden;
+
+  color: #6f8095;
+
+  font-size: 9px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mentor-session-calendar-format {
+  justify-self: end;
+
+  padding: 5px 7px;
+
+  border: 1px solid #dfe4eb;
+  border-radius: 999px;
+
+  color: #4c5867;
+  background: #f7f8fa;
+
+  font-size: 8px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.mentor-session-calendar-empty {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  min-height: 92px;
+
+  margin-top: 12px;
+  padding: 16px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 11px;
+
+  background: #ffffff;
+}
+
+.mentor-session-calendar-empty > svg {
+  flex-shrink: 0;
+
+  color: #ff5303;
+}
+
+.mentor-session-calendar-empty h4 {
+  margin: 0 0 4px;
+
+  color: #101419;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mentor-session-calendar-empty p {
+  margin: 0;
+
+  color: #6f8095;
+
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------
+   CALENDAR POPOVER
+   --------------------------------------------------------- */
+
+.mentor-custom-calendar {
+  position: absolute;
+
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 80;
+
+  width: min(100%, 360px);
+  padding: 12px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 18px 44px rgba(16, 20, 25, 0.13);
+}
+
+.mentor-custom-calendar-topbar,
+.mentor-custom-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.mentor-custom-calendar-topbar {
+  padding-bottom: 9px;
+
+  border-bottom: 1px solid #eef1f5;
+}
+
+.mentor-custom-calendar-topbar > span {
+  color: #6f8095;
+
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.mentor-custom-calendar-close,
+.mentor-custom-calendar-header button {
+  display: grid;
+  place-items: center;
+
+  width: 32px;
+  height: 32px;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 8px;
+
+  color: #4c5867;
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.mentor-custom-calendar-close:hover,
+.mentor-custom-calendar-header button:hover {
+  color: #101419;
+  background: #f7f8fa;
+}
+
+.mentor-custom-calendar-header {
+  padding: 10px 0;
+}
+
+.mentor-custom-calendar-header strong {
+  color: #101419;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mentor-custom-calendar-weekdays,
+.mentor-custom-calendar-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, minmax(0, 1fr));
+
+  gap: 4px;
+}
+
+.mentor-custom-calendar-weekdays {
+  margin-bottom: 4px;
+}
+
+.mentor-custom-calendar-weekdays span {
+  display: grid;
+  place-items: center;
+
+  min-height: 26px;
+
+  color: #6f8095;
+
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.mentor-custom-calendar-empty-day {
+  min-height: 36px;
+}
+
+.mentor-custom-calendar-day {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  min-height: 36px;
+
+  padding: 0;
+
+  border: 1px solid transparent;
+  border-radius: 8px;
+
+  color: #4c5867;
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.mentor-custom-calendar-day:hover {
+  border-color: #e4e8ef;
+
+  color: #101419;
+  background: #f7f8fa;
+}
+
+.mentor-custom-calendar-day.today {
+  border-color: #ffcbc5;
+
+  color: #c13c00;
+  background: #fff4f3;
+}
+
+.mentor-custom-calendar-day.selected {
+  border-color: #101419;
+
+  color: #ffffff;
+  background: #101419;
+}
+
+.mentor-custom-calendar-day.has-session::after,
+.mentor-custom-calendar-day.has-session i {
+  position: absolute;
+
+  right: 50%;
+  bottom: 3px;
+
+  width: 4px;
+  height: 4px;
+
+  border-radius: 999px;
+
+  background: #ff5303;
+
+  content: "";
+
+  transform: translateX(50%);
+}
+
+.mentor-custom-calendar-day.selected.has-session::after,
+.mentor-custom-calendar-day.selected.has-session i {
+  background: #ffffff;
+}
+
+/* ---------------------------------------------------------
+   LOADING SKELETONS
+   --------------------------------------------------------- */
+
+.mentor-session-loading-state {
+  display: grid;
+
+  gap: 14px;
+}
+
+.mentor-session-loading-card {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 14px;
+
+  min-height: 180px;
+  padding: 20px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 18px;
+
+  background: #ffffff;
+}
+
+.mentor-session-loading-date {
+  flex: 0 0 64px;
+
+  width: 64px;
+  height: 74px;
+
+  border-radius: 14px;
+
+  background: #eef1f5;
+
+  animation:
+    mentor-session-skeleton 1.25s ease-in-out infinite;
+}
+
+.mentor-session-loading-card > div {
+  display: grid;
+
+  width: min(520px, 100%);
+
+  gap: 9px;
+}
+
+.mentor-session-loading-line {
+  display: block;
+
+  width: 78%;
+  height: 10px;
+
+  border-radius: 999px;
+
+  background: #eef1f5;
+
+  animation:
+    mentor-session-skeleton 1.25s ease-in-out infinite;
+}
+
+.mentor-session-loading-line--title {
+  width: 48%;
+  height: 18px;
+}
+
+.mentor-session-loading-line--short {
+  width: 58%;
+}
+
+.mentor-session-calendar-loading {
+  display: grid;
+
+  gap: 10px;
+
+  margin-top: 14px;
+}
+
+.mentor-session-calendar-loading span {
+  display: block;
+
+  width: 100%;
+  height: 58px;
+
+  border-radius: 12px;
+
+  background: #eef1f5;
+
+  animation:
+    mentor-session-skeleton 1.25s ease-in-out infinite;
+}
+
+@keyframes mentor-session-skeleton {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------
+   TABLET
+   --------------------------------------------------------- */
+
+@media (max-width: 980px) {
+  .mentor-session-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .mentor-session-calendar-panel {
+    position: static;
+
+    width: 100%;
+    height: auto;
+    min-height: 0;
+  }
+
+  .mentor-custom-calendar {
+    position: static;
+
+    width: 100%;
+
+    margin-top: 8px;
+  }
+}
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .mentor-sessions-summary {
+    padding: 20px;
+  }
+
+  .mentor-sessions-summary h2 {
+    font-size: 21px;
+  }
+
+  .mentor-session-tabs {
+    display: flex;
+
+    width: 100%;
+  }
+
+  .mentor-session-tabs button {
+    flex: 1;
+  }
+
+  .mentor-session-ready-card {
+    padding: 16px;
+  }
+
+  .mentor-session-card {
+    padding: 18px;
+  }
+
+  .mentor-session-information {
+    grid-template-columns: 1fr;
+  }
+
+  .mentor-session-calendar-panel {
+    padding: 18px;
+  }
+
+  .mentor-session-calendar-result {
+    grid-template-columns:
+      minmax(0, 1fr);
+
+    gap: 6px;
+  }
+
+  .mentor-session-calendar-time {
+    min-width: 0;
+  }
+
+  .mentor-session-calendar-format {
+    justify-self: start;
+  }
+
+  .mentor-session-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mentor-session-view-mentor,
+  .mentor-session-join-button {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .mentor-session-pagination {
+    gap: 6px;
+
+    padding: 12px;
+  }
+
+  .mentor-session-pagination-nav {
+    min-width: 68px !important;
+    padding: 0 8px !important;
+  }
+
+  .mentor-session-pagination-pages {
+    gap: 4px;
+  }
+
+  .mentor-session-pagination button {
+    min-width: 32px;
+    min-height: 32px;
+
+    padding: 0 8px;
+  }
+
+  .mentor-session-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .mentor-session-status {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .mentor-sessions-summary {
+    padding: 18px;
+  }
+
+  .mentor-session-ready-card {
+    flex-direction: column;
+  }
+
+  .mentor-session-date {
+    align-items: flex-start;
+  }
+
+  .mentor-custom-calendar {
+    padding: 10px;
+  }
+
+  .mentor-custom-calendar-day {
+    min-height: 34px;
+  }
+}
+
+/* =========================================================
+   MY SESSIONS
+   FINAL FILLED-STATE STYLES
+   Paste at the VERY BOTTOM of MentorSessions.css
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   MAIN WORKSPACE
+   --------------------------------------------------------- */
+
+.mentor-session-workspace {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.6fr)
+    minmax(310px, 0.7fr);
+
+  align-items: start;
+
+  gap: 18px;
+
+  width: 100%;
+}
+
+.mentor-session-main-column {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------
+   TABS
+   Dark secondary active state
+   --------------------------------------------------------- */
+
+.mentor-session-tabs {
+  border-color: #e4e8ef !important;
+
+  background: #ffffff !important;
+}
+
+.mentor-session-tabs button {
+  color: #4c5867 !important;
+
+  background: transparent !important;
+
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.mentor-session-tabs button span {
+  color: #4c5867 !important;
+
+  background: #eef1f5 !important;
+}
+
+.mentor-session-tabs button.active {
+  border-color: #101419 !important;
+
+  color: #ffffff !important;
+  background: #101419 !important;
+}
+
+.mentor-session-tabs button.active span {
+  color: #101419 !important;
+
+  background: #ffffff !important;
+}
+
+/* ---------------------------------------------------------
+   SESSION CARD
+   --------------------------------------------------------- */
+
+.mentor-session-card {
+  padding: 22px !important;
+
+  border-color: #e4e8ef !important;
+
+  background: #ffffff !important;
+
+  box-shadow:
+    0 8px 24px rgba(16, 20, 25, 0.035) !important;
+}
+
+.mentor-session-initials {
+  border: 1px solid #e4e8ef !important;
+
+  color: #101419 !important;
+  background: #f3f5f7 !important;
+
+  font-weight: 600 !important;
+}
+
+.mentor-session-mentor small {
+  color: #6f8095 !important;
+
+  font-weight: 500 !important;
+}
+
+.mentor-session-mentor h2 {
+  color: #101419 !important;
+}
+
+/* ---------------------------------------------------------
+   STATUS
+   No green or teal
+   --------------------------------------------------------- */
+
+.mentor-session-status {
+  padding: 6px 10px !important;
+
+  border: 1px solid #ffcbc5 !important;
+
+  color: #c13c00 !important;
+  background: #fff4f3 !important;
+
+  font-size: 10px !important;
+  font-weight: 500 !important;
+}
+
+.mentor-session-status.status-completed,
+.mentor-session-status.status-cancelled,
+.mentor-session-status.status-no-show {
+  border-color: #dfe4eb !important;
+
+  color: #4c5867 !important;
+  background: #f7f8fa !important;
+}
+
+/* ---------------------------------------------------------
+   DATE BLOCK
+   --------------------------------------------------------- */
+
+.mentor-session-date {
+  margin-top: 18px !important;
+
+  padding: 14px !important;
+
+  background: #fbfcfd !important;
+}
+
+.mentor-session-date-badge {
+  color: #ffffff !important;
+
+  background: #ff5303 !important;
+}
+
+.mentor-session-date-badge span,
+.mentor-session-date-badge strong {
+  color: #ffffff !important;
+}
+
+.mentor-session-date-copy strong {
+  color: #101419 !important;
+}
+
+.mentor-session-date-copy span {
+  color: #4c5867 !important;
+}
+
+.mentor-session-date-copy small {
+  color: #6f8095 !important;
+}
+
+/* ---------------------------------------------------------
+   SESSION INFORMATION
+   --------------------------------------------------------- */
+
+.mentor-session-information {
+  margin-top: 18px !important;
+
+  gap: 18px !important;
+}
+
+.mentor-session-information svg {
+  color: #ff5303 !important;
+}
+
+.mentor-session-information small,
+.mentor-session-topic small {
+  color: #6f8095 !important;
+
+  font-weight: 500 !important;
+}
+
+.mentor-session-information strong {
+  color: #101419 !important;
+
+  font-weight: 600 !important;
+}
+
+/* ---------------------------------------------------------
+   MENTORING AREA
+   --------------------------------------------------------- */
+
+.mentor-session-topic {
+  margin-top: 20px !important;
+
+  padding: 18px 0 0 !important;
+
+  border: 0 !important;
+  border-top: 1px solid #eef1f5 !important;
+
+  border-radius: 0 !important;
+
+  background: transparent !important;
+}
+
+.mentor-session-topic p {
+  color: #4c5867 !important;
+}
+
+/* ---------------------------------------------------------
+   LOCATION
+   --------------------------------------------------------- */
+
+.mentor-session-location {
+  margin-top: 16px !important;
+
+  padding: 12px 13px !important;
+
+  border: 1px solid #eef1f5 !important;
+
+  color: #4c5867 !important;
+  background: #fbfcfd !important;
+}
+
+.mentor-session-location svg {
+  color: #ff5303 !important;
+}
+
+/* ---------------------------------------------------------
+   ACTIONS
+   --------------------------------------------------------- */
+
+.mentor-session-actions {
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 14px !important;
+
+  margin-top: 20px !important;
+
+  padding-top: 18px !important;
+
+  border-top: 1px solid #eef1f5 !important;
+}
+
+/* Dark filled secondary action */
+
+.mentor-session-view-mentor {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  display: inline-flex !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  min-height: 42px !important;
+
+  padding: 0 16px !important;
+
+  border: 1px solid #101419 !important;
+
+  border-radius: 9px !important;
+
+  color: #ffffff !important;
+
+  background: #101419 !important;
+
+  font-family: inherit !important;
+
+  font-size: 13px !important;
+  font-weight: 500 !important;
+
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.mentor-session-view-mentor:hover {
+  border-color: #2d353f !important;
+
+  color: #ffffff !important;
+
+  background: #2d353f !important;
+}
+
+/* Orange primary action */
+
+.mentor-session-join-button {
+  display: inline-flex !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  min-height: 42px !important;
+
+  padding: 0 17px !important;
+
+  border: 1px solid #ff5303 !important;
+
+  border-radius: 9px !important;
+
+  color: #ffffff !important;
+
+  background: #ff5303 !important;
+
+  font-size: 13px !important;
+  font-weight: 500 !important;
+
+  text-decoration: none !important;
+
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.mentor-session-join-button:hover {
+  border-color: #c13c00 !important;
+
+  background: #c13c00 !important;
+}
+
+/* ---------------------------------------------------------
+   ONE SESSION CARD + PAGINATION
+   --------------------------------------------------------- */
+
+.mentor-session-paged-shell {
+  overflow: hidden;
+
+  width: 100%;
+
+  border: 1px solid #e4e8ef;
+
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 24px rgba(16, 20, 25, 0.035);
+}
+
+.mentor-session-paged-shell
+.mentor-session-card--paginated {
+  display: block !important;
+
+  min-height: 0 !important;
+  height: auto !important;
+
+  margin: 0 !important;
+
+  border: 0 !important;
+
+  border-radius: 0 !important;
+
+  box-shadow: none !important;
+}
+
+.mentor-session-pagination {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  margin: 0 !important;
+
+  padding: 14px 18px;
+
+  border-top: 1px solid #eef1f5;
+
+  background: #fbfcfd;
+}
+
+.mentor-session-pagination-pages {
+  display: flex;
+
+  align-items: center;
+
+  gap: 6px;
+}
+
+.mentor-session-pagination button {
+  appearance: none;
+  -webkit-appearance: none;
+
+  min-width: 34px;
+  min-height: 34px;
+
+  padding: 0 10px;
+
+  border: 1px solid #dfe4eb;
+
+  border-radius: 8px;
+
+  color: #4c5867;
+
+  background: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 11px;
+  font-weight: 500;
+
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.mentor-session-pagination
+button:hover:not(:disabled) {
+  border-color: #97aac2;
+
+  color: #101419;
+
+  background: #f7f8fa;
+}
+
+.mentor-session-pagination-pages
+button.active {
+  border-color: #101419;
+
+  color: #ffffff;
+
+  background: #101419;
+}
+
+.mentor-session-pagination button:disabled {
+  color: #97aac2;
+
+  background: #f7f8fa;
+
+  cursor: not-allowed;
+
+  opacity: 0.65;
+}
+
+.mentor-session-pagination-nav {
+  min-width: 76px !important;
+}
+
+/* ---------------------------------------------------------
+   CALENDAR PANEL
+   Same structure as approved empty state
+   --------------------------------------------------------- */
+
+.mentor-session-calendar-panel {
+  position: static !important;
+
+  top: auto !important;
+
+  align-self: start !important;
+
+  width: 100% !important;
+
+  min-width: 0 !important;
+
+  min-height: 0 !important;
+  height: auto !important;
+
+  margin: 0 !important;
+
+  padding: 22px !important;
+
+  border-color: #e4e8ef !important;
+
+  background: #ffffff !important;
+
+  box-shadow:
+    0 8px 24px rgba(16, 20, 25, 0.03) !important;
+}
+
+.mentor-session-calendar-heading .eyebrow {
+  color: #ff5303 !important;
+}
+
+.mentor-session-calendar-heading h3 {
+  color: #101419 !important;
+}
+
+.mentor-session-calendar-heading p {
+  color: #4c5867 !important;
+}
+
+/* ---------------------------------------------------------
+   DATE FIELD
+   --------------------------------------------------------- */
+
+.mentor-custom-date-field-wrap {
+  position: relative !important;
+
+  width: 100% !important;
+
+  margin-top: 18px !important;
+}
+
+.mentor-custom-date-label {
+  color: #2d353f !important;
+
+  font-weight: 600 !important;
+}
+
+.mentor-custom-date-field {
+  width: 100% !important;
+
+  border-color: #c9d2df !important;
+
+  color: #101419 !important;
+
+  background: #ffffff !important;
+
+  font-weight: 500 !important;
+}
+
+.mentor-custom-date-field:hover,
+.mentor-custom-date-field:focus-visible {
+  border-color: #4c5867 !important;
+
+  outline: none !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.1) !important;
+}
+
+.mentor-custom-date-field svg {
+  color: #ff5303 !important;
+}
+
+/* ---------------------------------------------------------
+   TODAY BUTTON
+   --------------------------------------------------------- */
+
+.mentor-session-today-button {
+  width: 100% !important;
+
+  margin-top: 10px !important;
+
+  border-color: #c9d2df !important;
+
+  color: #2d353f !important;
+
+  background: #ffffff !important;
+
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+.mentor-session-today-button:hover {
+  border-color: #97aac2 !important;
+
+  background: #f7f8fa !important;
+}
+
+/* ---------------------------------------------------------
+   SELECTED DATE BLOCK
+   --------------------------------------------------------- */
+
+.mentor-session-selected-date {
+  display: flex !important;
+
+  align-items: center !important;
+
+  min-height: 76px !important;
+
+  height: auto !important;
+
+  margin-top: 16px !important;
+
+  padding: 15px 16px !important;
+
+  border: 1px solid #eef1f5 !important;
+
+  border-radius: 12px !important;
+
+  color: #2d353f !important;
+
+  background: #f8f9fb !important;
+}
+
+.mentor-session-selected-date > svg {
+  flex: 0 0 auto !important;
+
+  width: 20px !important;
+  height: 20px !important;
+
+  margin-right: 11px !important;
+
+  color: #ff5303 !important;
+}
+
+.mentor-session-selected-date > div {
+  display: flex !important;
+
+  flex-direction: column !important;
+
+  justify-content: center !important;
+
+  min-width: 0 !important;
+}
+
+.mentor-session-selected-date small {
+  margin-bottom: 4px !important;
+
+  color: #6f8095 !important;
+
+  font-size: 9px !important;
+  font-weight: 600 !important;
+}
+
+.mentor-session-selected-date strong {
+  color: #101419 !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  line-height: 1.35 !important;
+}
+
+/* ---------------------------------------------------------
+   CALENDAR POPUP
+   --------------------------------------------------------- */
+
+.mentor-custom-calendar {
+  border-color: #e4e8ef !important;
+
+  background: #ffffff !important;
+
+  box-shadow:
+    0 18px 44px
+    rgba(16, 20, 25, 0.13) !important;
+}
+
+.mentor-custom-calendar-topbar {
+  border-bottom-color: #eef1f5 !important;
+}
+
+.mentor-custom-calendar-topbar > span {
+  color: #6f8095 !important;
+}
+
+.mentor-custom-calendar-close,
+.mentor-custom-calendar-header button {
+  color: #4c5867 !important;
+}
+
+.mentor-custom-calendar-close:hover,
+.mentor-custom-calendar-header button:hover {
+  color: #101419 !important;
+
+  background: #f7f8fa !important;
+}
+
+.mentor-custom-calendar-header strong {
+  color: #101419 !important;
+
+  font-weight: 600 !important;
+}
+
+.mentor-custom-calendar-weekdays span {
+  color: #6f8095 !important;
+}
+
+.mentor-custom-calendar-day {
+  color: #2d353f !important;
+
+  font-weight: 500 !important;
+}
+
+.mentor-custom-calendar-day:hover {
+  color: #c13c00 !important;
+
+  background: #fff4f3 !important;
+}
+
+.mentor-custom-calendar-day.today:not(.selected) {
+  border-color: #ff9788 !important;
+
+  color: #c13c00 !important;
+}
+
+.mentor-custom-calendar-day.selected {
+  border-color: #ff5303 !important;
+
+  color: #ffffff !important;
+
+  background: #ff5303 !important;
+}
+
+.mentor-custom-calendar-day.has-session::after,
+.mentor-custom-calendar-day.has-session i {
+  background: #ff5303 !important;
+}
+
+.mentor-custom-calendar-day.selected.has-session::after,
+.mentor-custom-calendar-day.selected.has-session i {
+  background: #ffffff !important;
+}
+
+/* ---------------------------------------------------------
+   CALENDAR EMPTY STATE
+   --------------------------------------------------------- */
+
+.mentor-session-calendar-empty {
+  min-height: 0 !important;
+
+  height: auto !important;
+
+  margin-top: 12px !important;
+
+  border-color: #dfe4eb !important;
+
+  color: #4c5867 !important;
+
+  background: #ffffff !important;
+}
+
+.mentor-session-calendar-empty > svg {
+  color: #ff5303 !important;
+}
+
+.mentor-session-calendar-empty h4 {
+  color: #101419 !important;
+}
+
+.mentor-session-calendar-empty p {
+  color: #6f8095 !important;
+}
+
+/* ---------------------------------------------------------
+   CALENDAR SESSION RESULT
+   --------------------------------------------------------- */
+
+.mentor-session-calendar-results {
+  gap: 9px !important;
+
+  min-height: 0 !important;
+
+  height: auto !important;
+
+  margin-top: 12px !important;
+}
+
+.mentor-session-calendar-result {
+  grid-template-columns: 1fr !important;
+
+  gap: 6px !important;
+
+  min-height: 0 !important;
+
+  height: auto !important;
+
+  padding: 13px 14px !important;
+
+  border-color: #e4e8ef !important;
+
+  background: #ffffff !important;
+}
+
+.mentor-session-calendar-time {
+  min-width: 0 !important;
+
+  color: #c13c00 !important;
+
+  font-weight: 600 !important;
+}
+
+.mentor-session-calendar-result strong {
+  color: #101419 !important;
+}
+
+.mentor-session-calendar-result p {
+  color: #6f8095 !important;
+}
+
+.mentor-session-calendar-format {
+  justify-self: start !important;
+
+  border: 1px solid #e4e8ef !important;
+
+  color: #4c5867 !important;
+
+  background: #f7f8fa !important;
+
+  font-weight: 500 !important;
+}
+
+/* ---------------------------------------------------------
+   DESKTOP HEIGHT ALIGNMENT
+   Outer canvases line up without stretching card content.
+   --------------------------------------------------------- */
+
+@media (min-width: 981px) {
+  .mentor-session-workspace {
+    align-items: stretch !important;
+  }
+
+  .mentor-session-main-column {
+    height: 100% !important;
+  }
+
+  .mentor-session-paged-shell {
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    height: 100% !important;
+  }
+
+  .mentor-session-paged-shell
+  .mentor-session-card--paginated {
+    flex: 0 0 auto !important;
+  }
+
+  .mentor-session-paged-shell
+  .mentor-session-pagination {
+    margin-top: auto !important;
+  }
+
+  .mentor-session-calendar-panel {
+    align-self: stretch !important;
+
+    height: 100% !important;
+
+    min-height: 100% !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   TABLET
+   --------------------------------------------------------- */
+
+@media (max-width: 980px) {
+  .mentor-session-workspace {
+    grid-template-columns: 1fr !important;
+  }
+
+  .mentor-session-calendar-panel {
+    position: static !important;
+
+    top: auto !important;
+
+    min-height: 0 !important;
+
+    height: auto !important;
+
+    margin-top: 0 !important;
+  }
+
+  .mentor-session-card--paginated {
+    min-height: 0 !important;
+
+    height: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .mentor-session-card {
+    padding: 18px !important;
+  }
+
+  .mentor-session-actions {
+    align-items: stretch !important;
+
+    flex-direction: column !important;
+  }
+
+  .mentor-session-view-mentor,
+  .mentor-session-join-button {
+    width: 100% !important;
+
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .mentor-session-calendar-panel {
+    padding: 18px !important;
+  }
+
+  .mentor-session-pagination {
+    gap: 6px !important;
+
+    padding: 12px !important;
+  }
+
+  .mentor-session-pagination-nav {
+    min-width: 68px !important;
+
+    padding: 0 8px !important;
+  }
+
+  .mentor-session-selected-date {
+    min-height: 68px !important;
+
+    padding: 13px 14px !important;
+  }
+
+  .mentor-session-paged-shell {
+    border-radius: 14px !important;
+  }
+}
+
+/* =========================================================
+   FINAL SESSIONS EMPTY-STATE + CANVAS ALIGNMENT
+   Desktop: left empty canvas and right calendar canvas match.
+   No fixed 420px height. The taller content defines the row.
+   Tablet/mobile: both return to natural stacked heights.
+   ========================================================= */
+
+/* Keep the schedule introduction fully white. */
+.mentor-sessions-summary {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+.mentor-sessions-summary::before,
+.mentor-sessions-summary::after {
+  content: none !important;
+  background: none !important;
+}
+
+/* Remove old fixed empty-state sizing. */
+.mentor-session-main-column > .mentor-session-empty-state,
+.mentor-session-empty-state {
+  min-height: 0 !important;
+}
+
+/* ---------------------------------------------------------
+   DESKTOP EMPTY STATE
+   Let CSS Grid calculate the row from the taller column,
+   then stretch both canvases to that same height.
+   --------------------------------------------------------- */
+
+@media (min-width: 981px) {
+  .mentor-session-workspace--empty {
+    align-items: stretch !important;
+  }
+
+  .mentor-session-workspace--empty
+  .mentor-session-main-column {
+    display: flex !important;
+    flex-direction: column !important;
+
+    align-self: stretch !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .mentor-session-workspace--empty
+  .mentor-session-empty-state {
+    flex: 1 1 auto !important;
+
+    align-self: stretch !important;
+
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+
+    padding: 38px 24px !important;
+
+    border: 1px solid #e4e8ef !important;
+    border-radius: 16px !important;
+
+    background: #ffffff !important;
+    background-image: none !important;
+
+    box-shadow:
+      0 8px 24px rgba(16, 20, 25, 0.03) !important;
+  }
+
+  .mentor-session-workspace--empty
+  .mentor-session-calendar-panel {
+    align-self: stretch !important;
+
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   EMPTY STATE CONTENT
+   Keep the content compact even when the outer canvas stretches.
+   --------------------------------------------------------- */
+
+.mentor-session-empty-state {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: column !important;
+
+  text-align: center !important;
+}
+
+.mentor-session-empty-state
+.empty-state-icon {
+  margin-bottom: 14px !important;
+}
+
+.mentor-session-empty-state h2 {
+  margin: 0 0 7px !important;
+}
+
+.mentor-session-empty-state p {
+  max-width: 520px !important;
+}
+
+.mentor-session-empty-state
+.primary-button {
+  margin-top: 18px !important;
+}
+
+/* ---------------------------------------------------------
+   TABLET + MOBILE
+   Once stacked, each canvas sizes naturally again.
+   --------------------------------------------------------- */
+
+@media (max-width: 980px) {
+  .mentor-session-workspace--empty {
+    align-items: start !important;
+  }
+
+  .mentor-session-workspace--empty
+  .mentor-session-main-column {
+    display: block !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .mentor-session-workspace--empty
+  .mentor-session-empty-state {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+
+    padding: 34px 24px !important;
+  }
+
+  .mentor-session-workspace--empty
+  .mentor-session-calendar-panel {
+    align-self: start !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .mentor-session-workspace--empty
+  .mentor-session-empty-state {
+    padding: 30px 20px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .mentor-session-workspace--empty
+  .mentor-session-empty-state {
+    padding: 26px 18px !important;
+  }
+}
+
+
+/* =========================================================
+   MENTOR-SPECIFIC SESSION OVERRIDES
+   Read-only production state for now.
+   ========================================================= */
+
+.mentor-session-readonly-note {
+  margin-right: auto;
+  color: #8794a4;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.mentor-session-actions {
+  justify-content: space-between !important;
+}
+
+@media (max-width: 700px) {
+  .mentor-session-actions {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .mentor-session-readonly-note {
+    margin-right: 0;
+  }
+
+  .mentor-session-join-button {
+    width: 100% !important;
+  }
+}

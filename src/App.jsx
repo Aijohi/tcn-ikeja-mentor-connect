@@ -34,6 +34,13 @@ import BecomeAMentor from "./pages/BecomeAMentor";
 
 import MentorApplicationStatus from "./pages/MentorApplicationStatus";
 import MentorDashboard from "./pages/MentorDashboard";
+import MentorMyProfile from "./pages/MentorMyProfile";
+import MentorRequests from "./pages/MentorRequests";
+import MentorRequestDetails from "./pages/MentorRequestDetails";
+import MentorMentees from "./pages/MentorMentees";
+import MentorSessions from "./pages/MentorSessions";
+import MentorMessages from "./pages/MentorMessages";
+import MentorComingSoon from "./pages/MentorComingSoon";
 import BecomeAMentee from "./pages/BecomeAMentee";
 
 import AdminDashboard from "./pages/AdminDashboard";
@@ -291,6 +298,97 @@ function App() {
                 ]}
               >
                 <MentorDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentor/profile"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "mentor",
+                ]}
+              >
+                <MentorMyProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentor/requests"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "mentor",
+                ]}
+              >
+                <MentorRequests />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentor/requests/:requestId"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "mentor",
+                ]}
+              >
+                <MentorRequestDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentor/mentees"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "mentor",
+                ]}
+              >
+                <MentorMentees />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentor/mentees/:requestId"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "mentor",
+                ]}
+              >
+                <MentorRequestDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentor/sessions"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "mentor",
+                ]}
+              >
+                <MentorSessions />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentor/messages"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "mentor",
+                ]}
+              >
+                <MentorMessages />
               </ProtectedRoute>
             }
           />

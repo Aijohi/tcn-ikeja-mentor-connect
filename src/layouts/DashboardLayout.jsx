@@ -10,6 +10,7 @@ import {
   Search,
   Sparkles,
   UserRound,
+  Users,
   X,
 } from "lucide-react";
 import {
@@ -60,6 +61,31 @@ const menus = {
       label: "Overview",
       icon: LayoutDashboard,
       path: "/mentor/dashboard",
+    },
+    {
+      label: "My profile",
+      icon: UserRound,
+      path: "/mentor/profile",
+    },
+    {
+      label: "Mentorship requests",
+      icon: GitPullRequest,
+      path: "/mentor/requests",
+    },
+    {
+      label: "My mentees",
+      icon: Users,
+      path: "/mentor/mentees",
+    },
+    {
+      label: "My sessions",
+      icon: CalendarDays,
+      path: "/mentor/sessions",
+    },
+    {
+      label: "Messages",
+      icon: MessageCircle,
+      path: "/mentor/messages",
     },
   ],
 
