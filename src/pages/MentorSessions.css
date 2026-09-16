@@ -2686,3 +2686,31 @@ button.active {
     width: 100% !important;
   }
 }
+
+
+/* =========================================================
+   REAL SESSION CREATION ENTRY POINT
+   ========================================================= */
+
+.mentor-sessions-summary--with-action {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 22px !important;
+}
+
+.mentor-schedule-session-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .mentor-sessions-summary--with-action {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .mentor-schedule-session-button {
+    width: auto !important;
+  }
+}

@@ -20,6 +20,8 @@ import {
 } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
+import NotificationBell from "../components/NotificationBell";
+
 import "./DashboardLayout.css";
 
 const menus = {
@@ -782,14 +784,28 @@ function DashboardLayout({
             <p>{description}</p>
           </span>
 
-          <div className="dashboard-user">
-            <strong>
-              {displayName}
-            </strong>
+          <div className="dashboard-header-actions">
+            {(
+              role === "mentor" ||
+              (
+                role === "mentee" &&
+                !isMentorOnboardingAccount
+              )
+            ) && (
+              <NotificationBell
+                userId={user.id}
+              />
+            )}
 
-            <small>
-              {accountTypeLabel}
-            </small>
+            <div className="dashboard-user">
+              <strong>
+                {displayName}
+              </strong>
+
+              <small>
+                {accountTypeLabel}
+              </small>
+            </div>
           </div>
         </header>
 

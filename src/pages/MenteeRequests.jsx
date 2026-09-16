@@ -28,22 +28,21 @@ import "./MenteeRequestsTable.css";
 
 const PENDING_STATUSES = [
   "pending",
+  "clarification_requested",
 ];
 
 const ACTIVE_STATUSES = [
   "accepted",
-  "clarification_requested",
-  "referred",
 ];
 
 const WITHDRAWABLE_STATUSES = [
   "pending",
   "clarification_requested",
-  "referred",
 ];
 
 const CLOSED_STATUSES = [
   "declined",
+  "referred",
   "withdrawn",
 ];
 
@@ -88,6 +87,11 @@ function MenteeRequests() {
     withdrawing,
     setWithdrawing,
   ] = useState(false);
+
+  const [
+    withdrawalReason,
+    setWithdrawalReason,
+  ] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -308,26 +312,30 @@ function MenteeRequests() {
       return;
     }
 
+    const reason =
+      withdrawalReason.trim();
+
+    if (!reason) {
+      setError(
+        "Please state why you are withdrawing this mentorship request.",
+      );
+      return;
+    }
+
     setWithdrawing(true);
     setError("");
 
     const {
       error: withdrawError,
-    } = await supabase
-      .from(
-        "mentorship_requests",
-      )
-      .update({
-        status: "withdrawn",
-      })
-      .eq(
-        "id",
-        withdrawRequest.id,
-      )
-      .eq(
-        "mentee_id",
-        user.id,
-      );
+    } = await supabase.rpc(
+      "withdraw_mentorship_request",
+      {
+        p_request_id:
+          withdrawRequest.id,
+        p_reason:
+          reason,
+      },
+    );
 
     if (withdrawError) {
       console.error(
@@ -336,7 +344,8 @@ function MenteeRequests() {
       );
 
       setError(
-        "We could not withdraw this request. Please try again.",
+        withdrawError.message ||
+          "We could not withdraw this request. Please try again.",
       );
 
       setWithdrawing(false);
@@ -361,6 +370,7 @@ function MenteeRequests() {
     setWithdrawRequest(
       null,
     );
+    setWithdrawalReason("");
 
     setWithdrawing(false);
   }
@@ -577,9 +587,19 @@ function MenteeRequests() {
                             request={
                               request
                             }
+                            onViewDetails={() =>
+                              navigate(
+                                `/mentee/requests/${request.id}`,
+                              )
+                            }
                             onViewMentor={() =>
                               navigate(
                                 `/mentee/mentors/${request.mentor_id}`,
+                              )
+                            }
+                            onMessages={() =>
+                              navigate(
+                                `/mentee/messages?mentor=${request.mentor_id}`,
                               )
                             }
                             onSessions={() =>
@@ -587,11 +607,12 @@ function MenteeRequests() {
                                 "/mentee/sessions",
                               )
                             }
-                            onWithdraw={() =>
+                            onWithdraw={() => {
+                              setWithdrawalReason("");
                               setWithdrawRequest(
                                 request,
-                              )
-                            }
+                              );
+                            }}
                           />
                         ),
                       )}
@@ -609,9 +630,19 @@ function MenteeRequests() {
                         request={
                           request
                         }
+                        onViewDetails={() =>
+                          navigate(
+                            `/mentee/requests/${request.id}`,
+                          )
+                        }
                         onViewMentor={() =>
                           navigate(
                             `/mentee/mentors/${request.mentor_id}`,
+                          )
+                        }
+                        onMessages={() =>
+                          navigate(
+                            `/mentee/messages?mentor=${request.mentor_id}`,
                           )
                         }
                         onSessions={() =>
@@ -619,11 +650,12 @@ function MenteeRequests() {
                             "/mentee/sessions",
                           )
                         }
-                        onWithdraw={() =>
+                        onWithdraw={() => {
+                          setWithdrawalReason("");
                           setWithdrawRequest(
                             request,
-                          )
-                        }
+                          );
+                        }}
                       />
                     ),
                   )}
@@ -706,6 +738,7 @@ function MenteeRequests() {
                 setWithdrawRequest(
                   null,
                 );
+                setWithdrawalReason("");
               }
             }}
           >
@@ -723,11 +756,12 @@ function MenteeRequests() {
                 <button
                   type="button"
                   aria-label="Close withdraw request dialog"
-                  onClick={() =>
+                  onClick={() => {
                     setWithdrawRequest(
                       null,
-                    )
-                  }
+                    );
+                    setWithdrawalReason("");
+                  }}
                 >
                   <X size={17} />
                 </button>
@@ -749,15 +783,44 @@ function MenteeRequests() {
                 mentor afterwards.
               </p>
 
+              <label className="mentee-request-modal-reason">
+                <span>
+                  Reason for withdrawing *
+                </span>
+
+                <textarea
+                  value={
+                    withdrawalReason
+                  }
+                  rows={4}
+                  placeholder="Tell the mentor why you are withdrawing this request."
+                  onChange={(
+                    event,
+                  ) => {
+                    setWithdrawalReason(
+                      event.target
+                        .value,
+                    );
+
+                    setError("");
+                  }}
+                />
+
+                <small>
+                  This reason will be visible to the mentor and kept in the request history.
+                </small>
+              </label>
+
               <div className="mentee-request-modal-actions">
                 <button
                   type="button"
                   className="mentee-request-button mentee-request-button--secondary"
-                  onClick={() =>
+                  onClick={() => {
                     setWithdrawRequest(
                       null,
-                    )
-                  }
+                    );
+                    setWithdrawalReason("");
+                  }}
                   disabled={
                     withdrawing
                   }
@@ -867,7 +930,9 @@ function MentorIdentity({
 
 function RequestTableRow({
   request,
+  onViewDetails,
   onViewMentor,
+  onMessages,
   onSessions,
   onWithdraw,
 }) {
@@ -907,6 +972,16 @@ function RequestTableRow({
             type="button"
             className="mentee-request-table-link"
             onClick={
+              onViewDetails
+            }
+          >
+            View details
+          </button>
+
+          <button
+            type="button"
+            className="mentee-request-table-link"
+            onClick={
               onViewMentor
             }
           >
@@ -915,15 +990,27 @@ function RequestTableRow({
 
           {status ===
             "accepted" && (
-            <button
-              type="button"
-              className="mentee-request-table-link"
-              onClick={
-                onSessions
-              }
-            >
-              Sessions
-            </button>
+            <>
+              <button
+                type="button"
+                className="mentee-request-table-link is-message"
+                onClick={
+                  onMessages
+                }
+              >
+                Message mentor
+              </button>
+
+              <button
+                type="button"
+                className="mentee-request-table-link"
+                onClick={
+                  onSessions
+                }
+              >
+                Sessions
+              </button>
+            </>
           )}
 
           {WITHDRAWABLE_STATUSES.includes(
@@ -947,7 +1034,9 @@ function RequestTableRow({
 
 function RequestMobileCard({
   request,
+  onViewDetails,
   onViewMentor,
+  onMessages,
   onSessions,
   onWithdraw,
 }) {
@@ -998,6 +1087,16 @@ function RequestMobileCard({
           type="button"
           className="mentee-request-table-link"
           onClick={
+            onViewDetails
+          }
+        >
+          View details
+        </button>
+
+        <button
+          type="button"
+          className="mentee-request-table-link"
+          onClick={
             onViewMentor
           }
         >
@@ -1009,18 +1108,30 @@ function RequestMobileCard({
 
         {status ===
           "accepted" && (
-          <button
-            type="button"
-            className="mentee-request-table-link"
-            onClick={
-              onSessions
-            }
-          >
-            My sessions
-            <ArrowRight
-              size={14}
-            />
-          </button>
+          <>
+            <button
+              type="button"
+              className="mentee-request-table-link is-message"
+              onClick={
+                onMessages
+              }
+            >
+              Message mentor
+            </button>
+
+            <button
+              type="button"
+              className="mentee-request-table-link"
+              onClick={
+                onSessions
+              }
+            >
+              My sessions
+              <ArrowRight
+                size={14}
+              />
+            </button>
+          </>
         )}
 
         {WITHDRAWABLE_STATUSES.includes(

@@ -1,40 +1,4 @@
 /* =========================================================
-   DASHBOARD USER IDENTITY
-   Keep the user name and role badge calm and consistent.
-   ========================================================= */
-
-#root
-.dashboard-layout
-.dashboard-content
-.dashboard-user strong {
-  color: #101419 !important;
-
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  line-height: 1.2 !important;
-}
-
-#root
-.dashboard-layout
-.dashboard-content
-.dashboard-user small {
-  min-height: 24px !important;
-  padding: 0 9px !important;
-
-  border: 1px solid #d7dee7 !important;
-  border-radius: 999px !important;
-
-  color: #2d353f !important;
-  background: #f7f8fa !important;
-
-  font-size: 10px !important;
-  font-weight: 500 !important;
-  line-height: 22px !important;
-
-  text-transform: capitalize !important;
-}
-
-/* =========================================================
    DASHBOARD LAYOUT
    Shared confirmation modal for Sign out.
    Works for mentee, mentor and administrator dashboards.
@@ -58,8 +22,6 @@
   background:
     rgba(3, 4, 5, 0.48);
 
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 
 .dashboard-signout-modal {
@@ -317,5 +279,196 @@ span {
 @media (prefers-reduced-motion: reduce) {
   .dashboard-signout-modal {
     animation: none;
+  }
+}
+
+/* =========================================================
+   DASHBOARD BRAND ALIGNMENT
+   Stable desktop, tablet and mobile alignment.
+   ========================================================= */
+
+.dashboard-brand {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  gap: 10px;
+
+  min-width: 0;
+
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard-brand-logo {
+  display: block;
+
+  flex: 0 0 auto;
+
+  width: 58px;
+  height: 30px;
+
+  margin: 0;
+  padding: 0;
+
+  object-fit: contain;
+}
+
+.dashboard-brand-text {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+
+  gap: 4px;
+
+  min-width: 0;
+
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard-brand-text strong,
+.dashboard-brand-text small {
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  line-height: 1;
+}
+
+.dashboard-sidebar .dashboard-brand-logo {
+  width: 58px;
+  height: 32px;
+}
+
+.dashboard-sidebar .dashboard-brand-text strong {
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dashboard-sidebar .dashboard-brand-text small {
+  color: #97aac2;
+
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+/* ---------------------------------------------------------
+   TABLET AND MOBILE HEADER
+   --------------------------------------------------------- */
+
+@media (max-width: 1180px) {
+  .dashboard-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 68px;
+
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .dashboard-mobile-header .dashboard-brand {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    width: auto;
+    max-width: calc(100% - 116px);
+
+    min-width: 0;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-logo {
+    width: 58px;
+    height: 28px;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+
+    gap: 3px;
+
+    min-height: 28px;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text strong {
+    color: #101419;
+
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text small {
+    color: #8797ad;
+
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    white-space: nowrap;
+  }
+}
+
+/* Phones show only TCN IKEJA beside the logo. */
+@media (max-width: 560px) {
+  .dashboard-mobile-header .dashboard-brand {
+    gap: 8px;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-logo {
+    width: 56px;
+    height: 26px;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text {
+    min-height: 26px;
+
+    gap: 0;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text strong {
+    display: none;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text small {
+    display: flex;
+    align-items: center;
+
+    min-height: 26px;
+
+    font-size: 9px;
+    line-height: 1;
+    letter-spacing: 0.14em;
+  }
+}
+
+@media (max-width: 380px) {
+  .dashboard-mobile-header .dashboard-brand {
+    gap: 7px;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-logo {
+    width: 52px;
+    height: 24px;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text {
+    min-height: 24px;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text small {
+    min-height: 24px;
+
+    font-size: 8px;
+    letter-spacing: 0.12em;
   }
 }

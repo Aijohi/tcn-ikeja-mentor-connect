@@ -146,9 +146,9 @@
   display: block;
   margin-top: 8px;
   color: #101419;
-  font-size: 25px;
+  font-size: 20px;
   font-weight: 650;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: -0.03em;
 }
 
@@ -278,7 +278,7 @@
 
   .mentor-overview-stat-card > strong {
     margin-top: 4px;
-    font-size: 21px;
+    font-size: 18px;
   }
 
   .mentor-overview-stat-card > p {

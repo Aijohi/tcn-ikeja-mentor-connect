@@ -94,8 +94,83 @@ function MentorMessages() {
       [location.search],
     );
 
+  const requestedRequestId =
+    useMemo(
+      () =>
+        new URLSearchParams(
+          location.search,
+        ).get("request"),
+      [location.search],
+    );
+
+  const routedConversation =
+    location.state
+      ?.conversationRequest ??
+    null;
+
   useEffect(() => {
     let isMounted = true;
+
+    async function prepareConnection(
+      connection,
+    ) {
+      const requestId =
+        connection.request_id;
+
+      if (!requestId) {
+        return {
+          connection: null,
+          error:
+            "This accepted mentorship is missing its request reference.",
+        };
+      }
+
+      const {
+        data: conversation,
+        error: conversationError,
+      } = await supabase.rpc(
+        "ensure_mentorship_conversation",
+        {
+          p_request_id:
+            requestId,
+        },
+      );
+
+      if (conversationError) {
+        console.error(
+          `Unable to prepare conversation for request ${requestId}:`,
+          conversationError.message,
+        );
+
+        return {
+          connection: null,
+          error:
+            conversationError.message ||
+            "We could not start this conversation.",
+        };
+      }
+
+      const conversationId =
+        getConversationId(
+          conversation,
+        );
+
+      if (!conversationId) {
+        return {
+          connection: null,
+          error:
+            "The conversation was prepared, but no conversation id was returned.",
+        };
+      }
+
+      return {
+        connection: {
+          ...connection,
+          conversationId,
+        },
+        error: "",
+      };
+    }
 
     async function loadMessagingData() {
       if (!user?.id) {
@@ -105,9 +180,66 @@ function MentorMessages() {
       setLoading(true);
       setError("");
 
+      /*
+       * If the mentor clicked "Message mentee" from an accepted
+       * request, try that relationship first. This means the mentor
+       * can start the first message even when there is no existing
+       * conversation thread yet.
+       */
+      let directConnection =
+        routedConversation;
+
+      if (
+        !directConnection &&
+        requestedRequestId
+      ) {
+        const {
+          data:
+            requestDetails,
+          error:
+            requestDetailsError,
+        } = await supabase.rpc(
+          "get_mentor_request_details",
+          {
+            p_request_id:
+              requestedRequestId,
+          },
+        );
+
+        if (
+          !requestDetailsError &&
+          requestDetails?.status ===
+            "accepted"
+        ) {
+          directConnection = {
+            request_id:
+              requestDetails.id,
+            mentee_id:
+              requestDetails.mentee_id,
+            mentee_name:
+              requestDetails.mentee
+                ?.full_name ||
+              "Mentee",
+            mentee_email:
+              requestDetails.mentee
+                ?.email ||
+              "",
+            profile_photo_url:
+              requestDetails.mentee
+                ?.profile_photo_url ||
+              null,
+            mentoring_area:
+              requestDetails.mentoring_area ||
+              "Mentorship",
+          };
+        }
+      }
+
       const {
-        data: activeMentees,
-        error: menteesError,
+        data:
+          activeMentees,
+        error:
+          menteesError,
       } = await supabase.rpc(
         "get_my_active_mentees",
       );
@@ -121,68 +253,81 @@ function MentorMessages() {
           "Unable to load active mentees:",
           menteesError.message,
         );
-
-        setError(
-          "We could not load your mentorship conversations. Please try again.",
-        );
-
-        setEligibleMentees([]);
-        setThreads([]);
-        setLoading(false);
-        return;
       }
 
-      const accepted =
+      let accepted =
         activeMentees ?? [];
 
-      if (accepted.length === 0) {
+      /*
+       * The request-details screen already knows which accepted
+       * mentee the mentor wants to message. Merge it into the
+       * eligible list if the active-mentee read has not returned it.
+       */
+      if (directConnection) {
+        const alreadyIncluded =
+          accepted.some(
+            (item) =>
+              item.request_id ===
+              directConnection.request_id,
+          );
+
+        if (!alreadyIncluded) {
+          accepted = [
+            directConnection,
+            ...accepted,
+          ];
+        }
+      }
+
+      if (
+        accepted.length === 0
+      ) {
         setEligibleMentees([]);
         setThreads([]);
-        setSelectedThreadId(null);
+        setSelectedThreadId(
+          null,
+        );
+
+        if (menteesError) {
+          setError(
+            menteesError.message ||
+              "We could not load your active mentees.",
+          );
+        }
+
         setLoading(false);
         return;
       }
 
-      const preparedMentees = [];
+      const preparedMentees =
+        [];
+      let firstPreparationError =
+        "";
 
-      for (const connection of accepted) {
+      for (
+        const connection of accepted
+      ) {
         const {
-          data: conversation,
-          error: conversationError,
-        } = await supabase.rpc(
-          "ensure_mentorship_conversation",
-          {
-            p_request_id:
-              connection.request_id,
-          },
+          connection:
+            preparedConnection,
+          error:
+            preparationError,
+        } = await prepareConnection(
+          connection,
         );
 
-        if (conversationError) {
-          console.error(
-            `Unable to prepare conversation for request ${connection.request_id}:`,
-            conversationError.message,
+        if (
+          preparedConnection
+        ) {
+          preparedMentees.push(
+            preparedConnection,
           );
-
-          continue;
+        } else if (
+          !firstPreparationError
+        ) {
+          firstPreparationError =
+            preparationError;
         }
-
-        const conversationId =
-          getConversationId(
-            conversation,
-          );
-
-        if (!conversationId) {
-          console.error(
-            "Conversation was prepared but no conversation id was returned.",
-          );
-
-          continue;
-        }
-
-        preparedMentees.push({
-          ...connection,
-          conversationId,
-        });
       }
 
       if (!isMounted) {
@@ -193,6 +338,24 @@ function MentorMessages() {
         preparedMentees,
       );
 
+      if (
+        preparedMentees.length ===
+        0
+      ) {
+        setThreads([]);
+        setSelectedThreadId(
+          null,
+        );
+
+        setError(
+          firstPreparationError ||
+            "We found your accepted mentorship, but could not start the conversation.",
+        );
+
+        setLoading(false);
+        return;
+      }
+
       const conversationIds =
         preparedMentees.map(
           (item) =>
@@ -202,85 +365,123 @@ function MentorMessages() {
       let existingConversationIds =
         new Set();
 
-      if (
-        conversationIds.length >
-        0
-      ) {
-        const {
-          data: existingMessages,
-          error:
-            existingMessageError,
-        } = await supabase
-          .from(
-            "mentorship_messages",
-          )
-          .select(
-            "conversation_id",
-          )
-          .in(
-            "conversation_id",
-            conversationIds,
-          );
+      const {
+        data:
+          existingMessages,
+        error:
+          existingMessageError,
+      } = await supabase
+        .from(
+          "mentorship_messages",
+        )
+        .select(`
+          conversation_id,
+          sender_id,
+          recipient_id,
+          body,
+          read_at,
+          created_at
+        `)
+        .in(
+          "conversation_id",
+          conversationIds,
+        );
 
-        if (
-          existingMessageError
-        ) {
-          console.error(
-            "Unable to determine existing message threads:",
-            existingMessageError.message,
+      if (
+        existingMessageError
+      ) {
+        console.error(
+          "Unable to determine existing message threads:",
+          existingMessageError.message,
+        );
+      } else {
+        existingConversationIds =
+          new Set(
+            (
+              existingMessages ??
+              []
+            ).map(
+              (message) =>
+                message.conversation_id,
+            ),
           );
-        } else {
-          existingConversationIds =
-            new Set(
-              (
-                existingMessages ??
-                []
-              ).map(
-                (message) =>
-                  message.conversation_id,
-              ),
-            );
-        }
       }
+
+      const messageSummaryByConversation =
+        buildMessageSummaryByConversation(
+          existingMessages ?? [],
+          user.id,
+        );
 
       if (!isMounted) {
         return;
       }
 
       let preparedThreads =
-        preparedMentees.filter(
+        preparedMentees
+          .filter(
+            (item) =>
+              existingConversationIds.has(
+                item.conversationId,
+              ),
+          )
+          .map(
+            (item) => ({
+              ...item,
+              ...getConversationSummary(
+                messageSummaryByConversation,
+                item.conversationId,
+              ),
+            }),
+          );
+
+      const requestedConnection =
+        preparedMentees.find(
           (item) =>
-            existingConversationIds.has(
-              item.conversationId,
-            ),
-        );
+            (requestedRequestId &&
+              item.request_id ===
+                requestedRequestId) ||
+            (requestedMenteeId &&
+              item.mentee_id ===
+                requestedMenteeId) ||
+            (directConnection &&
+              item.request_id ===
+                directConnection.request_id),
+        ) ?? null;
 
-      const requestedMentee =
-        requestedMenteeId
-          ? preparedMentees.find(
-              (item) =>
-                item.mentee_id ===
-                requestedMenteeId,
-            )
-          : null;
-
-      if (requestedMentee) {
+      /*
+       * No message has been sent yet? That is okay.
+       * Put the accepted mentee into the conversation list anyway
+       * and open the blank chat canvas so the mentor can send the
+       * very first message.
+       */
+      if (
+        requestedConnection
+      ) {
         const alreadyInThreads =
           preparedThreads.some(
             (item) =>
               item.conversationId ===
-              requestedMentee.conversationId,
+              requestedConnection.conversationId,
           );
 
-        if (!alreadyInThreads) {
+        if (
+          !alreadyInThreads
+        ) {
           preparedThreads = [
-            requestedMentee,
+            {
+              ...requestedConnection,
+              ...getConversationSummary(
+                messageSummaryByConversation,
+                requestedConnection.conversationId,
+              ),
+            },
             ...preparedThreads,
           ];
         }
 
         setSelectedThreadId(
-          requestedMentee.conversationId,
+          requestedConnection.conversationId,
         );
       } else {
         setSelectedThreadId(
@@ -320,6 +521,8 @@ function MentorMessages() {
   }, [
     user?.id,
     requestedMenteeId,
+    requestedRequestId,
+    routedConversation,
   ]);
 
   useEffect(() => {
@@ -404,6 +607,26 @@ function MentorMessages() {
           "Unable to mark messages as read:",
           readError.message,
         );
+      } else {
+        setThreads(
+          (current) =>
+            current.map(
+              (thread) =>
+                thread.conversationId ===
+                selectedThreadId
+                  ? {
+                      ...thread,
+                      unreadCount: 0,
+                    }
+                  : thread,
+            ),
+        );
+
+        window.dispatchEvent(
+          new CustomEvent(
+            "mentorship:messages-read",
+          ),
+        );
       }
     }
 
@@ -415,6 +638,173 @@ function MentorMessages() {
   }, [
     selectedThreadId,
     user?.id,
+  ]);
+
+  useEffect(() => {
+    if (
+      !user?.id ||
+      eligibleMentees.length ===
+        0
+    ) {
+      return undefined;
+    }
+
+    const channel =
+      supabase
+        .channel(
+          `mentor-message-thread-live-${user.id}`,
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table:
+              "mentorship_messages",
+          },
+          async (
+            payload,
+          ) => {
+            const incoming =
+              payload.new;
+
+            if (
+              incoming.sender_id !==
+                user.id &&
+              incoming.recipient_id !==
+                user.id
+            ) {
+              return;
+            }
+
+            const connection =
+              eligibleMentees.find(
+                (item) =>
+                  item.conversationId ===
+                  incoming.conversation_id,
+              );
+
+            if (!connection) {
+              return;
+            }
+
+            setThreads(
+              (current) => {
+                const exists =
+                  current.some(
+                    (thread) =>
+                      thread.conversationId ===
+                      incoming.conversation_id,
+                  );
+
+                const isIncoming =
+                  incoming.recipient_id ===
+                  user.id;
+
+                const isOpen =
+                  incoming.conversation_id ===
+                  selectedThreadId;
+
+                const updateThread =
+                  (thread) => ({
+                    ...thread,
+                    lastMessage:
+                      incoming.body,
+                    lastMessageAt:
+                      incoming.created_at,
+                    unreadCount:
+                      isIncoming &&
+                      !isOpen
+                        ? Number(
+                            thread.unreadCount ??
+                              0,
+                          ) + 1
+                        : isOpen
+                          ? 0
+                          : Number(
+                              thread.unreadCount ??
+                                0,
+                            ),
+                  });
+
+                if (exists) {
+                  return current.map(
+                    (thread) =>
+                      thread.conversationId ===
+                      incoming.conversation_id
+                        ? updateThread(
+                            thread,
+                          )
+                        : thread,
+                  );
+                }
+
+                return [
+                  updateThread({
+                    ...connection,
+                    unreadCount: 0,
+                  }),
+                  ...current,
+                ];
+              },
+            );
+
+            if (
+              incoming.conversation_id ===
+              selectedThreadId
+            ) {
+              setMessages(
+                (current) => {
+                  const exists =
+                    current.some(
+                      (message) =>
+                        message.id ===
+                        incoming.id,
+                    );
+
+                  if (exists) {
+                    return current;
+                  }
+
+                  return [
+                    ...current,
+                    incoming,
+                  ];
+                },
+              );
+
+              if (
+                incoming.recipient_id ===
+                user.id
+              ) {
+                await supabase.rpc(
+                  "mark_mentorship_messages_read",
+                  {
+                    p_conversation_id:
+                      selectedThreadId,
+                  },
+                );
+
+                window.dispatchEvent(
+                  new CustomEvent(
+                    "mentorship:messages-read",
+                  ),
+                );
+              }
+            }
+          },
+        )
+        .subscribe();
+
+    return () => {
+      supabase.removeChannel(
+        channel,
+      );
+    };
+  }, [
+    user?.id,
+    eligibleMentees,
+    selectedThreadId,
   ]);
 
   useEffect(() => {
@@ -698,22 +1088,36 @@ function MentorMessages() {
             </span>
 
             <h2>
-              Unable to load messages
+              Conversation could not start
             </h2>
 
             <p>
               {error}
             </p>
 
-            <button
-              type="button"
-              className="mentor-message-primary-button"
-              onClick={() =>
-                window.location.reload()
-              }
-            >
-              Try again
-            </button>
+            <div className="mentor-message-empty-actions">
+              <button
+                type="button"
+                className="mentor-message-primary-button"
+                onClick={() =>
+                  window.location.reload()
+                }
+              >
+                Try again
+              </button>
+
+              <button
+                type="button"
+                className="mentor-message-empty-secondary"
+                onClick={() =>
+                  navigate(
+                    "/mentor/mentees",
+                  )
+                }
+              >
+                View my mentees
+              </button>
+            </div>
           </section>
         </div>
       </DashboardLayout>
@@ -738,11 +1142,11 @@ function MentorMessages() {
             </span>
 
             <h2>
-              No conversations yet
+              No active mentees to message yet
             </h2>
 
             <p>
-              Once you accept a mentorship request, you can start a conversation with that mentee here.
+              Accept a mentorship request first. As soon as the relationship is accepted, you can start the first conversation from the request details or from Messages.
             </p>
 
             <button
@@ -1202,6 +1606,12 @@ function MessageThreadButton({
         active
           ? "active"
           : ""
+      } ${
+        Number(
+          thread.unreadCount ?? 0,
+        ) > 0
+          ? "has-unread"
+          : ""
       }`}
       onClick={
         onClick
@@ -1224,6 +1634,23 @@ function MessageThreadButton({
             "Mentorship"}
         </small>
       </span>
+
+      {Number(
+        thread.unreadCount ?? 0,
+      ) > 0 && (
+        <span
+          className="mentor-message-thread-unread"
+          aria-label={`${thread.unreadCount} unread ${
+            thread.unreadCount === 1
+              ? "message"
+              : "messages"
+          }`}
+        >
+          {thread.unreadCount > 99
+            ? "99+"
+            : thread.unreadCount}
+        </span>
+      )}
     </button>
   );
 }
@@ -1313,6 +1740,81 @@ function getConversationId(
     conversation.id ??
     conversation.conversation_id ??
     null
+  );
+}
+
+function buildMessageSummaryByConversation(
+  messages,
+  userId,
+) {
+  const summaries =
+    new Map();
+
+  for (
+    const message of messages
+  ) {
+    const conversationId =
+      message.conversation_id;
+
+    if (!conversationId) {
+      continue;
+    }
+
+    const current =
+      summaries.get(
+        conversationId,
+      ) ?? {
+        unreadCount: 0,
+        lastMessage: "",
+        lastMessageAt: null,
+      };
+
+    if (
+      message.recipient_id ===
+        userId &&
+      !message.read_at
+    ) {
+      current.unreadCount +=
+        1;
+    }
+
+    if (
+      !current.lastMessageAt ||
+      new Date(
+        message.created_at,
+      ).getTime() >
+        new Date(
+          current.lastMessageAt,
+        ).getTime()
+    ) {
+      current.lastMessage =
+        message.body ?? "";
+
+      current.lastMessageAt =
+        message.created_at;
+    }
+
+    summaries.set(
+      conversationId,
+      current,
+    );
+  }
+
+  return summaries;
+}
+
+function getConversationSummary(
+  summaryMap,
+  conversationId,
+) {
+  return (
+    summaryMap.get(
+      conversationId,
+    ) ?? {
+      unreadCount: 0,
+      lastMessage: "",
+      lastMessageAt: null,
+    }
   );
 }
 

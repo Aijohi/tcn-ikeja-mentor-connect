@@ -39,11 +39,14 @@ import MentorRequests from "./pages/MentorRequests";
 import MentorRequestDetails from "./pages/MentorRequestDetails";
 import MentorMentees from "./pages/MentorMentees";
 import MentorSessions from "./pages/MentorSessions";
+import MentorScheduleSession from "./pages/MentorScheduleSession";
 import MentorMessages from "./pages/MentorMessages";
 import MentorComingSoon from "./pages/MentorComingSoon";
 import BecomeAMentee from "./pages/BecomeAMentee";
 
 import AdminDashboard from "./pages/AdminDashboard";
+
+import "./styles/PlatformVisualFix.css";
 
 function App() {
   return (
@@ -376,6 +379,19 @@ function App() {
                 ]}
               >
                 <MentorSessions />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentor/sessions/new"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "mentor",
+                ]}
+              >
+                <MentorScheduleSession />
               </ProtectedRoute>
             }
           />

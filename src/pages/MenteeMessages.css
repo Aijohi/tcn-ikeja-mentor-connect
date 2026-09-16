@@ -60,7 +60,16 @@ body:has(.mentee-messages-page)
 
   gap: 18px;
 
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  padding: 16px 18px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 24px rgba(16, 20, 25, 0.025);
 }
 
 .mentee-message-toolbar-eyebrow {
@@ -119,20 +128,19 @@ body:has(.mentee-messages-page)
 .mentee-messages-layout {
   display: grid;
   grid-template-columns:
-    minmax(220px, 260px)
+    minmax(240px, 290px)
     minmax(0, 1fr);
 
   width: 100%;
   min-width: 0;
 
   height:
-    clamp(
-      480px,
-      62vh,
-      600px
+    min(
+      650px,
+      calc(100dvh - 230px)
     );
 
-  min-height: 0;
+  min-height: 520px;
 
   overflow: hidden;
 
@@ -142,7 +150,7 @@ body:has(.mentee-messages-page)
   background: #ffffff;
 
   box-shadow:
-    0 8px 24px rgba(16, 20, 25, 0.035);
+    0 10px 30px rgba(16, 20, 25, 0.035);
 }
 
 /* ---------------------------------------------------------
@@ -158,7 +166,7 @@ body:has(.mentee-messages-page)
 
   border-right: 1px solid #e4e8ef;
 
-  background: #ffffff;
+  background: #fbfcfd;
 }
 
 .mentee-message-threads-heading {
@@ -189,7 +197,7 @@ body:has(.mentee-messages-page)
 .mentee-message-thread-list {
   min-height: 0;
 
-  padding: 0;
+  padding: 8px;
 
   overflow-y: auto;
 
@@ -197,8 +205,6 @@ body:has(.mentee-messages-page)
 }
 
 .mentee-message-thread {
-  position: relative;
-
   display: grid;
   grid-template-columns:
     42px
@@ -208,14 +214,13 @@ body:has(.mentee-messages-page)
   gap: 10px;
 
   width: 100%;
-  padding: 13px 14px;
+  padding: 10px;
 
-  border: 0;
-  border-bottom: 1px solid #eef1f5;
-  border-radius: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
 
   color: inherit;
-  background: #ffffff;
+  background: transparent;
 
   font-family: inherit;
   text-align: left;
@@ -223,30 +228,18 @@ body:has(.mentee-messages-page)
   cursor: pointer;
 
   transition:
+    border-color 150ms ease,
     background-color 150ms ease;
 }
 
 .mentee-message-thread:hover {
-  background: #f8f9fb;
-}
-
-.mentee-message-thread.active {
   background: #f3f5f7;
 }
 
-.mentee-message-thread.active::before {
-  position: absolute;
-  top: 9px;
-  bottom: 9px;
-  left: 0;
+.mentee-message-thread.active {
+  border-color: #d7dee7;
 
-  width: 3px;
-
-  border-radius: 0 4px 4px 0;
-
-  background: #ff5303;
-
-  content: "";
+  background: #eef1f5;
 }
 
 .mentee-message-thread-avatar {
@@ -463,16 +456,20 @@ body:has(.mentee-messages-page)
 }
 
 .mentee-message-view-mentor {
-  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-  min-height: 34px;
-  padding: 0 10px;
+  gap: 7px;
 
-  border: 0;
-  border-radius: 7px;
+  min-height: 38px;
+  padding: 0 12px;
 
-  color: #c13c00;
-  background: transparent;
+  border: 1px solid #c9d2df;
+  border-radius: 8px;
+
+  color: #101419;
+  background: #ffffff;
 
   font-family: inherit;
   font-size: 11px;
@@ -482,8 +479,8 @@ body:has(.mentee-messages-page)
 }
 
 .mentee-message-view-mentor:hover {
-  color: #832600;
-  background: #fff4f3;
+  border-color: #97aac2;
+  background: #f7f8fa;
 }
 
 /* ---------------------------------------------------------
@@ -764,13 +761,11 @@ body:has(.mentee-messages-page)
     box-shadow 150ms ease;
 }
 
-.mentee-message-composer textarea:focus,
-.mentee-message-composer textarea:focus-visible {
-  border-color: #4c5867;
-  outline: none;
+.mentee-message-composer textarea:focus {
+  border-color: #97aac2;
 
   box-shadow:
-    0 0 0 2px rgba(76, 88, 103, 0.10);
+    0 0 0 3px rgba(16, 20, 25, 0.05);
 }
 
 .mentee-message-composer textarea::placeholder {
@@ -1098,6 +1093,8 @@ body:has(.mentee-messages-page)
   .mentee-message-page-toolbar {
     align-items: stretch;
     flex-direction: column;
+
+    padding: 14px;
   }
 
   .mentee-message-start-button {
@@ -1117,7 +1114,7 @@ body:has(.mentee-messages-page)
         calc(100dvh - 170px)
       );
 
-    min-height: 500px;
+    min-height: 540px;
 
     border-radius: 14px;
   }
@@ -1142,12 +1139,18 @@ body:has(.mentee-messages-page)
   }
 
   .mentee-message-thread-list {
-    display: block;
+    display: flex;
 
-    padding: 0;
+    gap: 7px;
 
-    overflow-x: hidden;
-    overflow-y: auto;
+    padding: 8px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .mentee-message-thread {
+    flex: 0 0 min(210px, 74vw);
   }
 
   .mentee-message-empty-list {
@@ -1177,12 +1180,17 @@ body:has(.mentee-messages-page)
   }
 
   .mentee-message-view-mentor {
-    width: auto;
-    min-height: 34px;
+    width: 36px;
+    min-height: 36px;
 
-    padding: 0 8px;
+    padding: 0;
 
-    font-size: 10px;
+    font-size: 0;
+  }
+
+  .mentee-message-view-mentor svg {
+    width: 16px;
+    height: 16px;
   }
 
   .mentee-message-history {
@@ -1202,15 +1210,14 @@ body:has(.mentee-messages-page)
   }
 
   .mentee-message-send-button {
-    width: auto;
-    min-width: 82px;
-    padding: 0 14px;
+    width: 44px;
+    padding: 0;
 
-    font-size: 12px;
+    font-size: 0;
   }
 
   .mentee-message-send-button span {
-    display: inline;
+    display: none;
   }
 
   .mentee-message-modal-backdrop {
@@ -1248,5 +1255,792 @@ body:has(.mentee-messages-page)
 
   .mentee-messages-layout {
     min-height: 520px;
+  }
+}
+
+
+/* =========================================================
+   FINAL PREVIEW PARITY OVERRIDES
+   ========================================================= */
+
+.mentee-message-thread {
+  position: relative;
+}
+
+.mentee-message-thread.active {
+  background: #f3f5f7;
+}
+
+.mentee-message-thread.active::before {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: #ff5303;
+  content: "";
+}
+
+.mentee-message-conversation-header small {
+  color: #c13c00;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   FINAL MESSAGE WORKSPACE CONSISTENCY FIX
+   ---------------------------------------------------------
+   The main index.css still contains an older Messages design.
+   These scoped rules keep the current empty/new conversation
+   state visually identical to the approved filled state.
+   ========================================================= */
+
+.mentee-messages-page .mentee-messages-layout {
+  grid-template-columns:
+    minmax(220px, 260px)
+    minmax(0, 1fr) !important;
+
+  height:
+    clamp(
+      480px,
+      62vh,
+      600px
+    ) !important;
+
+  min-height: 0 !important;
+
+  background: #ffffff !important;
+}
+
+/* LEFT CONVERSATION LIST
+   Keep the first conversation directly below the heading.
+   Do not allow the single row to stretch vertically. */
+.mentee-messages-page .mentee-message-threads {
+  display: grid !important;
+  grid-template-rows:
+    auto
+    minmax(0, 1fr) !important;
+
+  min-height: 0 !important;
+
+  background: #ffffff !important;
+}
+
+.mentee-messages-page .mentee-message-threads-heading {
+  padding: 18px !important;
+
+  background: #ffffff !important;
+}
+
+.mentee-messages-page .mentee-message-thread-list {
+  display: block !important;
+  align-content: start !important;
+
+  min-height: 0 !important;
+  padding: 0 !important;
+
+  overflow-y: auto !important;
+}
+
+.mentee-messages-page .mentee-message-thread {
+  position: relative !important;
+
+  display: grid !important;
+  grid-template-columns:
+    42px
+    minmax(0, 1fr) !important;
+  align-items: center !important;
+
+  gap: 10px !important;
+
+  width: 100% !important;
+  min-height: 68px !important;
+  height: auto !important;
+  padding: 13px 14px !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+  border-bottom: 1px solid #eef1f5 !important;
+  border-radius: 0 !important;
+
+  background: #ffffff !important;
+}
+
+.mentee-messages-page .mentee-message-thread:hover {
+  background: #f8f9fb !important;
+}
+
+.mentee-messages-page .mentee-message-thread.active {
+  background: #f3f5f7 !important;
+}
+
+.mentee-messages-page .mentee-message-thread.active::before {
+  position: absolute !important;
+  top: 9px !important;
+  bottom: 9px !important;
+  left: 0 !important;
+
+  width: 3px !important;
+
+  border-radius:
+    0 4px 4px 0 !important;
+
+  background: #ff5303 !important;
+
+  content: "" !important;
+}
+
+/* Keep the mentor avatar neutral.
+   Remove the old orange/teal gradient from index.css. */
+.mentee-messages-page .mentee-message-thread-initials {
+  display: grid !important;
+  place-items: center !important;
+
+  color: #101419 !important;
+  background: #f3f5f7 !important;
+
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+/* RIGHT CONVERSATION HEADER
+   The mentor name stays in the same location for both
+   empty and filled conversations. */
+.mentee-messages-page .mentee-message-conversation {
+  display: grid !important;
+  grid-template-rows:
+    auto
+    minmax(0, 1fr)
+    auto
+    auto !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  background: #ffffff !important;
+}
+
+.mentee-messages-page .mentee-message-conversation-header {
+  display: grid !important;
+  grid-template-columns:
+    auto
+    minmax(0, 1fr)
+    auto !important;
+  align-items: center !important;
+
+  gap: 12px !important;
+
+  min-height: 78px !important;
+  padding: 14px 16px !important;
+
+  border-bottom:
+    1px solid #e4e8ef !important;
+
+  background: #ffffff !important;
+}
+
+.mentee-messages-page .mentee-message-conversation-title {
+  min-width: 0 !important;
+}
+
+.mentee-messages-page
+.mentee-message-conversation-title small {
+  display: block !important;
+
+  color: #c13c00 !important;
+
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+}
+
+.mentee-messages-page
+.mentee-message-conversation-title h2 {
+  margin: 4px 0 2px !important;
+
+  color: #101419 !important;
+
+  font-size: 16px !important;
+  font-weight: 650 !important;
+  line-height: 1.2 !important;
+}
+
+.mentee-messages-page
+.mentee-message-conversation-title p {
+  margin: 0 !important;
+
+  color: #6f8095 !important;
+
+  font-size: 10px !important;
+}
+
+/* Keep View mentor at the far right rather than beside the name. */
+.mentee-messages-page .mentee-message-view-mentor {
+  justify-self: end !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  gap: 6px !important;
+
+  min-height: 34px !important;
+  padding: 0 10px !important;
+
+  border: 0 !important;
+  border-radius: 7px !important;
+
+  color: #c13c00 !important;
+  background: transparent !important;
+}
+
+/* CONVERSATION CANVAS
+   Remove the old peach canvas so empty and filled states
+   use the same clean neutral workspace. */
+.mentee-messages-page .mentee-message-history {
+  min-height: 0 !important;
+  padding: 18px !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  background: #fbfcfd !important;
+}
+
+/* Empty/new conversation remains centered within the
+   message history only. It must not move the mentor row. */
+.mentee-messages-page .mentee-message-new-thread {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: column !important;
+
+  min-height: 100% !important;
+  height: 100% !important;
+  padding: 28px !important;
+
+  text-align: center !important;
+}
+
+.mentee-messages-page
+.mentee-message-new-thread
+.mentee-message-thread-initials {
+  color: #101419 !important;
+  background: #f3f5f7 !important;
+}
+
+/* COMPOSER
+   Keep it visually attached to the conversation canvas. */
+.mentee-messages-page .mentee-message-composer {
+  padding: 12px 14px !important;
+
+  border-top:
+    1px solid #e4e8ef !important;
+
+  background: #ffffff !important;
+}
+
+/* ---------------------------------------------------------
+   TABLET / MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .mentee-messages-page .mentee-messages-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-rows:
+      auto
+      minmax(0, 1fr) !important;
+
+    height:
+      min(
+        640px,
+        calc(100dvh - 170px)
+      ) !important;
+
+    min-height: 540px !important;
+  }
+
+  .mentee-messages-page .mentee-message-threads {
+    max-height: 180px !important;
+
+    border-right: 0 !important;
+    border-bottom:
+      1px solid #e4e8ef !important;
+  }
+
+  .mentee-messages-page .mentee-message-thread-list {
+    display: flex !important;
+
+    gap: 7px !important;
+
+    padding: 8px !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+  .mentee-messages-page .mentee-message-thread {
+    flex: 0 0 min(210px, 74vw) !important;
+
+    min-height: 58px !important;
+
+    border: 1px solid #e4e8ef !important;
+    border-radius: 10px !important;
+  }
+
+  .mentee-messages-page .mentee-message-conversation-header {
+    grid-template-columns:
+      auto
+      minmax(0, 1fr)
+      auto !important;
+
+    min-height: 68px !important;
+    padding: 10px 12px !important;
+  }
+}
+
+
+/* =========================================================
+   FINAL CHAT COLOUR SOFTENING
+   ---------------------------------------------------------
+   Keep orange as the brand accent without pairing it with
+   heavy black chat surfaces.
+   ========================================================= */
+
+/* Conversation list active state */
+.mentee-messages-page .mentee-message-thread.active {
+  background: #fff8f4 !important;
+}
+
+/* Mentor initials/avatar */
+.mentee-messages-page .mentee-message-thread-initials {
+  border: 1px solid #ffd6c2 !important;
+
+  color: #c13c00 !important;
+  background: #fff2eb !important;
+}
+
+/* Empty/new conversation avatar */
+.mentee-messages-page
+.mentee-message-new-thread
+.mentee-message-thread-initials {
+  border: 1px solid #ffd6c2 !important;
+
+  color: #c13c00 !important;
+  background: #fff2eb !important;
+}
+
+/* Chat canvas stays very light and neutral */
+.mentee-messages-page .mentee-message-history {
+  background: #fafbfc !important;
+}
+
+/* Received messages */
+.mentee-messages-page
+.mentee-message-row.theirs
+.mentee-message-bubble {
+  border-color: #e1e6ed !important;
+
+  color: #2d353f !important;
+  background: #ffffff !important;
+
+  box-shadow:
+    0 2px 8px
+    rgba(16, 20, 25, 0.025) !important;
+}
+
+/* Sent messages
+   Replace the previous black bubble with a light orange
+   brand treatment that is easier on the eye. */
+.mentee-messages-page
+.mentee-message-row.mine
+.mentee-message-bubble {
+  border-color: #ffd1bb !important;
+
+  color: #2d353f !important;
+  background: #fff3ec !important;
+
+  box-shadow: none !important;
+}
+
+.mentee-messages-page
+.mentee-message-row.mine
+.mentee-message-bubble p {
+  color: #2d353f !important;
+}
+
+.mentee-messages-page
+.mentee-message-row.mine
+.mentee-message-bubble small {
+  color: #9b6a55 !important;
+}
+
+/* Composer remains clean.
+   Orange is reserved for the action, not the whole chat. */
+.mentee-messages-page .mentee-message-composer {
+  background: #ffffff !important;
+}
+
+.mentee-messages-page .mentee-message-composer textarea {
+  border-color: #c9d2df !important;
+
+  color: #101419 !important;
+  background: #ffffff !important;
+}
+
+.mentee-messages-page .mentee-message-composer textarea:hover {
+  border-color: #97aac2 !important;
+}
+
+.mentee-messages-page .mentee-message-composer textarea:focus,
+.mentee-messages-page .mentee-message-composer textarea:focus-visible {
+  border-color: #4c5867 !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.10) !important;
+}
+
+
+/* =========================================================
+   REAL-TIME UNREAD MESSAGE INDICATOR
+   ========================================================= */
+
+.mentee-messages-page .mentee-message-thread {
+  grid-template-columns:
+    42px
+    minmax(0, 1fr)
+    auto !important;
+}
+
+.mentee-messages-page
+.mentee-message-thread.has-unread
+.mentee-message-thread-copy strong {
+  color: #101419;
+  font-weight: 700;
+}
+
+.mentee-message-thread-unread {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+
+  border-radius: 999px;
+
+  color: #ffffff;
+  background: #ff5303;
+
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   FINAL RESPONSIVE MESSAGING POLISH
+   Compact actions and consistent behaviour across desktop,
+   tablet and mobile. Buttons remain content-width.
+   ========================================================= */
+
+/* ---------- DESKTOP / SHARED ---------- */
+
+.mentee-messages-page .mentee-message-page-toolbar {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mentee-messages-page .mentee-message-start-button,
+.mentee-messages-page .mentee-message-primary-button,
+.mentee-messages-page .mentee-message-send-button {
+  width: auto !important;
+  max-width: max-content;
+}
+
+.mentee-messages-page .mentee-message-start-button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 15px;
+}
+
+/* ---------- TABLET ---------- */
+
+@media (max-width: 1024px) {
+  .mentee-messages-page .mentee-message-page-toolbar {
+    gap: 12px;
+  }
+
+  .mentee-messages-page .mentee-message-start-button {
+    margin-left: auto;
+  }
+
+  .mentee-messages-page .mentee-message-bubble {
+    max-width: 82% !important;
+  }
+}
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 760px) {
+  .mentee-messages-page {
+    padding-top: 12px;
+  }
+
+  .mentee-messages-page .mentee-message-page-toolbar {
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+
+    gap: 10px 12px;
+
+    margin-bottom: 12px;
+    padding: 0 !important;
+
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .mentee-messages-page .mentee-message-page-toolbar > div {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+
+  .mentee-messages-page .mentee-message-start-button {
+    align-self: flex-start;
+
+    flex: 0 0 auto;
+
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 38px;
+
+    padding: 0 13px;
+
+    font-size: 12px;
+  }
+
+  .mentee-messages-page .mentee-messages-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-rows:
+      auto
+      minmax(0, 1fr) !important;
+
+    height:
+      min(
+        650px,
+        calc(100dvh - 210px)
+      ) !important;
+
+    min-height: 520px !important;
+
+    border-radius: 14px;
+  }
+
+  .mentee-messages-page .mentee-message-threads {
+    max-height: 156px !important;
+
+    border-right: 0 !important;
+    border-bottom: 1px solid #e4e8ef !important;
+  }
+
+  .mentee-messages-page .mentee-message-threads-heading {
+    padding: 11px 13px !important;
+  }
+
+  .mentee-messages-page .mentee-message-threads-heading h2 {
+    font-size: 14px !important;
+  }
+
+  .mentee-messages-page .mentee-message-thread-list {
+    display: flex !important;
+
+    gap: 7px !important;
+
+    padding: 8px !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    scrollbar-width: thin;
+  }
+
+  .mentee-messages-page .mentee-message-thread {
+    flex: 0 0 min(210px, 72vw) !important;
+
+    min-height: 58px !important;
+
+    padding: 9px 10px !important;
+
+    border: 1px solid #e4e8ef !important;
+    border-radius: 10px !important;
+
+    background: #ffffff !important;
+  }
+
+  .mentee-messages-page .mentee-message-thread.active {
+    border-color: #ffd1bb !important;
+    background: #fff8f4 !important;
+  }
+
+  .mentee-messages-page .mentee-message-thread.active::before {
+    display: none !important;
+  }
+
+  .mentee-messages-page .mentee-message-thread-avatar,
+  .mentee-messages-page .mentee-message-thread-initials {
+    width: 38px !important;
+    height: 38px !important;
+
+    border-radius: 9px !important;
+  }
+
+  .mentee-messages-page .mentee-message-conversation-header {
+    grid-template-columns:
+      auto
+      minmax(0, 1fr)
+      auto !important;
+
+    gap: 9px !important;
+
+    min-height: 66px !important;
+    padding: 9px 11px !important;
+  }
+
+  .mentee-messages-page .mentee-message-mobile-back {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .mentee-messages-page .mentee-message-conversation-title h2 {
+    font-size: 14px !important;
+  }
+
+  .mentee-messages-page .mentee-message-view-mentor {
+    justify-self: end !important;
+
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 32px !important;
+
+    padding: 0 2px !important;
+
+    border: 0 !important;
+
+    color: #c13c00 !important;
+    background: transparent !important;
+
+    font-size: 10px !important;
+  }
+
+  .mentee-messages-page .mentee-message-view-mentor span {
+    display: inline !important;
+  }
+
+  .mentee-messages-page .mentee-message-history {
+    padding: 13px 10px !important;
+  }
+
+  .mentee-messages-page .mentee-message-bubble {
+    max-width: 86% !important;
+
+    padding: 10px 12px !important;
+
+    border-radius: 14px !important;
+  }
+
+  .mentee-messages-page .mentee-message-composer {
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto !important;
+
+    gap: 8px !important;
+
+    padding: 9px 10px !important;
+  }
+
+  .mentee-messages-page .mentee-message-composer textarea {
+    min-height: 42px !important;
+
+    padding: 10px 11px !important;
+
+    font-size: 16px !important;
+  }
+
+  .mentee-messages-page .mentee-message-send-button {
+    width: auto !important;
+    min-width: 74px !important;
+    min-height: 42px !important;
+
+    padding: 0 12px !important;
+
+    font-size: 11px !important;
+  }
+
+  .mentee-messages-page .mentee-message-send-button span {
+    display: inline !important;
+  }
+}
+
+/* ---------- SMALL PHONE ---------- */
+
+@media (max-width: 480px) {
+  .mentee-messages-page .mentee-message-page-toolbar {
+    display: grid !important;
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto !important;
+    align-items: end !important;
+  }
+
+  .mentee-messages-page .mentee-message-page-toolbar > div {
+    min-width: 0;
+  }
+
+  .mentee-messages-page .mentee-message-start-button {
+    min-height: 36px;
+    padding: 0 11px;
+
+    font-size: 11px;
+  }
+
+  .mentee-messages-page .mentee-messages-layout {
+    height:
+      min(
+        620px,
+        calc(100dvh - 190px)
+      ) !important;
+
+    min-height: 500px !important;
+  }
+
+  .mentee-messages-page .mentee-message-thread {
+    flex-basis: min(190px, 70vw) !important;
+  }
+
+  .mentee-messages-page .mentee-message-bubble {
+    max-width: 90% !important;
+  }
+
+  .mentee-messages-page .mentee-message-send-button {
+    min-width: 46px !important;
+    width: 46px !important;
+
+    padding: 0 !important;
+
+    font-size: 0 !important;
+  }
+
+  .mentee-messages-page .mentee-message-send-button span {
+    display: none !important;
+  }
+
+  .mentee-messages-page .mentee-message-send-button svg {
+    width: 17px;
+    height: 17px;
   }
 }

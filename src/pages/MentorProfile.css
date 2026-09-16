@@ -1,0 +1,109 @@
+/* =========================================================
+   MENTOR PROFILE
+   Relationship-aware additions only.
+   Existing profile layout remains in the global stylesheet.
+   ========================================================= */
+
+/* Status surfaces stay clean. They are not filled status pills. */
+
+.mentor-profile-availability.relationship-accepted {
+  border-color: #cde6d5 !important;
+  color: #2f7d4a !important;
+  background: #ffffff !important;
+}
+
+.mentor-profile-availability.relationship-pending {
+  border-color: #ead8b5 !important;
+  color: #b56a00 !important;
+  background: #ffffff !important;
+}
+
+.mentor-profile-availability.relationship-declined {
+  border-color: #ecd0d4 !important;
+  color: #a63d46 !important;
+  background: #ffffff !important;
+}
+
+.mentor-profile-availability.relationship-referred {
+  border-color: #bcded6 !important;
+  color: #087967 !important;
+  background: #ffffff !important;
+}
+
+.mentor-profile-availability.relationship-withdrawn,
+.mentor-profile-availability.relationship-unavailable {
+  border-color: #e4e8ef !important;
+  color: #6f8095 !important;
+  background: #ffffff !important;
+}
+
+.mentor-profile-availability.relationship-available {
+  border-color: #e4e8ef !important;
+  color: #c13c00 !important;
+  background: #ffffff !important;
+}
+
+.mentor-profile-referred-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 170px;
+  padding: 0 16px;
+
+  border: 1px solid #9fcfc4;
+  border-radius: 9px;
+
+  color: #087967;
+  background: #ffffff;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.mentor-profile-referred-action:hover {
+  border-color: #6fb6a6;
+  color: #066454;
+  background: #f4fbf9;
+
+  box-shadow:
+    0 4px 12px
+    rgba(8, 121, 103, 0.10);
+
+  transform: translateY(-1px);
+}
+
+.mentor-profile-referred-action:active {
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+/*
+   Keep profile actions compact on phone/tablet when they fit.
+   Do not force every action to become full-width.
+*/
+@media (max-width: 600px) {
+  .mentor-profile-actions {
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+  }
+
+  .mentor-profile-actions .primary-button,
+  .mentor-profile-actions .secondary-button,
+  .mentor-profile-referred-action {
+    width: auto !important;
+    min-width: 0 !important;
+  }
+}

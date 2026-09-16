@@ -105,37 +105,9 @@ function MentorRequests() {
       const {
         data,
         error: requestError,
-      } = await supabase
-        .from(
-          "mentorship_requests",
-        )
-        .select(`
-          id,
-          mentee_id,
-          mentor_id,
-          mentoring_area,
-          goal_statement,
-          preferred_times,
-          status,
-          created_at,
-          clarification_message,
-          clarification_response,
-          mentee:profiles!mentorship_requests_mentee_id_fkey (
-            full_name,
-            email,
-            profile_photo_url
-          )
-        `)
-        .eq(
-          "mentor_id",
-          user.id,
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false,
-          },
-        );
+      } = await supabase.rpc(
+        "get_my_mentor_requests",
+      );
 
       if (!isMounted) {
         return;
@@ -157,7 +129,32 @@ function MentorRequests() {
       }
 
       setRequests(
-        data ?? [],
+        (data ?? []).map(
+          (request) => ({
+            id:
+              request.id,
+            mentee_id:
+              request.mentee_id,
+            mentoring_area:
+              request.mentoring_area,
+            goal_statement:
+              request.goal_statement,
+            preferred_times:
+              request.preferred_times,
+            status:
+              request.status,
+            created_at:
+              request.created_at,
+            mentee: {
+              full_name:
+                request.mentee_name,
+              email:
+                request.mentee_email,
+              profile_photo_url:
+                request.profile_photo_url,
+            },
+          }),
+        ),
       );
 
       setLoading(false);

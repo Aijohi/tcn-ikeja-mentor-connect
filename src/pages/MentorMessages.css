@@ -1250,3 +1250,453 @@ body:has(.mentor-messages-page)
     min-height: 520px;
   }
 }
+
+
+/* =========================================================
+   FINAL VIEW MENTEE ACTION FIX
+   Keep this action at the far right of the conversation
+   header and remove the oversized hover surface.
+   ========================================================= */
+
+.mentor-messages-page
+.mentor-message-conversation-header
+.mentor-message-view-mentee {
+  justify-self: end !important;
+  align-self: center !important;
+
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: max-content !important;
+
+  min-height: 32px !important;
+  padding: 0 4px !important;
+  margin-left: auto !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  color: #c13c00 !important;
+  background: transparent !important;
+
+  box-shadow: none !important;
+
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+
+  transform: none !important;
+}
+
+.mentor-messages-page
+.mentor-message-conversation-header
+.mentor-message-view-mentee:hover {
+  color: #8f2d00 !important;
+  background: transparent !important;
+
+  box-shadow: none !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px !important;
+
+  transform: none !important;
+}
+
+.mentor-messages-page
+.mentor-message-conversation-header
+.mentor-message-view-mentee:focus-visible {
+  outline: 2px solid rgba(76, 88, 103, 0.32) !important;
+  outline-offset: 3px !important;
+
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 760px) {
+  .mentor-messages-page
+  .mentor-message-conversation-header
+  .mentor-message-view-mentee {
+    justify-self: end !important;
+
+    width: auto !important;
+    max-width: max-content !important;
+
+    padding: 0 2px !important;
+
+    font-size: 10px !important;
+  }
+}
+
+
+/* =========================================================
+   REAL-TIME UNREAD MESSAGE INDICATOR
+   ========================================================= */
+
+.mentor-messages-page .mentor-message-thread {
+  grid-template-columns:
+    42px
+    minmax(0, 1fr)
+    auto !important;
+}
+
+.mentor-messages-page
+.mentor-message-thread.has-unread
+.mentor-message-thread-copy strong {
+  color: #101419;
+  font-weight: 700;
+}
+
+.mentor-message-thread-unread {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+
+  border-radius: 999px;
+
+  color: #ffffff;
+  background: #ff5303;
+
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   FINAL RESPONSIVE MESSAGING POLISH
+   Compact actions, lighter chat colours, better tablet/mobile
+   layout. Buttons remain content-width on every device.
+   ========================================================= */
+
+/* ---------- DESKTOP / SHARED ---------- */
+
+.mentor-messages-page .mentor-message-page-toolbar {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mentor-messages-page .mentor-message-start-button,
+.mentor-messages-page .mentor-message-primary-button,
+.mentor-messages-page .mentor-message-send-button {
+  width: auto !important;
+  max-width: max-content;
+}
+
+.mentor-messages-page .mentor-message-start-button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 15px;
+}
+
+.mentor-messages-page .mentor-message-history {
+  background: #fafbfc !important;
+}
+
+/* Received messages */
+.mentor-messages-page
+.mentor-message-row.theirs
+.mentor-message-bubble {
+  border-color: #e1e6ed !important;
+  color: #2d353f !important;
+  background: #ffffff !important;
+  box-shadow:
+    0 2px 8px
+    rgba(16, 20, 25, 0.025) !important;
+}
+
+/* Sent messages: soft orange instead of black */
+.mentor-messages-page
+.mentor-message-row.mine
+.mentor-message-bubble {
+  border-color: #ffd1bb !important;
+  color: #2d353f !important;
+  background: #fff3ec !important;
+  box-shadow: none !important;
+}
+
+.mentor-messages-page
+.mentor-message-row.mine
+.mentor-message-bubble p {
+  color: #2d353f !important;
+}
+
+.mentor-messages-page
+.mentor-message-row.mine
+.mentor-message-bubble small {
+  color: #9b6a55 !important;
+}
+
+.mentor-messages-page .mentor-message-thread-initials {
+  border: 1px solid #ffd6c2 !important;
+  color: #c13c00 !important;
+  background: #fff2eb !important;
+}
+
+.mentor-messages-page .mentor-message-thread.active {
+  background: #fff8f4 !important;
+}
+
+/* ---------- TABLET ---------- */
+
+@media (max-width: 1024px) {
+  .mentor-messages-page .mentor-message-page-toolbar {
+    gap: 12px;
+  }
+
+  .mentor-messages-page .mentor-message-start-button {
+    margin-left: auto;
+  }
+
+  .mentor-messages-page .mentor-message-bubble {
+    max-width: 82% !important;
+  }
+}
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 760px) {
+  .mentor-messages-page {
+    padding-top: 12px;
+  }
+
+  .mentor-messages-page .mentor-message-page-toolbar {
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+
+    gap: 10px 12px;
+
+    margin-bottom: 12px;
+  }
+
+  .mentor-messages-page .mentor-message-page-toolbar > div {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+
+  .mentor-messages-page .mentor-message-start-button {
+    align-self: flex-start;
+
+    flex: 0 0 auto;
+
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 38px;
+
+    padding: 0 13px;
+
+    font-size: 12px;
+  }
+
+  .mentor-messages-page .mentor-messages-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-rows:
+      auto
+      minmax(0, 1fr) !important;
+
+    height:
+      min(
+        650px,
+        calc(100dvh - 210px)
+      ) !important;
+
+    min-height: 520px !important;
+
+    border-radius: 14px;
+  }
+
+  /* Keep the conversation selector compact and horizontally
+     scrollable instead of using too much vertical space. */
+  .mentor-messages-page .mentor-message-threads {
+    max-height: 156px !important;
+
+    border-right: 0 !important;
+    border-bottom: 1px solid #e4e8ef !important;
+  }
+
+  .mentor-messages-page .mentor-message-threads-heading {
+    padding: 11px 13px !important;
+  }
+
+  .mentor-messages-page .mentor-message-threads-heading h2 {
+    font-size: 14px !important;
+  }
+
+  .mentor-messages-page .mentor-message-thread-list {
+    display: flex !important;
+
+    gap: 7px;
+
+    padding: 8px !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    scrollbar-width: thin;
+  }
+
+  .mentor-messages-page .mentor-message-thread {
+    flex: 0 0 min(210px, 72vw);
+
+    min-height: 58px;
+
+    padding: 9px 10px !important;
+
+    border: 1px solid #e4e8ef !important;
+    border-radius: 10px !important;
+
+    background: #ffffff !important;
+  }
+
+  .mentor-messages-page .mentor-message-thread.active {
+    border-color: #ffd1bb !important;
+    background: #fff8f4 !important;
+  }
+
+  .mentor-messages-page .mentor-message-thread.active::before {
+    display: none !important;
+  }
+
+  .mentor-messages-page .mentor-message-thread-avatar,
+  .mentor-messages-page .mentor-message-thread-initials {
+    width: 38px !important;
+    height: 38px !important;
+
+    border-radius: 9px !important;
+  }
+
+  .mentor-messages-page .mentor-message-conversation-header {
+    grid-template-columns:
+      auto
+      minmax(0, 1fr)
+      auto !important;
+
+    gap: 9px !important;
+
+    min-height: 66px !important;
+    padding: 9px 11px !important;
+  }
+
+  .mentor-messages-page .mentor-message-mobile-back {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .mentor-messages-page .mentor-message-conversation-title h2 {
+    font-size: 14px !important;
+  }
+
+  .mentor-messages-page
+  .mentor-message-conversation-header
+  .mentor-message-view-mentee {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 32px !important;
+
+    padding: 0 2px !important;
+
+    font-size: 10px !important;
+  }
+
+  .mentor-messages-page .mentor-message-history {
+    padding: 13px 10px !important;
+  }
+
+  .mentor-messages-page .mentor-message-bubble {
+    max-width: 86% !important;
+
+    padding: 10px 12px !important;
+
+    border-radius: 14px !important;
+  }
+
+  .mentor-messages-page .mentor-message-composer {
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto !important;
+
+    gap: 8px !important;
+
+    padding: 9px 10px !important;
+  }
+
+  .mentor-messages-page .mentor-message-composer textarea {
+    min-height: 42px !important;
+
+    padding: 10px 11px !important;
+
+    font-size: 16px !important;
+  }
+
+  .mentor-messages-page .mentor-message-send-button {
+    width: auto !important;
+    min-width: 74px !important;
+    min-height: 42px !important;
+
+    padding: 0 12px !important;
+
+    font-size: 11px !important;
+  }
+}
+
+/* ---------- SMALL PHONE ---------- */
+
+@media (max-width: 480px) {
+  .mentor-messages-page .mentor-message-page-toolbar {
+    display: grid !important;
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto !important;
+    align-items: end !important;
+  }
+
+  .mentor-messages-page .mentor-message-page-toolbar > div {
+    min-width: 0;
+  }
+
+  .mentor-messages-page .mentor-message-start-button {
+    min-height: 36px;
+    padding: 0 11px;
+
+    font-size: 11px;
+  }
+
+  .mentor-messages-page .mentor-messages-layout {
+    height:
+      min(
+        620px,
+        calc(100dvh - 190px)
+      ) !important;
+
+    min-height: 500px !important;
+  }
+
+  .mentor-messages-page .mentor-message-thread {
+    flex-basis: min(190px, 70vw);
+  }
+
+  .mentor-messages-page .mentor-message-bubble {
+    max-width: 90% !important;
+  }
+
+  .mentor-messages-page .mentor-message-send-button {
+    min-width: 46px !important;
+    width: 46px !important;
+
+    padding: 0 !important;
+
+    font-size: 0 !important;
+  }
+
+  .mentor-messages-page .mentor-message-send-button span {
+    display: none !important;
+  }
+
+  .mentor-messages-page .mentor-message-send-button svg {
+    width: 17px;
+    height: 17px;
+  }
+}

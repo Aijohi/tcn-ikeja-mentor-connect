@@ -10,6 +10,7 @@ import {
   HeartHandshake,
   MessageCircle,
   Send,
+  UserRound,
   X,
 } from "lucide-react";
 
@@ -79,27 +80,35 @@ function MenteeMessages() {
       setError("");
 
       const {
-        data: acceptedRequests,
+        data: acceptedRows,
         error: requestError,
-      } = await supabase
-        .from("mentorship_requests")
-        .select(`
-          id,
-          mentor_id,
-          mentoring_area,
-          goal_statement,
-          status,
-          created_at,
-          mentor:profiles!mentorship_requests_mentor_id_fkey (
-            full_name,
-            profile_photo_url
-          )
-        `)
-        .eq("mentee_id", user.id)
-        .eq("status", "accepted")
-        .order("created_at", {
-          ascending: false,
-        });
+      } = await supabase.rpc(
+        "get_my_accepted_mentors_for_messaging",
+      );
+
+      const acceptedRequests =
+        (acceptedRows ?? []).map(
+          (row) => ({
+            id:
+              row.request_id,
+            mentor_id:
+              row.mentor_id,
+            mentoring_area:
+              row.mentoring_area,
+            goal_statement:
+              row.goal_statement,
+            status:
+              row.status,
+            created_at:
+              row.created_at,
+            mentor: {
+              full_name:
+                row.mentor_name,
+              profile_photo_url:
+                row.profile_photo_url,
+            },
+          }),
+        );
 
       if (!isMounted) {
         return;
@@ -127,11 +136,19 @@ function MenteeMessages() {
         setEligibleMentors([]);
         setThreads([]);
         setSelectedThreadId(null);
+
+        if (requestedMentorId) {
+          setError(
+            "We could not find an accepted mentorship with this mentor. Refresh My requests and confirm the request is still accepted.",
+          );
+        }
+
         setLoading(false);
         return;
       }
 
       const preparedMentors = [];
+      let firstConversationError = "";
 
       for (const request of accepted) {
         const {
@@ -149,6 +166,12 @@ function MenteeMessages() {
             `Unable to prepare conversation for request ${request.id}:`,
             conversationError.message,
           );
+
+          if (!firstConversationError) {
+            firstConversationError =
+              conversationError.message ||
+              "We could not prepare this conversation.";
+          }
 
           continue;
         }
@@ -176,6 +199,17 @@ function MenteeMessages() {
 
       setEligibleMentors(preparedMentors);
 
+      if (preparedMentors.length === 0) {
+        setThreads([]);
+        setSelectedThreadId(null);
+        setError(
+          firstConversationError ||
+            "Your mentorship is accepted, but the conversation could not be prepared.",
+        );
+        setLoading(false);
+        return;
+      }
+
       const conversationIds =
         preparedMentors.map(
           (item) => item.conversationId,
@@ -184,13 +218,23 @@ function MenteeMessages() {
       let existingConversationIds =
         new Set();
 
+      let messageSummaryByConversation =
+        new Map();
+
       if (conversationIds.length > 0) {
         const {
           data: existingMessages,
           error: existingMessageError,
         } = await supabase
           .from("mentorship_messages")
-          .select("conversation_id")
+          .select(`
+            conversation_id,
+            sender_id,
+            recipient_id,
+            body,
+            read_at,
+            created_at
+          `)
           .in(
             "conversation_id",
             conversationIds,
@@ -209,6 +253,12 @@ function MenteeMessages() {
             ),
           );
         }
+
+        messageSummaryByConversation =
+          buildMessageSummaryByConversation(
+            existingMessages ?? [],
+            user.id,
+          );
       }
 
       if (!isMounted) {
@@ -216,12 +266,22 @@ function MenteeMessages() {
       }
 
       let preparedThreads =
-        preparedMentors.filter(
-          (item) =>
-            existingConversationIds.has(
-              item.conversationId,
-            ),
-        );
+        preparedMentors
+          .filter(
+            (item) =>
+              existingConversationIds.has(
+                item.conversationId,
+              ),
+          )
+          .map(
+            (item) => ({
+              ...item,
+              ...getConversationSummary(
+                messageSummaryByConversation,
+                item.conversationId,
+              ),
+            }),
+          );
 
       const requestedMentor =
         requestedMentorId
@@ -242,7 +302,13 @@ function MenteeMessages() {
 
         if (!alreadyInThreads) {
           preparedThreads = [
-            requestedMentor,
+            {
+              ...requestedMentor,
+              ...getConversationSummary(
+                messageSummaryByConversation,
+                requestedMentor.conversationId,
+              ),
+            },
             ...preparedThreads,
           ];
         }
@@ -360,6 +426,26 @@ function MenteeMessages() {
           "Unable to mark messages as read:",
           readError.message,
         );
+      } else {
+        setThreads(
+          (current) =>
+            current.map(
+              (thread) =>
+                thread.conversationId ===
+                selectedThreadId
+                  ? {
+                      ...thread,
+                      unreadCount: 0,
+                    }
+                  : thread,
+            ),
+        );
+
+        window.dispatchEvent(
+          new CustomEvent(
+            "mentorship:messages-read",
+          ),
+        );
       }
     }
 
@@ -371,6 +457,172 @@ function MenteeMessages() {
   }, [
     selectedThreadId,
     user?.id,
+  ]);
+
+  useEffect(() => {
+    if (
+      !user?.id ||
+      eligibleMentors.length === 0
+    ) {
+      return undefined;
+    }
+
+    const channel =
+      supabase
+        .channel(
+          `mentee-message-thread-live-${user.id}`,
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table:
+              "mentorship_messages",
+          },
+          async (
+            payload,
+          ) => {
+            const incoming =
+              payload.new;
+
+            if (
+              incoming.sender_id !==
+                user.id &&
+              incoming.recipient_id !==
+                user.id
+            ) {
+              return;
+            }
+
+            const connection =
+              eligibleMentors.find(
+                (item) =>
+                  item.conversationId ===
+                  incoming.conversation_id,
+              );
+
+            if (!connection) {
+              return;
+            }
+
+            setThreads(
+              (current) => {
+                const exists =
+                  current.some(
+                    (thread) =>
+                      thread.conversationId ===
+                      incoming.conversation_id,
+                  );
+
+                const isIncoming =
+                  incoming.recipient_id ===
+                  user.id;
+
+                const isOpen =
+                  incoming.conversation_id ===
+                  selectedThreadId;
+
+                const updateThread =
+                  (thread) => ({
+                    ...thread,
+                    lastMessage:
+                      incoming.body,
+                    lastMessageAt:
+                      incoming.created_at,
+                    unreadCount:
+                      isIncoming &&
+                      !isOpen
+                        ? Number(
+                            thread.unreadCount ??
+                              0,
+                          ) + 1
+                        : isOpen
+                          ? 0
+                          : Number(
+                              thread.unreadCount ??
+                                0,
+                            ),
+                  });
+
+                if (exists) {
+                  return current.map(
+                    (thread) =>
+                      thread.conversationId ===
+                      incoming.conversation_id
+                        ? updateThread(
+                            thread,
+                          )
+                        : thread,
+                  );
+                }
+
+                return [
+                  updateThread({
+                    ...connection,
+                    unreadCount: 0,
+                  }),
+                  ...current,
+                ];
+              },
+            );
+
+            if (
+              incoming.conversation_id ===
+              selectedThreadId
+            ) {
+              setMessages(
+                (current) => {
+                  const exists =
+                    current.some(
+                      (message) =>
+                        message.id ===
+                        incoming.id,
+                    );
+
+                  if (exists) {
+                    return current;
+                  }
+
+                  return [
+                    ...current,
+                    incoming,
+                  ];
+                },
+              );
+
+              if (
+                incoming.recipient_id ===
+                user.id
+              ) {
+                await supabase.rpc(
+                  "mark_mentorship_messages_read",
+                  {
+                    p_conversation_id:
+                      selectedThreadId,
+                  },
+                );
+
+                window.dispatchEvent(
+                  new CustomEvent(
+                    "mentorship:messages-read",
+                  ),
+                );
+              }
+            }
+          },
+        )
+        .subscribe();
+
+    return () => {
+      supabase.removeChannel(
+        channel,
+      );
+    };
+  }, [
+    user?.id,
+    eligibleMentors,
+    selectedThreadId,
   ]);
 
   useEffect(() => {
@@ -396,12 +648,6 @@ function MenteeMessages() {
       return undefined;
     }
 
-    const previousOverflow =
-      document.body.style.overflow;
-
-    document.body.style.overflow =
-      "hidden";
-
     function handleEscape(event) {
       if (
         event.key === "Escape"
@@ -418,9 +664,6 @@ function MenteeMessages() {
     );
 
     return () => {
-      document.body.style.overflow =
-        previousOverflow;
-
       document.removeEventListener(
         "keydown",
         handleEscape,
@@ -627,7 +870,7 @@ function MenteeMessages() {
             </span>
 
             <h2>
-              Unable to load messages
+              Conversation could not open
             </h2>
 
             <p>{error}</p>
@@ -843,6 +1086,10 @@ function MenteeMessages() {
                       )
                     }
                   >
+                    <UserRound
+                      size={15}
+                    />
+
                     View mentor
                   </button>
                 </header>
@@ -1133,6 +1380,12 @@ function MessageThreadButton({
       type="button"
       className={`mentee-message-thread ${
         active ? "active" : ""
+      } ${
+        Number(
+          thread.unreadCount ?? 0,
+        ) > 0
+          ? "has-unread"
+          : ""
       }`}
       onClick={onClick}
     >
@@ -1150,6 +1403,23 @@ function MessageThreadButton({
             "Mentorship"}
         </small>
       </span>
+
+      {Number(
+        thread.unreadCount ?? 0,
+      ) > 0 && (
+        <span
+          className="mentee-message-thread-unread"
+          aria-label={`${thread.unreadCount} unread ${
+            thread.unreadCount === 1
+              ? "message"
+              : "messages"
+          }`}
+        >
+          {thread.unreadCount > 99
+            ? "99+"
+            : thread.unreadCount}
+        </span>
+      )}
     </button>
   );
 }
@@ -1226,6 +1496,81 @@ function getConversationId(
     conversation.id ??
     conversation.conversation_id ??
     null
+  );
+}
+
+function buildMessageSummaryByConversation(
+  messages,
+  userId,
+) {
+  const summaries =
+    new Map();
+
+  for (
+    const message of messages
+  ) {
+    const conversationId =
+      message.conversation_id;
+
+    if (!conversationId) {
+      continue;
+    }
+
+    const current =
+      summaries.get(
+        conversationId,
+      ) ?? {
+        unreadCount: 0,
+        lastMessage: "",
+        lastMessageAt: null,
+      };
+
+    if (
+      message.recipient_id ===
+        userId &&
+      !message.read_at
+    ) {
+      current.unreadCount +=
+        1;
+    }
+
+    if (
+      !current.lastMessageAt ||
+      new Date(
+        message.created_at,
+      ).getTime() >
+        new Date(
+          current.lastMessageAt,
+        ).getTime()
+    ) {
+      current.lastMessage =
+        message.body ?? "";
+
+      current.lastMessageAt =
+        message.created_at;
+    }
+
+    summaries.set(
+      conversationId,
+      current,
+    );
+  }
+
+  return summaries;
+}
+
+function getConversationSummary(
+  summaryMap,
+  conversationId,
+) {
+  return (
+    summaryMap.get(
+      conversationId,
+    ) ?? {
+      unreadCount: 0,
+      lastMessage: "",
+      lastMessageAt: null,
+    }
   );
 }
 

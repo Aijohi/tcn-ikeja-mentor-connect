@@ -204,3 +204,18 @@
     font-size: 11px;
   }
 }
+
+
+/* =========================================================
+   ACCEPTED REQUEST MESSAGE ACTION
+   ========================================================= */
+
+.mentee-request-table-link.is-message {
+  color: #c13c00;
+  font-weight: 600;
+}
+
+.mentee-request-table-link.is-message:hover {
+  color: #8f2d00;
+  background: #fff7f3;
+}

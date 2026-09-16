@@ -1,0 +1,437 @@
+/* =========================================================
+   TCN IKEJA MENTOR CONNECT
+   PLATFORM VISUAL CLEANUP
+   Load this stylesheet LAST from App.jsx.
+   ========================================================= */
+
+/* =========================================================
+   1. DASHBOARD FORM FIELD BASELINE
+   ========================================================= */
+
+.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+.dashboard-layout select,
+.dashboard-layout textarea {
+  border: 1px solid #c9d2df !important;
+  outline: none !important;
+
+  color: #101419 !important;
+  background-color: #ffffff !important;
+
+  box-shadow: none !important;
+
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):hover,
+.dashboard-layout select:hover,
+.dashboard-layout textarea:hover {
+  border-color: #97aac2 !important;
+}
+
+.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
+.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus-visible,
+.dashboard-layout select:focus,
+.dashboard-layout select:focus-visible,
+.dashboard-layout textarea:focus,
+.dashboard-layout textarea:focus-visible {
+  border-color: #4c5867 !important;
+  outline: none !important;
+
+  background-color: #ffffff !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.10) !important;
+}
+
+.dashboard-layout input::placeholder,
+.dashboard-layout textarea::placeholder {
+  color: #97aac2 !important;
+}
+
+/* =========================================================
+   2. SEARCH FIELDS WITH A WRAPPER
+   ========================================================= */
+
+.dashboard-search-field {
+  border-color: #c9d2df !important;
+  outline: none !important;
+}
+
+.dashboard-search-field:focus-within {
+  border-color: #4c5867 !important;
+  outline: none !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.10) !important;
+}
+
+/*
+   Find a mentor uses a bordered wrapper, so its inner input
+   must stay borderless.
+*/
+.dashboard-search-field input,
+.dashboard-search-field input:hover,
+.dashboard-search-field input:focus,
+.dashboard-search-field input:focus-visible,
+.dashboard-search-field input:active {
+  border: 0 !important;
+  outline: 0 !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+}
+
+/*
+   Mentorship requests and My mentees use the INPUT itself
+   as the visible field. Their wrappers must NOT draw another
+   border or focus ring, otherwise a second line appears inside.
+*/
+.mentor-requests-search,
+.mentor-requests-search:focus-within,
+.mentor-mentees-search,
+.mentor-mentees-search:focus-within {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+.dashboard-search-field:focus-within > svg,
+.mentor-requests-search:focus-within > svg,
+.mentor-mentees-search:focus-within > svg {
+  color: #ff5303 !important;
+}
+
+/* =========================================================
+   3. SPECIFIC DASHBOARD FORM SAFETY
+   ========================================================= */
+
+.mentee-profile-form input:focus,
+.mentee-profile-form input:focus-visible,
+.mentee-profile-form select:focus,
+.mentee-profile-form select:focus-visible,
+.mentee-profile-form textarea:focus,
+.mentee-profile-form textarea:focus-visible,
+
+.mentor-my-profile-page input:focus,
+.mentor-my-profile-page input:focus-visible,
+.mentor-my-profile-page select:focus,
+.mentor-my-profile-page select:focus-visible,
+.mentor-my-profile-page textarea:focus,
+.mentor-my-profile-page textarea:focus-visible,
+
+.mentor-application-form input:focus,
+.mentor-application-form input:focus-visible,
+.mentor-application-form select:focus,
+.mentor-application-form select:focus-visible,
+.mentor-application-form textarea:focus,
+.mentor-application-form textarea:focus-visible,
+
+.mentor-schedule-session-page input:focus,
+.mentor-schedule-session-page input:focus-visible,
+.mentor-schedule-session-page select:focus,
+.mentor-schedule-session-page select:focus-visible,
+.mentor-schedule-session-page textarea:focus,
+.mentor-schedule-session-page textarea:focus-visible,
+
+.mentee-message-composer textarea:focus,
+.mentee-message-composer textarea:focus-visible,
+.mentor-message-composer textarea:focus,
+.mentor-message-composer textarea:focus-visible,
+
+.mentor-request-modal textarea:focus,
+.mentor-request-modal textarea:focus-visible {
+  border-color: #4c5867 !important;
+  outline: none !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.10) !important;
+}
+
+/* =========================================================
+   4. MENTOR REQUEST SEARCH
+   ========================================================= */
+
+.mentor-requests-search input,
+.mentor-requests-search input:hover {
+  border: 1px solid #c9d2df !important;
+  outline: none !important;
+
+  background: #ffffff !important;
+
+  box-shadow: none !important;
+}
+
+.mentor-requests-search input:focus,
+.mentor-requests-search input:focus-visible {
+  border: 1px solid #4c5867 !important;
+  outline: none !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.10) !important;
+}
+
+/* =========================================================
+   5. MENTOR PROFILE POLISH
+   ========================================================= */
+
+.mentor-profile-hero,
+.mentor-profile-card {
+  border-color: #e4e8ef !important;
+
+  background: #ffffff !important;
+  background-image: none !important;
+}
+
+.mentor-profile-hero {
+  box-shadow:
+    0 8px 24px
+    rgba(16, 20, 25, 0.025);
+}
+
+.mentor-profile-avatar.mentor-profile-initials {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #2d353f !important;
+  border-radius: 18px !important;
+
+  color: #ffffff !important;
+  background: #101419 !important;
+  background-image: none !important;
+
+  font-size: 20px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0.02em;
+
+  box-shadow:
+    0 0 0 4px #ffffff,
+    0 0 0 5px #ffd8c6 !important;
+}
+
+.mentor-profile-avatar.mentor-profile-initials::after {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+
+  width: 10px;
+  height: 10px;
+
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+
+  background: #ff5303;
+
+  content: "";
+}
+
+img.mentor-profile-avatar {
+  border: 1px solid #e4e8ef;
+  background: #f8f9fb;
+
+  box-shadow:
+    0 0 0 4px #ffffff,
+    0 0 0 5px #e4e8ef;
+}
+
+.mentor-profile-availability {
+  border: 1px solid #e4e8ef !important;
+
+  color: #c13c00 !important;
+  background: #fbfcfd !important;
+  background-image: none !important;
+
+  box-shadow: none !important;
+}
+
+.mentor-profile-availability small {
+  color: #6f8095 !important;
+}
+
+.mentor-profile-availability.at-capacity {
+  border-color: #f0d4d8 !important;
+
+  color: #a63d46 !important;
+  background: #fff7f8 !important;
+}
+
+.mentor-profile-tags span {
+  border: 1px solid #ffd9c9 !important;
+
+  color: #c13c00 !important;
+  background: #fff9f6 !important;
+}
+
+.mentor-profile-detail-row svg {
+  color: #ff5303 !important;
+}
+
+/* =========================================================
+   6. MOBILE INPUT SAFETY
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  .dashboard-layout select,
+  .dashboard-layout textarea {
+    font-size: 16px !important;
+  }
+
+  .mentor-profile-avatar {
+    width: 64px !important;
+    height: 64px !important;
+    flex-basis: 64px !important;
+  }
+
+  .mentor-profile-avatar.mentor-profile-initials {
+    font-size: 17px !important;
+  }
+}
+
+
+/* =========================================================
+   FIND A MENTOR SEARCH - FINAL INNER LINE FIX
+   The wrapper is the only visible field border.
+   ========================================================= */
+
+body .dashboard-layout .dashboard-search-field
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+body .dashboard-layout .dashboard-search-field
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):hover,
+body .dashboard-layout .dashboard-search-field
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
+body .dashboard-layout .dashboard-search-field
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus-visible,
+body .dashboard-layout .dashboard-search-field
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):active {
+  border: 0 !important;
+  border-left: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+body .dashboard-layout .dashboard-search-field {
+  overflow: hidden !important;
+}
+
+
+/* =========================================================
+   FIND A MENTOR / REQUEST FLOW SEARCH
+   The current FindMentor page uses .request-flow-search,
+   not .dashboard-search-field.
+   The wrapper owns the ONLY visible border.
+   ========================================================= */
+
+body .dashboard-layout .request-flow-search {
+  border: 1px solid #c9d2df !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+body .dashboard-layout .request-flow-search:hover {
+  border-color: #97aac2 !important;
+}
+
+body .dashboard-layout .request-flow-search:focus-within {
+  border-color: #4c5867 !important;
+  outline: 0 !important;
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.10) !important;
+}
+
+body .dashboard-layout .request-flow-search
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+body .dashboard-layout .request-flow-search
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):hover,
+body .dashboard-layout .request-flow-search
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
+body .dashboard-layout .request-flow-search
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus-visible,
+body .dashboard-layout .request-flow-search
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):active {
+  border: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+body .dashboard-layout .request-flow-search:focus-within > svg {
+  color: #ff5303 !important;
+}
+
+
+/* =========================================================
+   PENDING STATUS - TEXT ONLY
+   No pill, no filled background.
+   Applies to mentee and mentor request status labels only.
+   ========================================================= */
+
+body .dashboard-layout
+.mentee-request-status.status-pending,
+body .dashboard-layout
+.mentor-request-status.status-pending {
+  min-height: auto !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  color: #b56a00 !important;
+  background: transparent !important;
+  background-image: none !important;
+
+  box-shadow: none !important;
+}
+
+/* Mentor request status already has a small dot.
+   Keep the dot, but never give the label a filled canvas. */
+body .dashboard-layout
+.mentor-request-status.status-pending > i {
+  background: #b56a00 !important;
+}
+
+
+/* =========================================================
+   ACCEPTED STATUS - GREEN TEXT ONLY
+   Positive state, no pill, no filled background.
+   Applies to mentee and mentor request status labels.
+   ========================================================= */
+
+body .dashboard-layout
+.mentee-request-status.status-accepted,
+body .dashboard-layout
+.mentor-request-status.status-accepted {
+  min-height: auto !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  color: #2f7d4a !important;
+  background: transparent !important;
+  background-image: none !important;
+
+  box-shadow: none !important;
+}
+
+/* Mentor table statuses already include a dot. Keep it green. */
+body .dashboard-layout
+.mentor-request-status.status-accepted > i {
+  background: #2f7d4a !important;
+}

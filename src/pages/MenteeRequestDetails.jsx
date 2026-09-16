@@ -23,6 +23,8 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
+import "./MenteeRequestDetails.css";
+
 const statusContent = {
   pending: {
     label: "Pending",
@@ -86,6 +88,9 @@ function MenteeRequestDetails() {
   const [showWithdrawConfirmation, setShowWithdrawConfirmation] =
     useState(false);
 
+  const [withdrawalReason, setWithdrawalReason] =
+    useState("");
+
   useEffect(() => {
     let isMounted = true;
 
@@ -113,6 +118,11 @@ function MenteeRequestDetails() {
             clarification_response,
             clarification_requested_at,
             clarification_responded_at,
+            decline_reason,
+            declined_at,
+            referral_reason,
+            referred_at,
+            withdrawal_reason,
             withdrawn_at,
             created_at,
             mentor:profiles!mentorship_requests_mentor_id_fkey (
@@ -273,6 +283,11 @@ function MenteeRequestDetails() {
             clarification_response,
             clarification_requested_at,
             clarification_responded_at,
+            decline_reason,
+            declined_at,
+            referral_reason,
+            referred_at,
+            withdrawal_reason,
             withdrawn_at,
             created_at,
             mentor:profiles!mentorship_requests_mentor_id_fkey (
@@ -306,6 +321,16 @@ function MenteeRequestDetails() {
       return;
     }
 
+    const reason =
+      withdrawalReason.trim();
+
+    if (!reason) {
+      setError(
+        "Please state why you are withdrawing this mentorship request.",
+      );
+      return;
+    }
+
     setProcessing(true);
     setError("");
     setSuccess("");
@@ -314,7 +339,10 @@ function MenteeRequestDetails() {
       await supabase.rpc(
         "withdraw_mentorship_request",
         {
-          p_request_id: request.id,
+          p_request_id:
+            request.id,
+          p_reason:
+            reason,
         },
       );
 
@@ -341,6 +369,7 @@ function MenteeRequestDetails() {
       );
 
       setShowWithdrawConfirmation(false);
+      setWithdrawalReason("");
     } catch (refreshError) {
       console.error(refreshError);
 
@@ -683,6 +712,32 @@ function MenteeRequestDetails() {
           </section>
         )}
 
+        {getOutcomeReason(
+          request,
+          statusKey,
+        ) && (
+          <section className="mentee-request-outcome-reason">
+            <span className="eyebrow">
+              {getOutcomeReasonLabel(
+                statusKey,
+              )}
+            </span>
+
+            <h3>
+              {getOutcomeReasonTitle(
+                statusKey,
+              )}
+            </h3>
+
+            <p>
+              {getOutcomeReason(
+                request,
+                statusKey,
+              )}
+            </p>
+          </section>
+        )}
+
         <section className="mentee-request-detail-actions-card">
           <div>
             <span className="eyebrow">
@@ -725,7 +780,7 @@ function MenteeRequestDetails() {
                   className="secondary-button"
                   onClick={() =>
                     navigate(
-                      "/mentee/messages",
+                      `/mentee/messages?mentor=${request.mentor_id}`,
                     )
                   }
                 >
@@ -777,6 +832,7 @@ function MenteeRequestDetails() {
                   setShowWithdrawConfirmation(
                     true,
                   );
+                  setWithdrawalReason("");
 
                   setError("");
                   setSuccess("");
@@ -804,15 +860,41 @@ function MenteeRequestDetails() {
               </p>
             </div>
 
+            <label className="mentee-request-withdraw-reason">
+              <span>
+                Reason for withdrawing *
+              </span>
+
+              <textarea
+                value={
+                  withdrawalReason
+                }
+                rows={4}
+                placeholder="Tell the mentor why you are withdrawing this request."
+                onChange={(event) => {
+                  setWithdrawalReason(
+                    event.target.value,
+                  );
+
+                  setError("");
+                }}
+              />
+
+              <small>
+                This reason will be visible to the mentor and kept in the request history.
+              </small>
+            </label>
+
             <div>
               <button
                 type="button"
                 className="secondary-button"
-                onClick={() =>
+                onClick={() => {
                   setShowWithdrawConfirmation(
                     false,
-                  )
-                }
+                  );
+                  setWithdrawalReason("");
+                }}
                 disabled={processing}
               >
                 Keep request
@@ -834,6 +916,70 @@ function MenteeRequestDetails() {
       </section>
     </DashboardLayout>
   );
+}
+
+function getOutcomeReason(
+  request,
+  status,
+) {
+  switch (status) {
+    case "declined":
+      return (
+        request?.decline_reason ||
+        null
+      );
+
+    case "referred":
+      return (
+        request?.referral_reason ||
+        null
+      );
+
+    case "withdrawn":
+      return (
+        request?.withdrawal_reason ||
+        null
+      );
+
+    default:
+      return null;
+  }
+}
+
+function getOutcomeReasonLabel(
+  status,
+) {
+  switch (status) {
+    case "declined":
+      return "REASON FROM MENTOR";
+
+    case "referred":
+      return "REFERRAL REASON";
+
+    case "withdrawn":
+      return "YOUR WITHDRAWAL REASON";
+
+    default:
+      return "REQUEST NOTE";
+  }
+}
+
+function getOutcomeReasonTitle(
+  status,
+) {
+  switch (status) {
+    case "declined":
+      return "Why the mentor declined this request";
+
+    case "referred":
+      return "Why another mentor may be a better match";
+
+    case "withdrawn":
+      return "Why you withdrew this request";
+
+    default:
+      return "Request information";
+  }
 }
 
 function getNextStepTitle(

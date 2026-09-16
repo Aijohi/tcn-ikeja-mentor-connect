@@ -6,6 +6,7 @@ import {
   ExternalLink,
   MapPin,
   Monitor,
+  Plus,
   UserRound,
   X,
 } from "lucide-react";
@@ -16,6 +17,10 @@ import {
   useState,
 } from "react";
 
+import {
+  useNavigate,
+} from "react-router-dom";
+
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -23,6 +28,7 @@ import { supabase } from "../lib/supabase";
 import "./MentorSessions.css";
 
 function MentorSessions() {
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [sessions, setSessions] = useState([]);
@@ -417,7 +423,7 @@ function MentorSessions() {
       title="My sessions"
       description="View your upcoming and previous mentoring sessions."
     >
-      <section className="mentor-sessions-summary">
+      <section className="mentor-sessions-summary mentor-sessions-summary--with-action">
         <div>
           <span className="mentor-sessions-eyebrow">
             YOUR MENTORING SCHEDULE
@@ -431,6 +437,19 @@ function MentorSessions() {
             Upcoming sessions, meeting details and previous sessions will appear here.
           </p>
         </div>
+
+        <button
+          type="button"
+          className="primary-button mentor-schedule-session-button"
+          onClick={() =>
+            navigate(
+              "/mentor/sessions/new",
+            )
+          }
+        >
+          <Plus size={16} />
+          Schedule session
+        </button>
       </section>
 
       <div className="mentor-session-tabs">

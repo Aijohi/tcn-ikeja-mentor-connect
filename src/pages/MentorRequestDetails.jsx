@@ -50,11 +50,17 @@ const ACTIONS = {
     title:
       "What would you like the mentee to clarify?",
     description:
-      "The request will pause until the mentee responds. Their reply returns the request to Pending.",
+      "The request will pause until the mentee responds. Your question will be shown to the mentee.",
     button:
       "Send clarification request",
     requiresMessage:
       true,
+    messageLabel:
+      "Clarification question *",
+    messagePlaceholder:
+      "What additional information do you need from the mentee?",
+    validationMessage:
+      "Please write the clarification you need from the mentee.",
     danger:
       false,
   },
@@ -65,11 +71,17 @@ const ACTIONS = {
     title:
       "Decline this mentorship request?",
     description:
-      "The request will be closed. You can optionally leave a short explanation for the record.",
+      "This closes the request. A reason is required and will be shown to the mentee.",
     button:
       "Decline request",
     requiresMessage:
-      false,
+      true,
+    messageLabel:
+      "Reason for declining *",
+    messagePlaceholder:
+      "Explain why you are unable to accept this mentorship request.",
+    validationMessage:
+      "Please state why you are declining this mentorship request.",
     danger:
       true,
   },
@@ -78,13 +90,19 @@ const ACTIONS = {
     eyebrow:
       "REFER REQUEST",
     title:
-      "Refer this request for matching support?",
+      "Refer this mentee for another match?",
     description:
-      "The request will be marked as referred so the mentoring team can help the mentee find another suitable match.",
+      "This closes the request as referred. A reason is required and will be shown to the mentee.",
     button:
-      "Refer request",
+      "Refer for matching",
     requiresMessage:
-      false,
+      true,
+    messageLabel:
+      "Reason for referral *",
+    messagePlaceholder:
+      "Explain why another mentor may be a better match.",
+    validationMessage:
+      "Please state why you are referring this mentee for another match.",
     danger:
       false,
   },
@@ -145,123 +163,102 @@ function MentorRequestDetails() {
     let isMounted = true;
 
     async function loadPage() {
-      if (
-        !user?.id ||
-        !requestId
-      ) {
+      if (!user?.id) {
+        return;
+      }
+
+      if (!requestId) {
+        setError(
+          "This mentorship request link is incomplete.",
+        );
+        setLoading(false);
         return;
       }
 
       setLoading(true);
       setError("");
 
-      const {
-        data,
-        error:
-          requestError,
-      } = await supabase
-        .from(
-          "mentorship_requests",
-        )
-        .select(`
-          id,
-          mentee_id,
-          mentor_id,
-          mentoring_area,
-          goal_statement,
-          reason_for_choosing_mentor,
-          preferred_times,
-          status,
-          clarification_message,
-          clarification_response,
-          clarification_requested_at,
-          clarification_responded_at,
-          created_at,
-          mentee:profiles!mentorship_requests_mentee_id_fkey (
-            full_name,
-            email,
-            profile_photo_url
-          )
-        `)
-        .eq(
-          "id",
-          requestId,
-        )
-        .eq(
-          "mentor_id",
-          user.id,
-        )
-        .maybeSingle();
+      try {
+        const {
+          data,
+          error:
+            requestError,
+        } = await withTimeout(
+          supabase.rpc(
+            "get_mentor_request_details",
+            {
+              p_request_id:
+                requestId,
+            },
+          ),
+          15000,
+        );
 
-      if (!isMounted) {
-        return;
-      }
+        if (!isMounted) {
+          return;
+        }
 
-      if (requestError) {
+        if (requestError) {
+          console.error(
+            "Unable to load mentor request:",
+            requestError.message,
+          );
+
+          setError(
+            requestError.message ||
+              "We could not load this mentorship request. Please try again.",
+          );
+
+          setRequest(null);
+          setMenteeProfile(null);
+          return;
+        }
+
+        if (!data) {
+          setError(
+            "This mentorship request could not be found.",
+          );
+
+          setRequest(null);
+          setMenteeProfile(null);
+          return;
+        }
+
+        const {
+          mentee_profile:
+            loadedMenteeProfile,
+          ...loadedRequest
+        } = data;
+
+        setRequest(
+          loadedRequest,
+        );
+
+        setMenteeProfile(
+          loadedMenteeProfile ??
+            null,
+        );
+      } catch (loadError) {
+        if (!isMounted) {
+          return;
+        }
+
         console.error(
-          "Unable to load mentor request:",
-          requestError.message,
+          "Mentor request details timed out or failed:",
+          loadError,
         );
 
         setError(
-          "We could not load this mentorship request. Please try again.",
+          "This request is taking too long to load. Please try again.",
         );
 
-        setLoading(false);
-        return;
+        setRequest(null);
+        setMenteeProfile(null);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-
-      if (!data) {
-        setError(
-          "This mentorship request could not be found.",
-        );
-
-        setLoading(false);
-        return;
-      }
-
-      const {
-        data:
-          menteeData,
-        error:
-          menteeError,
-      } = await supabase
-        .from(
-          "mentee_profiles",
-        )
-        .select(`
-          mentee_id,
-          biography,
-          mentorship_areas,
-          development_goals,
-          hopes_to_gain,
-          previous_mentoring_history,
-          preferred_availability
-        `)
-        .eq(
-          "mentee_id",
-          data.mentee_id,
-        )
-        .maybeSingle();
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (menteeError) {
-        console.error(
-          "Unable to load mentee profile:",
-          menteeError.message,
-        );
-      }
-
-      setRequest(data);
-      setMenteeProfile(
-        menteeData ??
-          null,
-      );
-
-      setLoading(false);
     }
 
     loadPage();
@@ -344,45 +341,41 @@ function MentorRequestDetails() {
       data,
       error:
         refreshError,
-    } = await supabase
-      .from(
-        "mentorship_requests",
-      )
-      .select(`
-        id,
-        mentee_id,
-        mentor_id,
-        mentoring_area,
-        goal_statement,
-        reason_for_choosing_mentor,
-        preferred_times,
-        status,
-        clarification_message,
-        clarification_response,
-        clarification_requested_at,
-        clarification_responded_at,
-        created_at,
-        mentee:profiles!mentorship_requests_mentee_id_fkey (
-          full_name,
-          email,
-          profile_photo_url
-        )
-      `)
-      .eq(
-        "id",
-        requestId,
-      )
-      .eq(
-        "mentor_id",
-        user.id,
-      )
-      .single();
+    } = await withTimeout(
+      supabase.rpc(
+        "get_mentor_request_details",
+        {
+          p_request_id:
+            requestId,
+        },
+      ),
+      15000,
+    );
 
     if (refreshError) {
       throw refreshError;
     }
 
-    setRequest(data);
+    if (!data) {
+      throw new Error(
+        "The mentorship request could not be found.",
+      );
+    }
+
+    const {
+      mentee_profile:
+        loadedMenteeProfile,
+      ...loadedRequest
+    } = data;
+
+    setRequest(
+      loadedRequest,
+    );
+
+    setMenteeProfile(
+      loadedMenteeProfile ??
+        null,
+    );
   }
 
   function openAction(
@@ -426,7 +419,8 @@ function MentorRequestDetails() {
       !actionMessage.trim()
     ) {
       setError(
-        "Please write the clarification you need from the mentee.",
+        information.validationMessage ||
+          "Please provide the required reason.",
       );
       return;
     }
@@ -863,6 +857,32 @@ function MentorRequestDetails() {
           </section>
         )}
 
+        {getOutcomeReason(
+          request,
+          statusKey,
+        ) && (
+          <section className="mentor-request-outcome-reason">
+            <span className="mentor-request-eyebrow">
+              {getOutcomeReasonLabel(
+                statusKey,
+              )}
+            </span>
+
+            <h3>
+              {getOutcomeReasonTitle(
+                statusKey,
+              )}
+            </h3>
+
+            <p>
+              {getOutcomeReason(
+                request,
+                statusKey,
+              )}
+            </p>
+          </section>
+        )}
+
         <section className="mentor-request-decision-section">
           <div>
             <span className="mentor-request-eyebrow">
@@ -985,14 +1005,39 @@ function MentorRequestDetails() {
                 className="mentor-request-accept-action"
                 onClick={() =>
                   navigate(
-                    "/mentor/messages",
+                    `/mentor/messages?request=${request.id}`,
+                    {
+                      state: {
+                        conversationRequest: {
+                          request_id:
+                            request.id,
+                          mentee_id:
+                            request.mentee_id,
+                          mentee_name:
+                            request.mentee
+                              ?.full_name ||
+                            "Mentee",
+                          mentee_email:
+                            request.mentee
+                              ?.email ||
+                            "",
+                          profile_photo_url:
+                            request.mentee
+                              ?.profile_photo_url ||
+                            null,
+                          mentoring_area:
+                            request.mentoring_area ||
+                            "Mentorship",
+                        },
+                      },
+                    },
                   )
                 }
               >
                 <MessageCircle
                   size={16}
                 />
-                Messages
+                Message mentee
               </button>
             </div>
           )}
@@ -1103,16 +1148,11 @@ function ActionModal({
           }
         </p>
 
-        {(information.requiresMessage ||
-          action ===
-            "decline" ||
-          action ===
-            "refer") && (
+        {information.requiresMessage && (
           <label>
             <span>
-              {information.requiresMessage
-                ? "Clarification question"
-                : "Optional note"}
+              {information.messageLabel ||
+                "Reason *"}
             </span>
 
             <textarea
@@ -1121,9 +1161,8 @@ function ActionModal({
               }
               rows={4}
               placeholder={
-                information.requiresMessage
-                  ? "What additional information do you need from the mentee?"
-                  : "Add a short note if helpful..."
+                information.messagePlaceholder ||
+                "Add the required information..."
               }
               onChange={(
                 event,
@@ -1134,6 +1173,13 @@ function ActionModal({
                 )
               }
             />
+
+            {(action === "decline" ||
+              action === "refer") && (
+              <small className="mentor-request-modal-helper">
+                This reason will be visible to the mentee and kept in the request history.
+              </small>
+            )}
           </label>
         )}
 
@@ -1319,6 +1365,70 @@ function getDecisionDescription(
   }
 }
 
+function getOutcomeReason(
+  request,
+  status,
+) {
+  switch (status) {
+    case "declined":
+      return (
+        request?.decline_reason ||
+        null
+      );
+
+    case "referred":
+      return (
+        request?.referral_reason ||
+        null
+      );
+
+    case "withdrawn":
+      return (
+        request?.withdrawal_reason ||
+        null
+      );
+
+    default:
+      return null;
+  }
+}
+
+function getOutcomeReasonLabel(
+  status,
+) {
+  switch (status) {
+    case "declined":
+      return "DECLINE REASON";
+
+    case "referred":
+      return "REFERRAL REASON";
+
+    case "withdrawn":
+      return "WITHDRAWAL REASON";
+
+    default:
+      return "REQUEST NOTE";
+  }
+}
+
+function getOutcomeReasonTitle(
+  status,
+) {
+  switch (status) {
+    case "declined":
+      return "Reason shared with the mentee";
+
+    case "referred":
+      return "Why another match was recommended";
+
+    case "withdrawn":
+      return "Why the mentee withdrew the request";
+
+    default:
+      return "Request information";
+  }
+}
+
 function formatDateTime(
   value,
 ) {
@@ -1338,6 +1448,33 @@ function formatDateTime(
   ).format(
     new Date(value),
   );
+}
+
+
+function withTimeout(
+  promise,
+  milliseconds,
+) {
+  return Promise.race([
+    promise,
+    new Promise(
+      (
+        _resolve,
+        reject,
+      ) => {
+        window.setTimeout(
+          () => {
+            reject(
+              new Error(
+                "Request timed out.",
+              ),
+            );
+          },
+          milliseconds,
+        );
+      },
+    ),
+  ]);
 }
 
 export default MentorRequestDetails;

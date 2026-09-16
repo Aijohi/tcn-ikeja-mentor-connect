@@ -718,15 +718,125 @@
 }
 
 .mentor-request-decline-action {
-  border: 1px solid #b74750;
-  color: #ffffff;
-  background: #b74750;
+  border: 1px solid #c9d2df;
+  color: #a63d46;
+  background: #ffffff;
 }
 
 .mentor-request-accept-action {
   border: 1px solid #ff5303;
   color: #ffffff;
   background: #ff5303;
+}
+
+
+
+/* =========================================================
+   REQUEST DECISION BUTTON INTERACTIONS
+   Clear but restrained hover/focus states.
+   ========================================================= */
+
+.mentor-request-secondary-action,
+.mentor-request-decline-action,
+.mentor-request-accept-action {
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.mentor-request-secondary-action:hover:not(:disabled) {
+  border-color: #97aac2;
+  color: #101419;
+  background: #f7f8fa;
+
+  box-shadow:
+    0 4px 12px
+    rgba(16, 20, 25, 0.06);
+
+  transform: translateY(-1px);
+}
+
+.mentor-request-decline-action:hover:not(:disabled) {
+  border-color: #d5a8ad;
+  color: #8f3038;
+  background: #fff7f8;
+
+  box-shadow:
+    0 4px 12px
+    rgba(166, 61, 70, 0.08);
+
+  transform: translateY(-1px);
+}
+
+.mentor-request-accept-action:hover:not(:disabled) {
+  border-color: #c13c00;
+  color: #ffffff;
+  background: #c13c00;
+
+  box-shadow:
+    0 4px 12px
+    rgba(193, 60, 0, 0.18);
+
+  transform: translateY(-1px);
+}
+
+.mentor-request-secondary-action:active:not(:disabled),
+.mentor-request-decline-action:active:not(:disabled),
+.mentor-request-accept-action:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+.mentor-request-secondary-action:focus-visible,
+.mentor-request-decline-action:focus-visible,
+.mentor-request-accept-action:focus-visible {
+  outline: none;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.16);
+}
+
+.mentor-request-secondary-action:disabled,
+.mentor-request-decline-action:disabled,
+.mentor-request-accept-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
+.mentor-request-secondary-action svg,
+.mentor-request-decline-action svg,
+.mentor-request-accept-action svg {
+  color: currentColor;
+}
+
+
+
+/* Refer for matching gets a restrained teal secondary treatment.
+   It remains an outline action, not a filled primary button. */
+.mentor-request-decision-actions
+.mentor-request-secondary-action:nth-of-type(2) {
+  border-color: #9fcfc4;
+  color: #087967;
+  background: #ffffff;
+}
+
+.mentor-request-decision-actions
+.mentor-request-secondary-action:nth-of-type(2):hover:not(:disabled) {
+  border-color: #6fb6a6;
+  color: #066454;
+  background: #f4fbf9;
+
+  box-shadow:
+    0 4px 12px
+    rgba(8, 121, 103, 0.10);
+
+  transform: translateY(-1px);
 }
 
 /* MODAL */
@@ -955,4 +1065,39 @@
   .mentor-request-modal {
     padding: 20px 17px;
   }
+}
+
+
+/* =========================================================
+   REQUEST OUTCOME REASON
+   ========================================================= */
+
+.mentor-request-outcome-reason {
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+  background: #fbfcfd;
+}
+
+.mentor-request-outcome-reason h3 {
+  margin: 0;
+  color: #101419;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.mentor-request-outcome-reason p {
+  margin: 8px 0 0;
+  color: #4c5867;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.mentor-request-modal-helper {
+  display: block;
+  margin-top: 7px;
+  color: #8794a4;
+  font-size: 9px;
+  line-height: 1.5;
 }
