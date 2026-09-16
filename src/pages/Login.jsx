@@ -1,9 +1,14 @@
-import { useState } from "react";
+import {
+  useLayoutEffect,
+  useState,
+} from "react";
+
 import {
   ArrowRight,
   Eye,
   EyeOff,
 } from "lucide-react";
+
 import {
   Link,
   useNavigate,
@@ -44,7 +49,7 @@ function GoogleIcon() {
 
       <path
         fill="#EA4335"
-        d="M12 5.94c1.47 0 2.79.5 3.83 1.5l2.87-2.87A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.96 5.45l3.35 2.62C7.18 7.7 9.39 5.94 12 5.94Z"
+        d="M12 5.94c1.47 0 2.79.5 3.83 1.5l2.87-2.87A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.96 5.45l3.35-2.62C7.18 7.7 9.39 5.94 12 5.94Z"
       />
     </svg>
   );
@@ -58,24 +63,65 @@ function Login() {
     signInWithGoogle,
   } = useAuth();
 
-  const [form, setForm] = useState({
+  const [
+    form,
+    setForm,
+  ] = useState({
     email: "",
     password: "",
   });
 
-  const [showPassword, setShowPassword] =
-    useState(false);
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
 
-  const [submitting, setSubmitting] =
-    useState(false);
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
 
   const [
     googleSubmitting,
     setGoogleSubmitting,
   ] = useState(false);
 
-  const [error, setError] =
-    useState("");
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  /*
+    React Router can preserve the scroll position from
+    the previous screen.
+
+    Authentication pages should always start at the top.
+  */
+  useLayoutEffect(() => {
+    const resetScroll = () => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    resetScroll();
+
+    const frame =
+      window.requestAnimationFrame(
+        resetScroll,
+      );
+
+    return () => {
+      window.cancelAnimationFrame(
+        frame,
+      );
+    };
+  }, []);
 
   function updateForm(event) {
     const {
@@ -313,187 +359,203 @@ function Login() {
             </Link>
           </div>
 
-          <div className="login-heading">
-            <span>
-              WELCOME BACK
-            </span>
+          <div className="login-main-content">
+            <div className="login-heading">
+              <span>
+                WELCOME BACK
+              </span>
 
-            <h1>
-              Sign in to your account
-            </h1>
+              <h1>
+                Sign in to your account
+              </h1>
 
-            <p>
-              Continue your mentoring
-              journey from where you
-              left off.
-            </p>
-          </div>
+              <p>
+                Continue your mentoring
+                journey from where you
+                left off.
+              </p>
+            </div>
 
-          {error && (
-            <p
-              className="login-error"
-              role="alert"
+            {error && (
+              <p
+                className="login-error"
+                role="alert"
+              >
+                {error}
+              </p>
+            )}
+
+            <form
+              className="login-form"
+              onSubmit={
+                handleSubmit
+              }
             >
-              {error}
-            </p>
-          )}
+              <label className="login-field">
+                <span>
+                  Email address
+                </span>
 
-          <form
-            className="login-form"
-            onSubmit={
-              handleSubmit
-            }
-          >
-            <label className="login-field">
-              <span>
-                Email address
-              </span>
-
-              <input
-                type="email"
-                name="email"
-                value={
-                  form.email
-                }
-                onChange={
-                  updateForm
-                }
-                placeholder="Enter your email address"
-                autoComplete="email"
-                disabled={
-                  authenticationInProgress
-                }
-                required
-              />
-            </label>
-
-            <label className="login-field">
-              <span>
-                Password
-              </span>
-
-              <div className="login-password-wrap">
                 <input
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
-                  name="password"
+                  type="email"
+                  name="email"
                   value={
-                    form.password
+                    form.email
                   }
                   onChange={
                     updateForm
                   }
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
+                  placeholder="Enter your email address"
+                  autoComplete="email"
                   disabled={
                     authenticationInProgress
                   }
                   required
                 />
+              </label>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowPassword(
-                      (current) =>
-                        !current,
-                    )
-                  }
-                  aria-label={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
-                  disabled={
-                    authenticationInProgress
-                  }
+              <label className="login-field">
+                <span>
+                  Password
+                </span>
+
+                <div className="login-password-wrap">
+                  <input
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
+                    }
+                    name="password"
+                    value={
+                      form.password
+                    }
+                    onChange={
+                      updateForm
+                    }
+                    placeholder="Enter your password"
+                    autoComplete="current-password"
+                    disabled={
+                      authenticationInProgress
+                    }
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPassword(
+                        (current) =>
+                          !current,
+                      )
+                    }
+                    aria-label={
+                      showPassword
+                        ? "Hide password"
+                        : "Show password"
+                    }
+                    disabled={
+                      authenticationInProgress
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeOff
+                        size={17}
+                      />
+                    ) : (
+                      <Eye
+                        size={17}
+                      />
+                    )}
+                  </button>
+                </div>
+              </label>
+
+              <div className="login-options">
+                <Link
+                  to="/forgot-password"
+                  className="login-forgot"
                 >
-                  {showPassword ? (
-                    <EyeOff
-                      size={17}
-                    />
-                  ) : (
-                    <Eye
-                      size={17}
-                    />
-                  )}
-                </button>
+                  Forgot password?
+                </Link>
               </div>
-            </label>
 
-            <div className="login-options">
-              <Link
-                to="/forgot-password"
-                className="login-forgot"
+              <button
+                type="submit"
+                className="login-submit"
+                disabled={
+                  authenticationInProgress
+                }
               >
-                Forgot password?
-              </Link>
+                <span>
+                  {submitting
+                    ? "Signing in..."
+                    : "Sign in"}
+                </span>
+
+                {!submitting && (
+                  <ArrowRight
+                    size={17}
+                  />
+                )}
+              </button>
+            </form>
+
+            <div className="login-divider">
+              <span>
+                or
+              </span>
             </div>
 
             <button
-              type="submit"
-              className="login-submit"
+              type="button"
+              className="login-google"
+              onClick={
+                handleGoogleSignIn
+              }
               disabled={
                 authenticationInProgress
               }
             >
-              <span>
-                {submitting
-                  ? "Signing in..."
-                  : "Sign in"}
-              </span>
+              <GoogleIcon />
 
-              {!submitting && (
-                <ArrowRight
-                  size={17}
-                />
-              )}
+              {googleSubmitting
+                ? "Connecting to Google..."
+                : "Continue with Google"}
             </button>
-          </form>
 
-          <div className="login-divider">
-            <span>
-              or
-            </span>
+            <p className="login-account-copy">
+              New to Mentor Connect?{" "}
+
+              <Link to="/register">
+                Create an account
+              </Link>
+            </p>
           </div>
 
-          <button
-            type="button"
-            className="login-google"
-            onClick={
-              handleGoogleSignIn
-            }
-            disabled={
-              authenticationInProgress
-            }
-          >
-            <GoogleIcon />
+          <div className="login-responsive-utility">
+            <span className="login-responsive-utility-label">
+              Platform administration
+            </span>
 
-            {googleSubmitting
-              ? "Connecting to Google..."
-              : "Continue with Google"}
-          </button>
+            <Link
+              to="/admin/login"
+              className="login-admin-access"
+            >
+              <span>
+                TCN Administrator
+              </span>
 
-          <p className="login-account-copy">
-            New to Mentor Connect?{" "}
-
-            <Link to="/register">
-              Create an account
-            </Link>
-          </p>
-
-          <footer className="login-mobile-utility-footer">
-            <Link to="/admin/login">
-              TCN Administrator
+              <ArrowRight
+                size={16}
+                aria-hidden="true"
+              />
             </Link>
 
             <small>
-              © 2026 TCN Ikeja Mentor Connect
+              © 2026 TCN Ikeja
             </small>
-          </footer>
+          </div>
         </div>
       </section>
 
@@ -542,15 +604,15 @@ function Login() {
             </small>
           </div>
 
-          <footer className="login-visual-footer">
+          <div className="login-visual-footer">
             <Link to="/admin/login">
               TCN Administrator
             </Link>
 
             <small>
-              © 2026 TCN Ikeja Mentor Connect
+              © 2026 TCN Ikeja
             </small>
-          </footer>
+          </div>
         </div>
       </aside>
     </main>
