@@ -54,6 +54,16 @@ function MentorSessions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [
+    outcomeSubmittingId,
+    setOutcomeSubmittingId,
+  ] = useState("");
+
+  const [
+    outcomeError,
+    setOutcomeError,
+  ] = useState("");
+
   useEffect(() => {
     if (!calendarOpen) {
       return undefined;
@@ -299,6 +309,89 @@ function MentorSessions() {
     setCalendarOpen(false);
   }
 
+  async function recordSessionOutcome(
+    session,
+    outcome,
+  ) {
+    const confirmationMessages = {
+      completed:
+        "Confirm that this mentoring session took place? This will mark the session as completed and record that you attended.",
+      mentee_no_show:
+        "Confirm that the mentee did not attend this session? This will mark the session as a no-show and record that you attended.",
+      mentor_no_show:
+        "Confirm that you did not attend this session? This will mark the session as a no-show.",
+    };
+
+    const confirmed =
+      window.confirm(
+        confirmationMessages[outcome] ||
+          "Record this session outcome?",
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setOutcomeError("");
+    setOutcomeSubmittingId(
+      session.session_id,
+    );
+
+    const {
+      error: outcomeRequestError,
+    } = await supabase.rpc(
+      "record_mentor_session_outcome",
+      {
+        p_session_id:
+          session.session_id,
+        p_outcome: outcome,
+      },
+    );
+
+    if (outcomeRequestError) {
+      console.error(
+        "Unable to record session outcome:",
+        outcomeRequestError.message,
+      );
+
+      setOutcomeError(
+        outcomeRequestError.message ||
+          "We could not record the session outcome. Please try again.",
+      );
+
+      setOutcomeSubmittingId("");
+      return;
+    }
+
+    const nextStatus =
+      outcome === "completed"
+        ? "completed"
+        : "no_show";
+
+    const nextMentorAttendance =
+      outcome === "mentor_no_show"
+        ? "no_show"
+        : "attended";
+
+    setSessions(
+      (currentSessions) =>
+        currentSessions.map(
+          (currentSession) =>
+            currentSession.session_id ===
+            session.session_id
+              ? {
+                  ...currentSession,
+                  status: nextStatus,
+                  mentor_attendance:
+                    nextMentorAttendance,
+                }
+              : currentSession,
+        ),
+    );
+
+    setOutcomeSubmittingId("");
+  }
+
   if (loading) {
     return (
       <DashboardLayout
@@ -423,6 +516,15 @@ function MentorSessions() {
       title="My sessions"
       description="View your upcoming and previous mentoring sessions."
     >
+      {outcomeError && (
+        <div
+          className="mentor-session-inline-error"
+          role="alert"
+        >
+          {outcomeError}
+        </div>
+      )}
+
       <section className="mentor-sessions-summary mentor-sessions-summary--with-action">
         <div>
           <span className="mentor-sessions-eyebrow">
@@ -523,6 +625,13 @@ function MentorSessions() {
                   }
                   session={currentSession}
                   paginated
+                  onRecordOutcome={
+                    recordSessionOutcome
+                  }
+                  outcomeSubmitting={
+                    outcomeSubmittingId ===
+                    currentSession.session_id
+                  }
                 />
               )}
 
@@ -900,6 +1009,8 @@ function SessionCalendarItem({
 function SessionCard({
   session,
   paginated = false,
+  onRecordOutcome,
+  outcomeSubmitting = false,
 }) {
   const menteeName =
     session.mentee_name ||
@@ -932,6 +1043,29 @@ function SessionCard({
     session.meeting_link &&
     session.status ===
       "scheduled";
+
+  const sessionHasEnded =
+    session.scheduled_end &&
+    new Date(
+      session.scheduled_end,
+    ).getTime() <= Date.now();
+
+  const canRecordOutcome =
+    sessionHasEnded &&
+    ![
+      "cancelled",
+      "reschedule_requested",
+    ].includes(sessionStatus) &&
+    !session.mentor_attendance;
+
+  const mentorAttendanceLabel =
+    session.mentor_attendance ===
+    "attended"
+      ? "You recorded that you attended."
+      : session.mentor_attendance ===
+          "no_show"
+        ? "You recorded that you did not attend."
+        : "";
 
   return (
     <article
@@ -1085,10 +1219,94 @@ function SessionCard({
           </div>
         )}
 
+      {mentorAttendanceLabel && (
+        <div className="mentor-session-topic">
+          <small>
+            Your attendance record
+          </small>
+
+          <p>
+            {mentorAttendanceLabel}
+          </p>
+        </div>
+      )}
+
+      {canRecordOutcome && (
+        <div className="mentor-session-topic">
+          <small>
+            AFTER THE SESSION
+          </small>
+
+          <p>
+            Record what happened so the session history and administrator
+            oversight remain accurate.
+          </p>
+
+          <div className="mentor-session-actions">
+            <button
+              type="button"
+              className="primary-button"
+              disabled={
+                outcomeSubmitting
+              }
+              onClick={() =>
+                onRecordOutcome(
+                  session,
+                  "completed",
+                )
+              }
+            >
+              {outcomeSubmitting
+                ? "Saving..."
+                : "Session completed"}
+            </button>
+
+            <button
+              type="button"
+              className="secondary-button"
+              disabled={
+                outcomeSubmitting
+              }
+              onClick={() =>
+                onRecordOutcome(
+                  session,
+                  "mentee_no_show",
+                )
+              }
+            >
+              Mentee did not attend
+            </button>
+
+            <button
+              type="button"
+              className="secondary-button"
+              disabled={
+                outcomeSubmitting
+              }
+              onClick={() =>
+                onRecordOutcome(
+                  session,
+                  "mentor_no_show",
+                )
+              }
+            >
+              I did not attend
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mentor-session-actions">
-        <span className="mentor-session-readonly-note">
-          Session management will be added next.
-        </span>
+        {!canRecordOutcome &&
+          !mentorAttendanceLabel &&
+          sessionHasEnded &&
+          sessionStatus ===
+            "reschedule_requested" && (
+            <span className="mentor-session-readonly-note">
+              This session has a reschedule request, so an outcome cannot be
+              recorded yet.
+            </span>
+          )}
 
         {canJoin && (
           <a
