@@ -48,6 +48,16 @@ function MenteeSessions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [
+    attendanceSubmittingId,
+    setAttendanceSubmittingId,
+  ] = useState("");
+
+  const [
+    attendanceError,
+    setAttendanceError,
+  ] = useState("");
+
   useEffect(() => {
     if (!calendarOpen) {
       return undefined;
@@ -180,14 +190,17 @@ function MenteeSessions() {
   const upcomingSessions = useMemo(
     () =>
       sessions.filter((session) => {
-        const sessionTime = new Date(
-          session.scheduled_start,
+        const sessionEndTime = new Date(
+          session.scheduled_end,
         ).getTime();
 
         return (
-          session.status === "scheduled" ||
-          session.status === "reschedule_requested"
-        ) && sessionTime >= now;
+          (
+            session.status === "scheduled" ||
+            session.status === "reschedule_requested"
+          ) &&
+          sessionEndTime >= now
+        );
       }),
     [sessions, now],
   );
@@ -196,15 +209,15 @@ function MenteeSessions() {
     () =>
       sessions
         .filter((session) => {
-          const sessionTime = new Date(
-            session.scheduled_start,
+          const sessionEndTime = new Date(
+            session.scheduled_end,
           ).getTime();
 
           return (
             session.status === "completed" ||
             session.status === "cancelled" ||
             session.status === "no_show" ||
-            sessionTime < now
+            sessionEndTime < now
           );
         })
         .sort(
@@ -349,6 +362,67 @@ function MenteeSessions() {
     setCalendarOpen(false);
   }
 
+  async function recordAttendance(
+    session,
+    attendance,
+  ) {
+    const message =
+      attendance === "attended"
+        ? "Confirm that you attended this mentoring session?"
+        : "Confirm that you did not attend this mentoring session?";
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    setAttendanceError("");
+    setAttendanceSubmittingId(
+      session.id,
+    );
+
+    const {
+      error: attendanceRequestError,
+    } = await supabase.rpc(
+      "record_mentee_session_attendance",
+      {
+        p_session_id: session.id,
+        p_attendance: attendance,
+      },
+    );
+
+    if (attendanceRequestError) {
+      console.error(
+        "Unable to record mentee attendance:",
+        attendanceRequestError.message,
+      );
+
+      setAttendanceError(
+        attendanceRequestError.message ||
+          "We could not record your attendance. Please try again.",
+      );
+
+      setAttendanceSubmittingId("");
+      return;
+    }
+
+    setSessions(
+      (currentSessions) =>
+        currentSessions.map(
+          (currentSession) =>
+            currentSession.id ===
+            session.id
+              ? {
+                  ...currentSession,
+                  mentee_attendance:
+                    attendance,
+                }
+              : currentSession,
+        ),
+    );
+
+    setAttendanceSubmittingId("");
+  }
+
   if (loading) {
     return (
       <DashboardLayout
@@ -473,6 +547,15 @@ function MenteeSessions() {
       title="My sessions"
       description="View your upcoming and previous mentoring sessions."
     >
+      {attendanceError && (
+        <div
+          className="mentee-session-inline-error"
+          role="alert"
+        >
+          {attendanceError}
+        </div>
+      )}
+
       <section className="mentee-sessions-summary">
         <div>
           <span className="eyebrow">
@@ -617,6 +700,13 @@ function MenteeSessions() {
                     navigate(
                       `/mentee/mentors/${currentSession.mentor_id}`,
                     )
+                  }
+                  onRecordAttendance={
+                    recordAttendance
+                  }
+                  attendanceSubmitting={
+                    attendanceSubmittingId ===
+                    currentSession.id
                   }
                 />
               )}
@@ -957,6 +1047,8 @@ function SessionCalendarItem({
 function SessionCard({
   session,
   onViewMentor,
+  onRecordAttendance,
+  attendanceSubmitting = false,
   paginated = false,
 }) {
   const mentorName =
@@ -981,6 +1073,29 @@ function SessionCard({
     isVirtual &&
     session.meeting_link &&
     session.status === "scheduled";
+
+  const sessionHasEnded =
+    session.scheduled_end &&
+    new Date(
+      session.scheduled_end,
+    ).getTime() <= Date.now();
+
+  const canRecordAttendance =
+    sessionHasEnded &&
+    ![
+      "cancelled",
+      "reschedule_requested",
+    ].includes(sessionStatus) &&
+    !session.mentee_attendance;
+
+  const attendanceLabel =
+    session.mentee_attendance ===
+    "attended"
+      ? "You recorded that you attended this session."
+      : session.mentee_attendance ===
+          "no_show"
+        ? "You recorded that you did not attend this session."
+        : "";
 
   return (
     <article
@@ -1118,6 +1233,67 @@ function SessionCard({
             </p>
           </div>
         )}
+
+      {attendanceLabel && (
+        <div className="mentee-session-topic">
+          <small>
+            YOUR ATTENDANCE
+          </small>
+
+          <p>
+            {attendanceLabel}
+          </p>
+        </div>
+      )}
+
+      {canRecordAttendance && (
+        <div className="mentee-session-topic">
+          <small>
+            AFTER THE SESSION
+          </small>
+
+          <p>
+            Please record whether you attended. Your response is stored
+            separately from your mentor's attendance record.
+          </p>
+
+          <div className="mentee-session-actions">
+            <button
+              type="button"
+              className="primary-button"
+              disabled={
+                attendanceSubmitting
+              }
+              onClick={() =>
+                onRecordAttendance(
+                  session,
+                  "attended",
+                )
+              }
+            >
+              {attendanceSubmitting
+                ? "Saving..."
+                : "I attended"}
+            </button>
+
+            <button
+              type="button"
+              className="secondary-button"
+              disabled={
+                attendanceSubmitting
+              }
+              onClick={() =>
+                onRecordAttendance(
+                  session,
+                  "no_show",
+                )
+              }
+            >
+              I did not attend
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="mentee-session-actions">
         <button
