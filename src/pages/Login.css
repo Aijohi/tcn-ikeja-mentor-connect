@@ -17,7 +17,6 @@
   --login-ink-600: #101419;
 
   display: grid;
-
   grid-template-columns:
     minmax(0, 1fr)
     minmax(0, 1fr);
@@ -26,7 +25,7 @@
   max-width: 100%;
 
   min-height: 100vh;
-  min-height: 100svh;
+  min-height: 100dvh;
 
   margin: 0;
 
@@ -46,15 +45,6 @@
 
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-}
-
-body:has(.login-page),
-body:has(.login-page) #root {
-  background:
-    #ffffff !important;
-
-  background-image:
-    none !important;
 }
 
 .login-page *,
@@ -96,7 +86,7 @@ body:has(.login-page) #root {
   min-width: 0;
 
   min-height: 100vh;
-  min-height: 100svh;
+  min-height: 100dvh;
 
   background:
     #ffffff !important;
@@ -115,7 +105,7 @@ body:has(.login-page) #root {
   min-width: 0;
 
   min-height: 100vh;
-  min-height: 100svh;
+  min-height: 100dvh;
 
   padding:
     44px
@@ -136,12 +126,7 @@ body:has(.login-page) #root {
   display: flex;
   align-items: center;
 
-  margin-bottom:
-    clamp(
-      44px,
-      7vh,
-      72px
-    );
+  margin-bottom: 58px;
 }
 
 .login-brand {
@@ -190,7 +175,7 @@ body:has(.login-page) #root {
    ===================================================== */
 
 .login-heading {
-  margin-bottom: 30px;
+  margin-bottom: 28px;
 }
 
 .login-heading > span {
@@ -226,12 +211,12 @@ body:has(.login-page) #root {
     var(--login-ink-400);
 
   font-size: 13px;
-  line-height: 1.65;
+  line-height: 1.6;
 }
 
 .login-error {
   margin:
-    0 0 16px;
+    0 0 14px;
 
   padding:
     11px 13px;
@@ -261,7 +246,7 @@ body:has(.login-page) #root {
 
   width: 100%;
 
-  gap: 18px;
+  gap: 16px;
 }
 
 .login-field {
@@ -352,6 +337,9 @@ body:has(.login-page) #root {
     #ffffff
     inset !important;
 
+  background:
+    #ffffff !important;
+
   caret-color:
     var(--login-ink-600);
 }
@@ -415,7 +403,7 @@ body:has(.login-page) #root {
   display: flex;
   justify-content: flex-end;
 
-  margin-top: -4px;
+  margin-top: -3px;
 }
 
 .login-forgot {
@@ -431,7 +419,7 @@ body:has(.login-page) #root {
 }
 
 /* =====================================================
-   PRIMARY ACTION
+   PRIMARY BUTTON
    ===================================================== */
 
 .login-submit {
@@ -495,7 +483,7 @@ body:has(.login-page) #root {
   gap: 12px;
 
   margin:
-    18px 0;
+    16px 0;
 }
 
 .login-divider::before,
@@ -549,7 +537,6 @@ body:has(.login-page) #root {
 
   transition:
     border-color 150ms ease,
-    background-color 150ms ease,
     box-shadow 150ms ease;
 }
 
@@ -564,12 +551,12 @@ body:has(.login-page) #root {
 
 .login-account-copy {
   margin:
-    17px 0 0;
+    15px 0 0;
 
   color:
     var(--login-ink-300);
 
-  font-size: 13px;
+  font-size: 14px;
 
   text-align: center;
 }
@@ -578,7 +565,8 @@ body:has(.login-page) #root {
   color:
     var(--login-orange-700);
 
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 /* =====================================================
@@ -605,23 +593,22 @@ body:has(.login-page) #root {
   min-width: 0;
 
   min-height: 100vh;
-  min-height: 100svh;
+  min-height: 100dvh;
 
   overflow: hidden;
 
   background:
-    #ffffff !important;
+    #ffffff;
 }
 
 .login-visual-canvas {
   position: relative;
-
   isolation: isolate;
 
   width: 100%;
 
   min-height: 100vh;
-  min-height: 100svh;
+  min-height: 100dvh;
 
   overflow: hidden;
 
@@ -637,10 +624,6 @@ body:has(.login-page) #root {
     ),
     #ffffff;
 }
-
-/* =====================================================
-   DECORATIVE ART
-   ===================================================== */
 
 .login-visual-canvas::before,
 .login-visual-canvas::after {
@@ -672,6 +655,10 @@ body:has(.login-page) #root {
   width: 430px;
   height: 430px;
 }
+
+/* =====================================================
+   ARTWORK
+   ===================================================== */
 
 .login-artwork {
   position: absolute;
@@ -899,7 +886,7 @@ body:has(.login-page) #root {
 }
 
 /* =====================================================
-   MESSAGE
+   VISUAL MESSAGE
    ===================================================== */
 
 .login-right-message {
@@ -970,7 +957,8 @@ body:has(.login-page) #root {
 }
 
 /* =====================================================
-   DESKTOP UTILITY FOOTER
+   DESKTOP FOOTER
+   Tertiary administrator action
    ===================================================== */
 
 .login-visual-footer {
@@ -993,21 +981,36 @@ body:has(.login-page) #root {
   display: inline-flex;
   align-items: center;
 
-  min-height: 32px;
+  min-height: 38px;
+
+  padding: 0;
+
+  border: 0;
 
   color:
-    var(--login-ink-300);
+    var(--login-orange-700);
 
-  font-size: 9px;
-  font-weight: 400;
+  background:
+    transparent;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+
+  cursor: pointer;
 
   transition:
-    color 150ms ease;
+    color 150ms ease,
+    text-decoration-color 150ms ease;
 }
 
-.login-visual-footer a:hover {
+.login-visual-footer a:hover,
+.login-visual-footer a:focus-visible {
   color:
-    var(--login-ink-500);
+    var(--login-orange-600);
+
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .login-visual-footer small {
@@ -1019,23 +1022,33 @@ body:has(.login-page) #root {
 }
 
 /* =====================================================
-   TABLET
+   TABLET AND MOBILE
    ===================================================== */
 
 @media (max-width: 1000px) {
   .login-page {
     display: block;
 
-    min-height: 100svh;
+    height: 100vh;
+    height: 100dvh;
+
+    min-height: 0;
+
+    overflow:
+      hidden;
 
     background:
       #ffffff !important;
   }
 
   .login-form-side {
-    width: 100%;
+    height: 100vh;
+    height: 100dvh;
 
-    min-height: 100svh;
+    min-height: 0;
+
+    overflow:
+      hidden;
 
     background:
       #ffffff !important;
@@ -1048,27 +1061,26 @@ body:has(.login-page) #root {
         560px
       );
 
-    min-height: 100svh;
+    height: 100%;
+
+    min-height: 0;
 
     padding:
-      max(
-        28px,
-        env(safe-area-inset-top)
-      )
-      30px
-      max(
-        28px,
-        env(safe-area-inset-bottom)
-      );
+      24px
+      28px;
+
+    overflow:
+      hidden;
   }
 
   .login-brand-row {
-    margin-bottom:
-      clamp(
-        34px,
-        6vh,
-        52px
-      );
+    flex: 0 0 auto;
+
+    margin-bottom: 28px;
+  }
+
+  .login-heading {
+    margin-bottom: 20px;
   }
 
   .login-field input {
@@ -1082,79 +1094,62 @@ body:has(.login-page) #root {
   .login-responsive-utility {
     display: block;
 
+    flex: 0 0 auto;
+
     width: 100%;
 
-    margin-top:
-      clamp(
-        34px,
-        7vh,
-        64px
-      );
-
-    padding-top: 20px;
-
-    border-top:
-      1px solid
-      #e4e8ef;
+    margin-top: 20px;
   }
 
   .login-responsive-utility-label {
     display: block;
 
-    margin-bottom: 9px;
+    margin-bottom: 2px;
 
     color:
       var(--login-ink-300);
 
     font-size: 10px;
-    font-weight: 500;
+    font-weight: 400;
   }
 
   .login-admin-access {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
 
-    gap: 12px;
+    gap: 7px;
 
-    width: 100%;
-    min-height: 46px;
+    min-height: 44px;
 
     padding:
-      0 14px;
+      0;
 
-    border:
-      1px solid
-      #d7dee7;
-
-    border-radius: 10px;
+    border: 0;
 
     color:
-      var(--login-ink-500);
+      var(--login-orange-700);
 
     background:
-      #ffffff;
+      transparent;
 
-    font-size: 13px;
-    font-weight: 500;
-
-    transition:
-      border-color 150ms ease,
-      background-color 150ms ease;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
   }
 
-  .login-admin-access:hover {
-    border-color:
-      var(--login-ink-200);
+  .login-admin-access:hover,
+  .login-admin-access:focus-visible {
+    color:
+      var(--login-orange-600);
 
-    background:
-      #f8f9fb;
+    text-decoration: underline;
+    text-underline-offset: 4px;
   }
 
   .login-responsive-utility > small {
     display: block;
 
-    margin-top: 12px;
+    margin-top: 2px;
 
     color:
       var(--login-ink-300);
@@ -1175,23 +1170,18 @@ body:has(.login-page) #root {
 
     padding:
       max(
-        20px,
+        17px,
         env(safe-area-inset-top)
       )
       20px
       max(
-        24px,
+        16px,
         env(safe-area-inset-bottom)
       );
   }
 
   .login-brand-row {
-    margin-bottom:
-      clamp(
-        28px,
-        5vh,
-        38px
-      );
+    margin-bottom: 22px;
   }
 
   .login-brand img {
@@ -1208,7 +1198,7 @@ body:has(.login-page) #root {
   }
 
   .login-heading {
-    margin-bottom: 22px;
+    margin-bottom: 18px;
   }
 
   .login-heading > span {
@@ -1217,34 +1207,31 @@ body:has(.login-page) #root {
 
   .login-heading h1 {
     margin:
-      0 0 7px;
+      0 0 6px;
 
-    font-size: 25px;
-    line-height: 1.15;
+    font-size: 26px;
+    line-height: 1.12;
   }
 
   .login-heading p {
-    max-width: 360px;
+    max-width: 370px;
 
     font-size: 13px;
-    line-height: 1.55;
+    line-height: 1.5;
   }
 
   .login-form {
-    gap: 15px;
+    gap: 13px;
   }
 
   .login-field > span {
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 
     font-size: 11px;
   }
 
   .login-field input {
-    min-height: 48px;
-
-    padding:
-      0 13px;
+    min-height: 46px;
 
     border-radius: 10px;
 
@@ -1253,42 +1240,69 @@ body:has(.login-page) #root {
 
   .login-submit,
   .login-google {
-    min-height: 48px;
+    min-height: 46px;
 
     border-radius: 10px;
   }
 
   .login-divider {
     margin:
-      17px 0;
+      14px 0;
   }
 
   .login-account-copy {
-    margin-top: 16px;
+    margin-top: 13px;
+
+    font-size: 14px;
+  }
+
+  .login-account-copy a {
+    font-size: 14px;
   }
 
   .login-responsive-utility {
-    margin-top:
-      clamp(
-        30px,
-        6vh,
-        52px
-      );
+    margin-top: 17px;
+  }
+
+  .login-responsive-utility-label {
+    font-size: 10px;
   }
 
   .login-admin-access {
-    min-height: 48px;
+    min-height: 42px;
 
-    padding:
-      0 15px;
-
-    font-size: 13px;
+    font-size: 14px;
   }
 }
 
 /* =====================================================
-   VERY NARROW PHONES
+   SHORT VIEWPORT FALLBACK
    ===================================================== */
+
+@media
+  (max-width: 1000px)
+  and (max-height: 760px) {
+
+  .login-page,
+  .login-form-side {
+    height: auto;
+
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    overflow-y: auto;
+  }
+
+  .login-form-inner {
+    height: auto;
+
+    min-height:
+      100dvh;
+
+    overflow:
+      visible;
+  }
+}
 
 @media (max-width: 380px) {
   .login-form-inner {
@@ -1297,6 +1311,6 @@ body:has(.login-page) #root {
   }
 
   .login-heading h1 {
-    font-size: 23px;
+    font-size: 24px;
   }
 }
