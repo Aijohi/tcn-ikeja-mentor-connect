@@ -1,0 +1,647 @@
+/* =========================================================
+   ADMIN SESSIONS
+   Desktop/tablet table + mobile cards.
+   Admin has oversight only.
+   ========================================================= */
+
+.admin-sessions-page,
+.admin-session-details-page {
+  width: 100%;
+  min-width: 0;
+
+  color: #101419;
+  background: #ffffff;
+}
+
+/* =========================================================
+   SESSION LIST TOOLBAR
+   ========================================================= */
+
+.admin-session-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+.admin-session-search {
+  flex: 1 1 360px;
+  max-width: 430px;
+}
+
+.admin-session-filters {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  max-width: 100%;
+  overflow-x: auto;
+
+  scrollbar-width: none;
+}
+
+.admin-session-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-session-filters button {
+  appearance: none;
+  -webkit-appearance: none;
+
+  min-height: 34px;
+  padding: 0 12px;
+
+  border: 1px solid #d7dee7;
+  border-radius: 8px;
+
+  color: #4c5867;
+  background: #ffffff;
+
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+
+  cursor: pointer;
+}
+
+.admin-session-filters button:hover {
+  border-color: #aeb9c7;
+  background: #f7f8fa;
+}
+
+.admin-session-filters button.active {
+  border-color: #101419;
+
+  color: #ffffff;
+  background: #101419;
+}
+
+.admin-session-filters button:focus-visible {
+  outline: 2px solid rgba(76, 88, 103, 0.18);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   SESSION RESULTS SUMMARY
+   ========================================================= */
+
+.admin-session-results-summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.admin-session-results-summary > span {
+  color: #2d353f;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  text-align: left;
+}
+
+.admin-session-results-summary > small {
+  max-width: 620px;
+
+  color: #8794a4;
+
+  font-size: 10px;
+  line-height: 1.55;
+  text-align: right;
+}
+
+/* =========================================================
+   SESSION TABLE
+   ========================================================= */
+
+.admin-session-table-shell {
+  overflow: hidden;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+
+  background: #ffffff;
+}
+
+.admin-session-desktop-table {
+  overflow-x: auto;
+}
+
+.admin-session-table {
+  width: 100%;
+  min-width: 850px;
+
+  border-collapse: collapse;
+}
+
+/*
+  Keep all informational table content left aligned.
+
+  This includes:
+  - Mentor
+  - Mentee
+  - Date & time
+  - Format
+  - Status
+  - Action
+*/
+
+.admin-session-table th,
+.admin-session-table td {
+  text-align: left !important;
+  vertical-align: middle !important;
+}
+
+.admin-session-table th {
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
+.admin-session-table td {
+  padding-top: 18px !important;
+  padding-bottom: 18px !important;
+}
+
+.admin-session-table td strong {
+  display: block;
+
+  color: #101419;
+
+  text-align: left !important;
+}
+
+.admin-session-table td small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #8794a4;
+
+  text-align: left !important;
+}
+
+.admin-session-table .admin-status-badge {
+  margin-inline: 0 !important;
+}
+
+.admin-session-table .admin-table-action-cell {
+  text-align: left !important;
+}
+
+.admin-session-view-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  margin-inline: 0 !important;
+
+  text-decoration: none;
+}
+
+.admin-session-mobile-list {
+  display: none;
+}
+
+/* =========================================================
+   SESSION DETAILS
+   ========================================================= */
+
+.admin-session-details-page {
+  padding-bottom: 32px;
+}
+
+.admin-session-details-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 22px;
+  padding: 24px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  text-align: left;
+}
+
+.admin-session-details-hero > div {
+  min-width: 0;
+}
+
+.admin-session-details-hero h2 {
+  margin: 0;
+
+  color: #101419;
+
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+
+  text-align: left;
+}
+
+.admin-session-details-hero p {
+  margin: 7px 0 0;
+
+  color: #6f8095;
+
+  font-size: 11px;
+  line-height: 1.5;
+
+  text-align: left;
+}
+
+/* =========================================================
+   SESSION PARTICIPANTS
+   ========================================================= */
+
+.admin-session-participants {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 12px;
+  margin-top: 14px;
+}
+
+/*
+  RequestParticipant is shared with mentorship requests.
+  Keep participant cards aligned consistently here as well.
+*/
+
+.admin-session-participants .admin-request-participant-card {
+  text-align: left;
+}
+
+.admin-session-participants .admin-request-participant-card > span,
+.admin-session-participants .admin-request-participant-card strong,
+.admin-session-participants .admin-request-participant-card small {
+  text-align: left;
+}
+
+/* =========================================================
+   SESSION INFORMATION GRID
+   ========================================================= */
+
+.admin-session-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.admin-session-details-grid .admin-request-information {
+  text-align: left;
+}
+
+.admin-session-details-grid .admin-request-information > span,
+.admin-session-details-grid .admin-request-information > strong {
+  text-align: left;
+}
+
+/* =========================================================
+   SESSION COPY SECTIONS
+   ========================================================= */
+
+.admin-session-copy-section {
+  margin-top: 14px;
+  padding: 20px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  text-align: left;
+}
+
+.admin-session-copy-section > span {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #8794a4;
+
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.admin-session-copy-section p,
+.admin-session-copy-section a {
+  margin: 0;
+
+  color: #4c5867;
+
+  font-size: 12px;
+  line-height: 1.7;
+
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.admin-session-copy-section a:hover {
+  color: #101419;
+}
+
+/* =========================================================
+   SESSION OVERSIGHT NOTE
+   ========================================================= */
+
+.admin-session-note {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 11px;
+  margin-top: 18px;
+  padding: 16px;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 12px;
+
+  color: #4c5867;
+  background: #f8f9fb;
+
+  text-align: left;
+}
+
+.admin-session-note > svg {
+  flex: 0 0 auto;
+
+  color: #ff5303;
+}
+
+.admin-session-note > div {
+  min-width: 0;
+}
+
+.admin-session-note strong {
+  display: block;
+
+  color: #101419;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  text-align: left;
+}
+
+.admin-session-note p {
+  margin: 4px 0 0;
+
+  color: #6f8095;
+
+  font-size: 10px;
+  line-height: 1.55;
+
+  text-align: left;
+}
+
+/* =========================================================
+   RESPONSIVE: TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .admin-session-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-session-search,
+  .admin-session-filters {
+    width: 100%;
+    max-width: none;
+  }
+
+  .admin-session-results-summary {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 5px;
+  }
+
+  .admin-session-results-summary > small {
+    max-width: none;
+
+    text-align: left;
+  }
+
+  .admin-session-details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* =========================================================
+   RESPONSIVE: MOBILE
+   ========================================================= */
+
+@media (max-width: 680px) {
+  .admin-session-desktop-table {
+    display: none;
+  }
+
+  .admin-session-mobile-list {
+    display: grid;
+
+    gap: 10px;
+    padding: 10px;
+
+    background: #ffffff;
+  }
+
+  .admin-session-mobile-card {
+    min-width: 0;
+    padding: 15px;
+
+    border: 1px solid #e4e8ef;
+    border-radius: 11px;
+
+    background: #ffffff;
+
+    text-align: left;
+  }
+
+  .admin-session-mobile-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 12px;
+    padding-bottom: 13px;
+
+    border-bottom: 1px solid #edf0f4;
+
+    text-align: left;
+  }
+
+  .admin-session-mobile-card-header > div {
+    min-width: 0;
+  }
+
+  .admin-session-mobile-card-header span {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #8794a4;
+
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.07em;
+
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .admin-session-mobile-card-header strong,
+  .admin-session-mobile-card-header small {
+    display: block;
+
+    overflow: hidden;
+
+    text-align: left;
+    text-overflow: ellipsis;
+  }
+
+  .admin-session-mobile-card-header strong {
+    color: #101419;
+
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .admin-session-mobile-card-header small {
+    margin-top: 3px;
+
+    color: #8794a4;
+
+    font-size: 9px;
+    line-height: 1.4;
+
+    overflow-wrap: anywhere;
+  }
+
+  .admin-session-mobile-card dl {
+    display: grid;
+
+    gap: 10px;
+    margin: 13px 0 0;
+  }
+
+  .admin-session-mobile-card dl > div {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    align-items: start;
+
+    gap: 10px;
+  }
+
+  .admin-session-mobile-card dt {
+    color: #8794a4;
+
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.4;
+
+    text-align: left;
+  }
+
+  .admin-session-mobile-card dd {
+    min-width: 0;
+    margin: 0;
+
+    color: #374151;
+
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.4;
+
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-session-mobile-view {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    width: auto;
+    max-width: max-content;
+    min-height: 34px;
+
+    padding: 0 11px;
+    margin-top: 14px;
+
+    border: 1px solid #101419;
+    border-radius: 8px;
+
+    color: #ffffff;
+    background: #101419;
+
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+  }
+
+  .admin-session-participants,
+  .admin-session-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-session-details-hero {
+    align-items: flex-start;
+    flex-direction: column;
+
+    padding: 20px;
+
+    text-align: left;
+  }
+
+  .admin-session-details-hero h2 {
+    font-size: 21px;
+  }
+
+  .admin-session-copy-section {
+    padding: 18px;
+  }
+
+  .admin-session-table-shell .admin-table-pagination {
+    padding: 13px 12px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE: SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 560px) {
+  .admin-session-filters {
+    padding-bottom: 3px;
+  }
+
+  .admin-session-results-summary {
+    gap: 6px;
+  }
+}

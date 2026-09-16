@@ -1,7 +1,10 @@
 import {
+  ArrowLeft,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
+  Eye,
   GitPullRequest,
   Search,
   UserCheck,
@@ -11,22 +14,27 @@ import {
 
 import { useEffect, useMemo, useState } from "react";
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import { supabase } from "../lib/supabase";
 
 import "./AdminDashboard.css";
+import "./AdminRequests.css";
+import "./AdminSessions.css";
 
 const ATTENTION_PAGE_SIZE = 5;
 const PEOPLE_PAGE_SIZE = 10;
 const APPLICATION_PAGE_SIZE = 10;
+const REQUEST_PAGE_SIZE = 10;
+const SESSION_PAGE_SIZE = 10;
 
 const ADMIN_ROUTES = {
   overview: "/admin/dashboard",
   people: "/admin/dashboard/people",
   applications: "/admin/dashboard/mentor-applications",
   requests: "/admin/dashboard/mentorship-requests",
+  sessions: "/admin/dashboard/sessions",
 };
 
 const pageInformation = {
@@ -53,6 +61,24 @@ const pageInformation = {
     description:
       "Monitor the mentorship requests submitted by mentees.",
   },
+
+  requestDetails: {
+    title: "Mentorship request details",
+    description:
+      "Review the request, participants, goal and request history.",
+  },
+
+  sessions: {
+    title: "Sessions",
+    description:
+      "Monitor mentorship sessions across the Mentor Connect community.",
+  },
+
+  sessionDetails: {
+    title: "Session details",
+    description:
+      "Review the participants, schedule and session information.",
+  },
 };
 
 function getAdminSection(pathname) {
@@ -61,26 +87,38 @@ function getAdminSection(pathname) {
       ? pathname.replace(/\/+$/, "")
       : pathname;
 
-  if (
-    cleanPath === ADMIN_ROUTES.people
-  ) {
+  if (cleanPath === ADMIN_ROUTES.people) {
     return "people";
   }
 
   if (
-    cleanPath ===
-      ADMIN_ROUTES.applications ||
-    cleanPath ===
-      "/admin/dashboard/applications"
+    cleanPath === ADMIN_ROUTES.applications ||
+    cleanPath === "/admin/dashboard/applications"
   ) {
     return "applications";
   }
 
   if (
-    cleanPath ===
-      ADMIN_ROUTES.requests ||
-    cleanPath ===
-      "/admin/dashboard/requests"
+    cleanPath.startsWith(`${ADMIN_ROUTES.sessions}/`) &&
+    cleanPath !== ADMIN_ROUTES.sessions
+  ) {
+    return "sessionDetails";
+  }
+
+  if (cleanPath === ADMIN_ROUTES.sessions) {
+    return "sessions";
+  }
+
+  if (
+    cleanPath.startsWith(`${ADMIN_ROUTES.requests}/`) &&
+    cleanPath !== ADMIN_ROUTES.requests
+  ) {
+    return "requestDetails";
+  }
+
+  if (
+    cleanPath === ADMIN_ROUTES.requests ||
+    cleanPath === "/admin/dashboard/requests"
   ) {
     return "requests";
   }
@@ -115,6 +153,18 @@ function AdminDashboard() {
 
       {section === "requests" && (
         <RequestsPage />
+      )}
+
+      {section === "requestDetails" && (
+        <RequestDetailsPage />
+      )}
+
+      {section === "sessions" && (
+        <SessionsPage />
+      )}
+
+      {section === "sessionDetails" && (
+        <SessionDetailsPage />
       )}
 
       {section === "overview" && (
@@ -739,8 +789,9 @@ function PeoplePage() {
           description="Try another name, email or role."
         />
       ) : (
-        <div className="admin-table-wrapper">
-          <table className="admin-data-table">
+        <div className="admin-mobile-table-shell">
+          <div className="admin-table-wrapper admin-responsive-table-desktop">
+            <table className="admin-data-table">
             <thead>
               <tr>
                 <th>Name</th>
@@ -806,7 +857,73 @@ function PeoplePage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
+
+          <div className="admin-responsive-mobile-list">
+            {visiblePeople.map((person) => (
+              <article className="admin-mobile-record-card" key={person.id}>
+                <div className="admin-mobile-record-header">
+                  <div>
+                    <span>PERSON</span>
+                    <strong>{person.full_name || "Name not provided"}</strong>
+                    <small>{person.email}</small>
+                  </div>
+
+                  <StatusBadge
+                    value={getPersonAccountTypeValue(person)}
+                    label={getPersonAccountType(person)}
+                  />
+                </div>
+
+                <dl className="admin-mobile-record-details">
+                  <div>
+                    <dt>Account status</dt>
+                    <dd>
+                      <StatusBadge
+                        value={person.account_status}
+                        label={
+                          person.account_status === "pending"
+                            ? "Awaiting verification"
+                            : undefined
+                        }
+                      />
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt>Membership</dt>
+                    <dd>
+                      <StatusBadge
+                        value={
+                          person.membership_verified
+                            ? "verified"
+                            : "not_verified"
+                        }
+                        label={
+                          person.membership_verified
+                            ? "Verified"
+                            : "Not verified"
+                        }
+                      />
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt>Registered</dt>
+                    <dd>{formatDate(person.created_at)}</dd>
+                  </div>
+                </dl>
+
+                <div className="admin-mobile-record-actions">
+                  <MemberActions
+                    person={person}
+                    onAction={openConfirmation}
+                  />
+                </div>
+              </article>
+            ))}
+          </div>
 
           <div className="admin-table-pagination">
             <p>
@@ -1434,6 +1551,69 @@ function ApplicationsPage() {
               </table>
             </div>
 
+            <div className="admin-responsive-mobile-list">
+              {visibleApplications.map((application) => (
+                <article
+                  className="admin-mobile-record-card"
+                  key={application.id}
+                >
+                  <div className="admin-mobile-record-header">
+                    <div>
+                      <span>APPLICANT</span>
+                      <strong>
+                        {application.applicant?.full_name ||
+                          "Name not provided"}
+                      </strong>
+                      <small>{application.applicant?.email || ""}</small>
+                    </div>
+
+                    <StatusBadge value={application.status} />
+                  </div>
+
+                  <dl className="admin-mobile-record-details">
+                    <div>
+                      <dt>Current role</dt>
+                      <dd>
+                        {application.job_title || "Not provided"}
+                        {application.organisation
+                          ? ` · ${application.organisation}`
+                          : ""}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt>Experience</dt>
+                      <dd>{application.years_of_experience ?? 0} years</dd>
+                    </div>
+
+                    <div>
+                      <dt>Mentoring areas</dt>
+                      <dd>
+                        {(application.expertise ?? [])
+                          .slice(0, 3)
+                          .join(", ") || "Not provided"}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt>Submitted</dt>
+                      <dd>{formatDate(application.created_at)}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="admin-mobile-record-actions">
+                    <button
+                      type="button"
+                      className="admin-review-button"
+                      onClick={() => openReview(application)}
+                    >
+                      {application.status === "pending" ? "Review" : "View"}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+
             <div className="admin-table-pagination">
               <p>
                 Showing {visibleStart}-{visibleEnd} of {filteredApplications.length}
@@ -1704,6 +1884,9 @@ function ReviewList({ label, items = [] }) {
 
 function RequestsPage() {
   const [requests, setRequests] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -1711,6 +1894,9 @@ function RequestsPage() {
     let isMounted = true;
 
     async function loadRequests() {
+      setLoading(true);
+      setError("");
+
       const { data, error: requestError } = await supabase
         .from("mentorship_requests")
         .select(
@@ -1740,9 +1926,7 @@ function RequestsPage() {
 
       if (requestError) {
         console.error(requestError);
-
         setError("We could not load mentorship requests.");
-
         setLoading(false);
         return;
       }
@@ -1758,6 +1942,64 @@ function RequestsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
+  const filteredRequests = useMemo(() => {
+    const searchValue = searchTerm.trim().toLowerCase();
+
+    return requests.filter((request) => {
+      const matchesFilter = requestMatchesAdminFilter(
+        request.status,
+        statusFilter,
+      );
+
+      if (!matchesFilter) {
+        return false;
+      }
+
+      if (!searchValue) {
+        return true;
+      }
+
+      return [
+        request.mentee?.full_name,
+        request.mentee?.email,
+        request.mentor?.full_name,
+        request.mentor?.email,
+        request.mentoring_area,
+        request.goal_statement,
+        request.status,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(searchValue);
+    });
+  }, [requests, searchTerm, statusFilter]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredRequests.length / REQUEST_PAGE_SIZE),
+  );
+
+  const safePage = Math.min(currentPage, totalPages);
+  const firstIndex = (safePage - 1) * REQUEST_PAGE_SIZE;
+
+  const visibleRequests = filteredRequests.slice(
+    firstIndex,
+    firstIndex + REQUEST_PAGE_SIZE,
+  );
+
+  const visibleStart =
+    filteredRequests.length === 0 ? 0 : firstIndex + 1;
+
+  const visibleEnd = Math.min(
+    firstIndex + REQUEST_PAGE_SIZE,
+    filteredRequests.length,
+  );
+
   if (loading) {
     return <AdminLoadingState />;
   }
@@ -1766,53 +2008,1236 @@ function RequestsPage() {
     return <AdminErrorState message={error} />;
   }
 
-  if (requests.length === 0) {
+  return (
+    <section className="admin-list-section admin-requests-page">
+      <div className="admin-request-toolbar">
+        <div className="admin-search-field admin-request-search">
+          <Search size={16} aria-hidden="true" />
+
+          <input
+            type="search"
+            value={searchTerm}
+            placeholder="Search mentee, mentor or mentoring area"
+            aria-label="Search mentorship requests"
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </div>
+
+        <div
+          className="admin-request-filters"
+          aria-label="Filter mentorship requests"
+        >
+          {[
+            { value: "all", label: "All" },
+            { value: "pending", label: "Pending" },
+            { value: "active", label: "Active" },
+            { value: "closed", label: "Closed" },
+          ].map((filter) => (
+            <button
+              key={filter.value}
+              type="button"
+              className={statusFilter === filter.value ? "active" : ""}
+              onClick={() => setStatusFilter(filter.value)}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="admin-request-results-summary">
+        <span>
+          {filteredRequests.length}{" "}
+          {filteredRequests.length === 1 ? "request" : "requests"}
+        </span>
+
+        <small>
+          Pending includes clarification requests. Active contains accepted
+          relationships. Closed contains declined, referred and withdrawn
+          requests.
+        </small>
+      </div>
+
+      {requests.length === 0 ? (
+        <AdminEmptyState
+          title="No mentorship requests"
+          description="Requests submitted by mentees will appear here."
+        />
+      ) : filteredRequests.length === 0 ? (
+        <AdminEmptyState
+          title="No matching requests"
+          description="Try another search term or status filter."
+        />
+      ) : (
+        <div className="admin-request-table-shell">
+          <div className="admin-table-wrapper admin-table-wrapper--flush admin-request-desktop-table">
+            <table className="admin-data-table admin-request-table">
+              <thead>
+                <tr>
+                  <th>Mentee</th>
+                  <th>Mentor</th>
+                  <th>Mentoring area</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                  <th aria-label="Action" />
+                </tr>
+              </thead>
+
+              <tbody>
+                {visibleRequests.map((request) => (
+                  <tr key={request.id}>
+                    <td>
+                      <strong>{request.mentee?.full_name || "Mentee"}</strong>
+                      <small>{request.mentee?.email || ""}</small>
+                    </td>
+
+                    <td>
+                      <strong>{request.mentor?.full_name || "Mentor"}</strong>
+                      <small>{request.mentor?.email || ""}</small>
+                    </td>
+
+                    <td className="admin-request-area-cell">
+                      {request.mentoring_area || "Not provided"}
+                    </td>
+
+                    <td>
+                      <StatusBadge value={request.status} />
+                    </td>
+
+                    <td>{formatDate(request.created_at)}</td>
+
+                    <td className="admin-table-action-cell">
+                      <Link
+                        to={`${ADMIN_ROUTES.requests}/${request.id}`}
+                        className="admin-review-button admin-request-view-button"
+                      >
+                        <Eye size={14} />
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="admin-request-mobile-list">
+            {visibleRequests.map((request) => (
+              <article className="admin-request-mobile-card" key={request.id}>
+                <div className="admin-request-mobile-card-header">
+                  <div>
+                    <span>Mentee</span>
+                    <strong>{request.mentee?.full_name || "Mentee"}</strong>
+                    <small>{request.mentee?.email || ""}</small>
+                  </div>
+
+                  <StatusBadge value={request.status} />
+                </div>
+
+                <dl>
+                  <div>
+                    <dt>Mentor</dt>
+                    <dd>{request.mentor?.full_name || "Mentor"}</dd>
+                  </div>
+
+                  <div>
+                    <dt>Mentoring area</dt>
+                    <dd>{request.mentoring_area || "Not provided"}</dd>
+                  </div>
+
+                  <div>
+                    <dt>Submitted</dt>
+                    <dd>{formatDate(request.created_at)}</dd>
+                  </div>
+                </dl>
+
+                <Link
+                  to={`${ADMIN_ROUTES.requests}/${request.id}`}
+                  className="admin-request-mobile-view"
+                >
+                  <Eye size={14} />
+                  View details
+                </Link>
+              </article>
+            ))}
+          </div>
+
+          <div className="admin-table-pagination">
+            <p>
+              Showing {visibleStart}-{visibleEnd} of {filteredRequests.length}
+            </p>
+
+            <div className="admin-pagination-controls">
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((page) => Math.max(1, page - 1))
+                }
+                disabled={safePage === 1}
+              >
+                <ChevronLeft size={16} />
+                Previous
+              </button>
+
+              <span>
+                Page {safePage} of {totalPages}
+              </span>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((page) => Math.min(totalPages, page + 1))
+                }
+                disabled={safePage === totalPages}
+              >
+                Next
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function RequestDetailsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const requestId = location.pathname
+    .replace(/\/+$/, "")
+    .split("/")
+    .pop();
+
+  const [request, setRequest] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadRequestDetails() {
+      setLoading(true);
+      setError("");
+
+      const detailedSelection = `
+        id,
+        mentee_id,
+        mentor_id,
+        mentoring_area,
+        goal_statement,
+        reason_for_choosing_mentor,
+        preferred_times,
+        status,
+        decline_reason,
+        declined_at,
+        referral_reason,
+        referred_at,
+        withdrawal_reason,
+        created_at,
+        updated_at,
+        mentee:profiles!mentorship_requests_mentee_id_fkey (
+          full_name,
+          email
+        ),
+        mentor:profiles!mentorship_requests_mentor_id_fkey (
+          full_name,
+          email
+        )
+      `;
+
+      let result = await supabase
+        .from("mentorship_requests")
+        .select(detailedSelection)
+        .eq("id", requestId)
+        .maybeSingle();
+
+      /*
+        Older databases may not have every request-history column yet.
+        Fall back to the core request fields instead of breaking the page.
+      */
+      if (result.error) {
+        console.warn(
+          "Detailed request fields were unavailable. Falling back to core fields.",
+          result.error,
+        );
+
+        result = await supabase
+          .from("mentorship_requests")
+          .select(
+            `
+              id,
+              mentee_id,
+              mentor_id,
+              mentoring_area,
+              goal_statement,
+              status,
+              created_at,
+              mentee:profiles!mentorship_requests_mentee_id_fkey (
+                full_name,
+                email
+              ),
+              mentor:profiles!mentorship_requests_mentor_id_fkey (
+                full_name,
+                email
+              )
+            `,
+          )
+          .eq("id", requestId)
+          .maybeSingle();
+      }
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (result.error) {
+        console.error(result.error);
+        setError("We could not load this mentorship request.");
+        setLoading(false);
+        return;
+      }
+
+      if (!result.data) {
+        setError("This mentorship request could not be found.");
+        setLoading(false);
+        return;
+      }
+
+      setRequest(result.data);
+      setLoading(false);
+    }
+
+    loadRequestDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [requestId]);
+
+  if (loading) {
+    return <AdminLoadingState />;
+  }
+
+  if (error) {
     return (
-      <AdminEmptyState
-        title="No mentorship requests"
-        description="Requests submitted by mentees will appear here."
-      />
+      <section className="admin-request-details-page">
+        <button
+          type="button"
+          className="admin-request-back-button"
+          onClick={() => navigate(ADMIN_ROUTES.requests)}
+        >
+          <ArrowLeft size={16} />
+          Back to requests
+        </button>
+
+        <AdminErrorState message={error} />
+      </section>
     );
   }
 
   return (
-    <section className="admin-list-section">
-      <div className="admin-table-wrapper">
-        <table className="admin-data-table">
-          <thead>
-            <tr>
-              <th>Mentee</th>
-              <th>Requested mentor</th>
-              <th>Mentoring area</th>
-              <th>Goal</th>
-              <th>Status</th>
-              <th>Submitted</th>
-            </tr>
-          </thead>
+    <section className="admin-request-details-page">
+      <button
+        type="button"
+        className="admin-request-back-button"
+        onClick={() => navigate(ADMIN_ROUTES.requests)}
+      >
+        <ArrowLeft size={16} />
+        Back to requests
+      </button>
 
-          <tbody>
-            {requests.map((request) => (
-              <tr key={request.id}>
-                <td>{request.mentee?.full_name || "Mentee"}</td>
+      <div className="admin-request-details-hero">
+        <div>
+          <span className="admin-section-eyebrow">MENTORSHIP REQUEST</span>
 
-                <td>{request.mentor?.full_name || "Mentor"}</td>
+          <h2>{request.mentoring_area || "Mentorship request"}</h2>
 
-                <td>{request.mentoring_area}</td>
+          <p>
+            Submitted {formatDate(request.created_at)}
+          </p>
+        </div>
 
-                <td className="admin-goal-cell">{request.goal_statement}</td>
+        <StatusBadge value={request.status} />
+      </div>
 
-                <td>
-                  <StatusBadge value={request.status} />
-                </td>
+      <div className="admin-request-participants">
+        <RequestParticipant
+          label="Mentee"
+          name={request.mentee?.full_name || "Mentee"}
+          email={request.mentee?.email || ""}
+        />
 
-                <td>{formatDate(request.created_at)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <RequestParticipant
+          label="Mentor"
+          name={request.mentor?.full_name || "Mentor"}
+          email={request.mentor?.email || ""}
+        />
+      </div>
+
+      <div className="admin-request-details-grid">
+        <RequestInformation
+          label="Mentoring area"
+          value={request.mentoring_area}
+        />
+
+        <RequestInformation
+          label="Current status"
+          value={formatStatusLabel(request.status)}
+        />
+
+        <RequestInformation
+          label="Submitted"
+          value={formatDate(request.created_at)}
+        />
+
+        {request.updated_at && (
+          <RequestInformation
+            label="Last updated"
+            value={formatDate(request.updated_at)}
+          />
+        )}
+      </div>
+
+      <div className="admin-request-copy-section">
+        <span>GOAL</span>
+        <p>{request.goal_statement || "No goal was provided."}</p>
+      </div>
+
+      <div className="admin-request-copy-section">
+        <span>WHY THIS MENTOR WAS CHOSEN</span>
+        <p>
+          {request.reason_for_choosing_mentor ||
+            "This information is not available on this request."}
+        </p>
+      </div>
+
+      {request.preferred_times && (
+        <div className="admin-request-copy-section">
+          <span>PREFERRED TIMES</span>
+          <p>{request.preferred_times}</p>
+        </div>
+      )}
+
+      <RequestOutcomeHistory request={request} />
+    </section>
+  );
+}
+
+function RequestParticipant({ label, name, email }) {
+  return (
+    <article className="admin-request-participant-card">
+      <span>{label}</span>
+      <strong>{name}</strong>
+      {email && <small>{email}</small>}
+    </article>
+  );
+}
+
+function RequestInformation({ label, value }) {
+  return (
+    <div className="admin-request-information">
+      <span>{label}</span>
+      <strong>{value || "Not available"}</strong>
+    </div>
+  );
+}
+
+function RequestOutcomeHistory({ request }) {
+  const historyItems = [
+    {
+      key: "submitted",
+      title: "Request submitted",
+      description: "The mentee submitted this mentorship request.",
+      date: request.created_at,
+    },
+  ];
+
+  if (request.status === "clarification_requested") {
+    historyItems.push({
+      key: "clarification",
+      title: "Clarification requested",
+      description:
+        "The mentor requested more information from the mentee.",
+      date: request.updated_at,
+    });
+  }
+
+  if (request.status === "accepted") {
+    historyItems.push({
+      key: "accepted",
+      title: "Request accepted",
+      description:
+        "The mentor accepted the request and the mentorship became active.",
+      date: request.updated_at,
+    });
+  }
+
+  if (request.status === "declined") {
+    historyItems.push({
+      key: "declined",
+      title: "Request declined",
+      description:
+        request.decline_reason ||
+        "A decline reason is not available on this request.",
+      date: request.declined_at || request.updated_at,
+    });
+  }
+
+  if (request.status === "referred") {
+    historyItems.push({
+      key: "referred",
+      title: "Mentee referred",
+      description:
+        request.referral_reason ||
+        "A referral reason is not available on this request.",
+      date: request.referred_at || request.updated_at,
+    });
+  }
+
+  if (request.status === "withdrawn") {
+    historyItems.push({
+      key: "withdrawn",
+      title: "Request withdrawn",
+      description:
+        request.withdrawal_reason ||
+        "A withdrawal reason is not available on this request.",
+      date: request.updated_at,
+    });
+  }
+
+  return (
+    <section className="admin-request-history">
+      <div className="admin-request-history-heading">
+        <span className="admin-section-eyebrow">REQUEST HISTORY</span>
+        <h3>Request activity</h3>
+      </div>
+
+      <div className="admin-request-history-list">
+        {historyItems.map((item) => (
+          <article key={item.key} className="admin-request-history-item">
+            <span className="admin-request-history-marker" aria-hidden="true" />
+
+            <div>
+              <strong>{item.title}</strong>
+              <p>{item.description}</p>
+              {item.date && <small>{formatDate(item.date)}</small>}
+            </div>
+          </article>
+        ))}
       </div>
     </section>
   );
+}
+
+function requestMatchesAdminFilter(status, filter) {
+  if (filter === "all") {
+    return true;
+  }
+
+  if (filter === "pending") {
+    return ["pending", "clarification_requested"].includes(status);
+  }
+
+  if (filter === "active") {
+    return status === "accepted";
+  }
+
+  if (filter === "closed") {
+    return ["declined", "referred", "withdrawn"].includes(status);
+  }
+
+  return true;
+}
+
+function formatStatusLabel(status) {
+  return String(status || "unknown")
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+
+function SessionsPage() {
+  const [sessions, setSessions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSessions() {
+      setLoading(true);
+      setError("");
+
+      const { data: sessionData, error: sessionError } = await supabase
+        .from("mentorship_sessions")
+        .select(
+          `
+            id,
+            request_id,
+            mentee_id,
+            mentor_id,
+            scheduled_start,
+            scheduled_end,
+            meeting_format,
+            status,
+            created_at
+          `,
+        )
+        .order("scheduled_start", {
+          ascending: false,
+        });
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (sessionError) {
+        console.error(sessionError);
+        setError("We could not load mentorship sessions.");
+        setLoading(false);
+        return;
+      }
+
+      const rawSessions = sessionData ?? [];
+
+      const participantIds = [
+        ...new Set(
+          rawSessions.flatMap((session) =>
+            [session.mentee_id, session.mentor_id].filter(Boolean),
+          ),
+        ),
+      ];
+
+      let profileMap = new Map();
+
+      if (participantIds.length > 0) {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", participantIds);
+
+        if (profileError) {
+          console.warn(
+            "Sessions loaded, but participant profiles could not be loaded.",
+            profileError,
+          );
+        } else {
+          profileMap = new Map(
+            (profileData ?? []).map((profile) => [profile.id, profile]),
+          );
+        }
+      }
+
+      const enrichedSessions = rawSessions.map((session) => ({
+        ...session,
+        mentee: profileMap.get(session.mentee_id) ?? null,
+        mentor: profileMap.get(session.mentor_id) ?? null,
+      }));
+
+      setSessions(enrichedSessions);
+      setLoading(false);
+    }
+
+    loadSessions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
+  const filteredSessions = useMemo(() => {
+    const searchValue = searchTerm.trim().toLowerCase();
+
+    return sessions.filter((session) => {
+      if (!sessionMatchesAdminFilter(session, statusFilter)) {
+        return false;
+      }
+
+      if (!searchValue) {
+        return true;
+      }
+
+      return [
+        session.mentee?.full_name,
+        session.mentee?.email,
+        session.mentor?.full_name,
+        session.mentor?.email,
+        session.meeting_format,
+        session.status,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(searchValue);
+    });
+  }, [sessions, searchTerm, statusFilter]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredSessions.length / SESSION_PAGE_SIZE),
+  );
+
+  const safePage = Math.min(currentPage, totalPages);
+  const firstIndex = (safePage - 1) * SESSION_PAGE_SIZE;
+
+  const visibleSessions = filteredSessions.slice(
+    firstIndex,
+    firstIndex + SESSION_PAGE_SIZE,
+  );
+
+  const visibleStart =
+    filteredSessions.length === 0 ? 0 : firstIndex + 1;
+
+  const visibleEnd = Math.min(
+    firstIndex + SESSION_PAGE_SIZE,
+    filteredSessions.length,
+  );
+
+  if (loading) {
+    return <AdminLoadingState />;
+  }
+
+  if (error) {
+    return <AdminErrorState message={error} />;
+  }
+
+  return (
+    <section className="admin-sessions-page">
+      <div className="admin-session-toolbar">
+        <div className="admin-search-field admin-session-search">
+          <Search size={16} aria-hidden="true" />
+
+          <input
+            type="search"
+            value={searchTerm}
+            placeholder="Search mentor, mentee or meeting format"
+            aria-label="Search mentorship sessions"
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </div>
+
+        <div
+          className="admin-session-filters"
+          aria-label="Filter mentorship sessions"
+        >
+          {[
+            { value: "all", label: "All" },
+            { value: "upcoming", label: "Upcoming" },
+            { value: "completed", label: "Completed" },
+            { value: "cancelled", label: "Cancelled" },
+            {
+              value: "reschedule_requested",
+              label: "Reschedule requested",
+            },
+          ].map((filter) => (
+            <button
+              key={filter.value}
+              type="button"
+              className={statusFilter === filter.value ? "active" : ""}
+              onClick={() => setStatusFilter(filter.value)}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="admin-session-results-summary">
+        <span>
+          {filteredSessions.length}{" "}
+          {filteredSessions.length === 1 ? "session" : "sessions"}
+        </span>
+
+        <small>
+          Administrators can monitor session activity here without changing
+          normal mentor and mentee arrangements.
+        </small>
+      </div>
+
+      {sessions.length === 0 ? (
+        <AdminEmptyState
+          title="No mentorship sessions"
+          description="Sessions created by mentors will appear here."
+        />
+      ) : filteredSessions.length === 0 ? (
+        <AdminEmptyState
+          title="No matching sessions"
+          description="Try another search term or session filter."
+        />
+      ) : (
+        <div className="admin-session-table-shell">
+          <div className="admin-session-desktop-table">
+            <table className="admin-data-table admin-session-table">
+              <thead>
+                <tr>
+                  <th>Mentor</th>
+                  <th>Mentee</th>
+                  <th>Date & time</th>
+                  <th>Format</th>
+                  <th>Status</th>
+                  <th aria-label="Action" />
+                </tr>
+              </thead>
+
+              <tbody>
+                {visibleSessions.map((session) => (
+                  <tr key={session.id}>
+                    <td>
+                      <strong>
+                        {session.mentor?.full_name || "Mentor"}
+                      </strong>
+                      {session.mentor?.email && (
+                        <small>{session.mentor.email}</small>
+                      )}
+                    </td>
+
+                    <td>
+                      <strong>
+                        {session.mentee?.full_name || "Mentee"}
+                      </strong>
+                      {session.mentee?.email && (
+                        <small>{session.mentee.email}</small>
+                      )}
+                    </td>
+
+                    <td>{formatDateTime(session.scheduled_start)}</td>
+
+                    <td>{formatMeetingFormat(session.meeting_format)}</td>
+
+                    <td>
+                      <StatusBadge value={session.status} />
+                    </td>
+
+                    <td className="admin-table-action-cell">
+                      <Link
+                        to={`${ADMIN_ROUTES.sessions}/${session.id}`}
+                        className="admin-review-button admin-session-view-button"
+                      >
+                        <Eye size={14} />
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="admin-session-mobile-list">
+            {visibleSessions.map((session) => (
+              <article className="admin-session-mobile-card" key={session.id}>
+                <div className="admin-session-mobile-card-header">
+                  <div>
+                    <span>MENTOR</span>
+                    <strong>
+                      {session.mentor?.full_name || "Mentor"}
+                    </strong>
+                    {session.mentor?.email && (
+                      <small>{session.mentor.email}</small>
+                    )}
+                  </div>
+
+                  <StatusBadge value={session.status} />
+                </div>
+
+                <dl>
+                  <div>
+                    <dt>Mentee</dt>
+                    <dd>{session.mentee?.full_name || "Mentee"}</dd>
+                  </div>
+
+                  <div>
+                    <dt>Date & time</dt>
+                    <dd>{formatDateTime(session.scheduled_start)}</dd>
+                  </div>
+
+                  <div>
+                    <dt>Format</dt>
+                    <dd>{formatMeetingFormat(session.meeting_format)}</dd>
+                  </div>
+                </dl>
+
+                <Link
+                  to={`${ADMIN_ROUTES.sessions}/${session.id}`}
+                  className="admin-session-mobile-view"
+                >
+                  <Eye size={14} />
+                  View details
+                </Link>
+              </article>
+            ))}
+          </div>
+
+          <div className="admin-table-pagination">
+            <p>
+              Showing {visibleStart}-{visibleEnd} of {filteredSessions.length}
+            </p>
+
+            <div className="admin-pagination-controls">
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((page) => Math.max(1, page - 1))
+                }
+                disabled={safePage === 1}
+              >
+                <ChevronLeft size={16} />
+                Previous
+              </button>
+
+              <span>
+                Page {safePage} of {totalPages}
+              </span>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((page) => Math.min(totalPages, page + 1))
+                }
+                disabled={safePage === totalPages}
+              >
+                Next
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SessionDetailsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const sessionId = location.pathname
+    .replace(/\/+$/, "")
+    .split("/")
+    .pop();
+
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSessionDetails() {
+      setLoading(true);
+      setError("");
+
+      const detailedSelection = `
+        id,
+        request_id,
+        mentee_id,
+        mentor_id,
+        scheduled_start,
+        scheduled_end,
+        meeting_format,
+        meeting_link,
+        location_guidance,
+        status,
+        attendance,
+        created_at,
+        updated_at
+      `;
+
+      let result = await supabase
+        .from("mentorship_sessions")
+        .select(detailedSelection)
+        .eq("id", sessionId)
+        .maybeSingle();
+
+      /*
+        Keep this page compatible with older session schemas that may not
+        contain attendance, meeting_link, location_guidance or updated_at.
+      */
+      if (result.error) {
+        console.warn(
+          "Detailed session fields were unavailable. Falling back to core fields.",
+          result.error,
+        );
+
+        result = await supabase
+          .from("mentorship_sessions")
+          .select(
+            `
+              id,
+              request_id,
+              mentee_id,
+              mentor_id,
+              scheduled_start,
+              scheduled_end,
+              meeting_format,
+              status,
+              created_at
+            `,
+          )
+          .eq("id", sessionId)
+          .maybeSingle();
+      }
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (result.error) {
+        console.error(result.error);
+        setError("We could not load this mentorship session.");
+        setLoading(false);
+        return;
+      }
+
+      if (!result.data) {
+        setError("This mentorship session could not be found.");
+        setLoading(false);
+        return;
+      }
+
+      const participantIds = [
+        result.data.mentee_id,
+        result.data.mentor_id,
+      ].filter(Boolean);
+
+      let profileMap = new Map();
+
+      if (participantIds.length > 0) {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", participantIds);
+
+        if (profileError) {
+          console.warn(
+            "Session loaded, but participant profiles could not be loaded.",
+            profileError,
+          );
+        } else {
+          profileMap = new Map(
+            (profileData ?? []).map((profile) => [profile.id, profile]),
+          );
+        }
+      }
+
+      setSession({
+        ...result.data,
+        mentee: profileMap.get(result.data.mentee_id) ?? null,
+        mentor: profileMap.get(result.data.mentor_id) ?? null,
+      });
+
+      setLoading(false);
+    }
+
+    loadSessionDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [sessionId]);
+
+  if (loading) {
+    return <AdminLoadingState />;
+  }
+
+  if (error) {
+    return (
+      <section className="admin-session-details-page">
+        <button
+          type="button"
+          className="admin-request-back-button"
+          onClick={() => navigate(ADMIN_ROUTES.sessions)}
+        >
+          <ArrowLeft size={16} />
+          Back to sessions
+        </button>
+
+        <AdminErrorState message={error} />
+      </section>
+    );
+  }
+
+  return (
+    <section className="admin-session-details-page">
+      <button
+        type="button"
+        className="admin-request-back-button"
+        onClick={() => navigate(ADMIN_ROUTES.sessions)}
+      >
+        <ArrowLeft size={16} />
+        Back to sessions
+      </button>
+
+      <div className="admin-session-details-hero">
+        <div>
+          <span className="admin-section-eyebrow">MENTORSHIP SESSION</span>
+
+          <h2>{formatDateTime(session.scheduled_start)}</h2>
+
+          <p>
+            {session.mentor?.full_name || "Mentor"} with{" "}
+            {session.mentee?.full_name || "Mentee"}
+          </p>
+        </div>
+
+        <StatusBadge value={session.status} />
+      </div>
+
+      <div className="admin-session-participants">
+        <RequestParticipant
+          label="Mentor"
+          name={session.mentor?.full_name || "Mentor"}
+          email={session.mentor?.email || ""}
+        />
+
+        <RequestParticipant
+          label="Mentee"
+          name={session.mentee?.full_name || "Mentee"}
+          email={session.mentee?.email || ""}
+        />
+      </div>
+
+      <div className="admin-session-details-grid">
+        <RequestInformation
+          label="Starts"
+          value={formatDateTime(session.scheduled_start)}
+        />
+
+        <RequestInformation
+          label="Ends"
+          value={formatDateTime(session.scheduled_end)}
+        />
+
+        <RequestInformation
+          label="Meeting format"
+          value={formatMeetingFormat(session.meeting_format)}
+        />
+
+        <RequestInformation
+          label="Status"
+          value={formatStatusLabel(session.status)}
+        />
+
+        {session.attendance && (
+          <RequestInformation
+            label="Attendance"
+            value={formatStatusLabel(session.attendance)}
+          />
+        )}
+
+        <RequestInformation
+          label="Created"
+          value={formatDate(session.created_at)}
+        />
+      </div>
+
+      {session.meeting_link && (
+        <div className="admin-session-copy-section">
+          <span>MEETING LINK</span>
+          <a
+            href={session.meeting_link}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {session.meeting_link}
+          </a>
+        </div>
+      )}
+
+      {session.location_guidance && (
+        <div className="admin-session-copy-section">
+          <span>LOCATION GUIDANCE</span>
+          <p>{session.location_guidance}</p>
+        </div>
+      )}
+
+      <div className="admin-session-note">
+        <CalendarDays size={18} />
+
+        <div>
+          <strong>Oversight only</strong>
+          <p>
+            Session scheduling remains between the mentor and mentee. This
+            admin page is for monitoring the relationship and session record.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function sessionMatchesAdminFilter(session, filter) {
+  if (filter === "all") {
+    return true;
+  }
+
+  const normalizedStatus = String(session.status || "")
+    .toLowerCase()
+    .replaceAll("-", "_");
+
+  if (filter === "completed") {
+    return normalizedStatus === "completed";
+  }
+
+  if (filter === "cancelled") {
+    return ["cancelled", "canceled"].includes(normalizedStatus);
+  }
+
+  if (filter === "reschedule_requested") {
+    return normalizedStatus === "reschedule_requested";
+  }
+
+  if (filter === "upcoming") {
+    const scheduledTime = session.scheduled_start
+      ? new Date(session.scheduled_start).getTime()
+      : 0;
+
+    const closedStatuses = [
+      "completed",
+      "cancelled",
+      "canceled",
+    ];
+
+    return (
+      scheduledTime >= Date.now() &&
+      !closedStatuses.includes(normalizedStatus)
+    );
+  }
+
+  return true;
+}
+
+function formatMeetingFormat(value) {
+  if (!value) {
+    return "Not provided";
+  }
+
+  return String(value)
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "Not available";
+  }
+
+  return new Intl.DateTimeFormat("en-NG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 function SummaryCard({ icon, label, value, attention = false }) {

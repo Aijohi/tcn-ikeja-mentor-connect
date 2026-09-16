@@ -16,6 +16,7 @@ import {
 } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
+
 import "./Register.css";
 
 const initialForm = {
@@ -40,14 +41,17 @@ function GoogleIcon() {
         fill="#4285F4"
         d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41Z"
       />
+
       <path
         fill="#34A853"
         d="M12 22c2.7 0 4.97-.9 6.62-2.36l-3.24-2.54c-.9.6-2.05.96-3.38.96-2.6 0-4.81-1.76-5.6-4.12H3.05v2.62A10 10 0 0 0 12 22Z"
       />
+
       <path
         fill="#FBBC05"
         d="M6.4 13.94A6 6 0 0 1 6.08 12c0-.67.12-1.32.32-1.94V7.44H3.05A10 10 0 0 0 2 12c0 1.61.39 3.14 1.05 4.56l3.35-2.62Z"
       />
+
       <path
         fill="#EA4335"
         d="M12 5.94c1.47 0 2.78.5 3.82 1.5l2.87-2.87A9.62 9.62 0 0 0 12 2a10 10 0 0 0-8.95 5.44l3.35 2.62C7.19 7.7 9.4 5.94 12 5.94Z"
@@ -74,16 +78,14 @@ function Register() {
     signInWithGoogle,
   } = useAuth();
 
-  const [
-    form,
-    setForm,
-  ] = useState(() => ({
-    ...initialForm,
-    role:
-      isMenteeHandoff
-        ? "mentee"
-        : "",
-  }));
+  const [form, setForm] =
+    useState(() => ({
+      ...initialForm,
+      role:
+        isMenteeHandoff
+          ? "mentee"
+          : "",
+    }));
 
   const [
     showPassword,
@@ -131,19 +133,25 @@ function Register() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+
     setError("");
 
     if (!form.role) {
       setError(
         "Please choose whether you want to join as a mentee or mentor.",
       );
+
       return;
     }
 
-    if (form.password.length < 8) {
+    if (
+      form.password.length <
+      8
+    ) {
       setError(
         "Your password must contain at least 8 characters.",
       );
+
       return;
     }
 
@@ -154,6 +162,7 @@ function Register() {
       setError(
         "Your passwords do not match.",
       );
+
       return;
     }
 
@@ -161,6 +170,7 @@ function Register() {
       setError(
         "Please accept the terms, privacy notice, code of conduct and safety guidelines.",
       );
+
       return;
     }
 
@@ -219,16 +229,19 @@ function Register() {
       return;
     }
 
-    navigate("/check-email", {
-      state: {
-        email:
-          form.email
-            .trim()
-            .toLowerCase(),
-        accountType:
-          form.role,
+    navigate(
+      "/check-email",
+      {
+        state: {
+          email:
+            form.email
+              .trim()
+              .toLowerCase(),
+          accountType:
+            form.role,
+        },
       },
-    });
+    );
   }
 
   async function handleGoogleSignIn() {
@@ -238,6 +251,7 @@ function Register() {
       setError(
         "Please choose whether you want to join as a mentee or mentor before continuing with Google.",
       );
+
       return;
     }
 
@@ -347,7 +361,9 @@ function Register() {
               <div className="register-select-wrap">
                 <select
                   name="role"
-                  value={form.role}
+                  value={
+                    form.role
+                  }
                   onChange={
                     updateForm
                   }
@@ -397,7 +413,9 @@ function Register() {
                 }
                 placeholder="Enter your full name"
                 autoComplete="name"
-                disabled={busy}
+                disabled={
+                  busy
+                }
                 required
               />
             </label>
@@ -410,7 +428,9 @@ function Register() {
               <input
                 type="email"
                 name="email"
-                value={form.email}
+                value={
+                  form.email
+                }
                 onChange={
                   updateForm
                 }
@@ -420,7 +440,9 @@ function Register() {
                     : "Enter your email address"
                 }
                 autoComplete="email"
-                disabled={busy}
+                disabled={
+                  busy
+                }
                 required
               />
 
@@ -449,7 +471,9 @@ function Register() {
                 placeholder="Enter your mobile number"
                 autoComplete="tel"
                 inputMode="tel"
-                disabled={busy}
+                disabled={
+                  busy
+                }
                 required
               />
             </label>
@@ -476,7 +500,9 @@ function Register() {
                   placeholder="Minimum of 8 characters"
                   autoComplete="new-password"
                   minLength={8}
-                  disabled={busy}
+                  disabled={
+                    busy
+                  }
                   required
                 />
 
@@ -495,9 +521,13 @@ function Register() {
                   }
                 >
                   {showPassword ? (
-                    <EyeOff size={17} />
+                    <EyeOff
+                      size={17}
+                    />
                   ) : (
-                    <Eye size={17} />
+                    <Eye
+                      size={17}
+                    />
                   )}
                 </button>
               </div>
@@ -525,7 +555,9 @@ function Register() {
                   placeholder="Enter your password again"
                   autoComplete="new-password"
                   minLength={8}
-                  disabled={busy}
+                  disabled={
+                    busy
+                  }
                   required
                 />
 
@@ -544,9 +576,13 @@ function Register() {
                   }
                 >
                   {showConfirmPassword ? (
-                    <EyeOff size={17} />
+                    <EyeOff
+                      size={17}
+                    />
                   ) : (
-                    <Eye size={17} />
+                    <Eye
+                      size={17}
+                    />
                   )}
                 </button>
               </div>
@@ -562,7 +598,9 @@ function Register() {
                 onChange={
                   updateForm
                 }
-                disabled={busy}
+                disabled={
+                  busy
+                }
                 required
               />
 
@@ -583,7 +621,9 @@ function Register() {
             <button
               type="submit"
               className="register-submit"
-              disabled={busy}
+              disabled={
+                busy
+              }
             >
               <span>
                 {submitting
@@ -611,7 +651,9 @@ function Register() {
             onClick={
               handleGoogleSignIn
             }
-            disabled={busy}
+            disabled={
+              busy
+            }
           >
             <GoogleIcon />
 
@@ -633,15 +675,25 @@ function Register() {
               Sign in
             </Link>
           </p>
+
+          <footer className="register-mobile-utility-footer">
+            <Link to="/admin/login">
+              TCN Administrator
+            </Link>
+
+            <small>
+              © 2026 TCN Ikeja Mentor Connect
+            </small>
+          </footer>
         </div>
       </section>
 
-      <aside
-        className="register-visual-side"
-        aria-hidden="true"
-      >
+      <aside className="register-visual-side">
         <div className="register-visual-canvas">
-          <div className="register-artwork">
+          <div
+            className="register-artwork"
+            aria-hidden="true"
+          >
             <span className="register-artwork-halo" />
             <span className="register-artwork-ring register-artwork-ring--one" />
             <span className="register-artwork-ring register-artwork-ring--two" />
@@ -651,7 +703,10 @@ function Register() {
             <span className="register-artwork-dot register-artwork-dot--two" />
           </div>
 
-          <div className="register-side-note">
+          <div
+            className="register-side-note"
+            aria-hidden="true"
+          >
             <span>
               A STRONGER
             </span>
@@ -667,7 +722,10 @@ function Register() {
             <i />
           </div>
 
-          <div className="register-right-message">
+          <div
+            className="register-right-message"
+            aria-hidden="true"
+          >
             <p>
               PEOPLE EMPOWER PEOPLE
             </p>
@@ -681,6 +739,16 @@ function Register() {
               TRANSFORM
             </small>
           </div>
+
+          <footer className="register-visual-footer">
+            <Link to="/admin/login">
+              TCN Administrator
+            </Link>
+
+            <small>
+              © 2026 TCN Ikeja Mentor Connect
+            </small>
+          </footer>
         </div>
       </aside>
     </main>

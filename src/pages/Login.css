@@ -21,9 +21,15 @@
     minmax(0, 1fr)
     minmax(0, 1fr);
 
+  width: 100%;
+  max-width: 100%;
+
   min-height: 100vh;
+  min-height: 100dvh;
 
   margin: 0;
+
+  overflow-x: clip;
 
   color:
     var(--login-ink-400);
@@ -36,6 +42,9 @@
     "Segoe UI",
     Arial,
     sans-serif;
+
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 .login-page *,
@@ -53,6 +62,20 @@
   font: inherit;
 }
 
+/*
+  Helps avoid unwanted tap/double-tap enlargement on
+  touch devices without disabling normal pinch-to-zoom.
+*/
+.login-page button,
+.login-page a {
+  touch-action: manipulation;
+}
+
+.login-page button {
+  -webkit-tap-highlight-color:
+    transparent;
+}
+
 /* =====================================================
    LEFT SIDE
    ===================================================== */
@@ -64,19 +87,33 @@
   grid-column: 1;
 
   width: 100%;
+  max-width: 100%;
+
   min-width: 0;
+
   min-height: 100vh;
+  min-height: 100dvh;
+
+  overflow-x: hidden;
 
   background:
     #ffffff;
 }
 
 .login-form-inner {
+  display: flex;
+  flex-direction: column;
+
   width:
     min(
       100%,
       500px
     );
+
+  max-width: 100%;
+
+  min-height: 100vh;
+  min-height: 100dvh;
 
   padding:
     44px
@@ -98,6 +135,7 @@
 .login-brand {
   display: flex;
   align-items: center;
+
   gap: 10px;
 }
 
@@ -111,6 +149,7 @@
 
 .login-brand > span {
   display: grid;
+
   gap: 2px;
 }
 
@@ -161,9 +200,9 @@
 }
 
 .login-heading p {
-  margin: 0;
-
   max-width: 420px;
+
+  margin: 0;
 
   color:
     var(--login-ink-400);
@@ -203,11 +242,18 @@
 .login-form {
   display: grid;
 
+  width: 100%;
+  max-width: 100%;
+
   gap: 18px;
 }
 
 .login-field {
   display: block;
+
+  width: 100%;
+  max-width: 100%;
+
   min-width: 0;
 }
 
@@ -224,7 +270,12 @@
 }
 
 .login-field input {
+  display: block;
+
   width: 100%;
+  max-width: 100%;
+
+  min-width: 0;
   min-height: 46px;
 
   padding:
@@ -270,8 +321,7 @@
 }
 
 /* =====================================================
-   BROWSER AUTOFILL
-   Keep saved email/password fields pure white
+   AUTOFILL
    ===================================================== */
 
 .login-field input:-webkit-autofill,
@@ -304,11 +354,11 @@
 }
 
 .login-field input:autofill {
-  background:
-    #ffffff !important;
-
   color:
     var(--login-ink-600) !important;
+
+  background:
+    #ffffff !important;
 
   box-shadow:
     0 0 0 1000px
@@ -316,8 +366,17 @@
     inset !important;
 }
 
+/* =====================================================
+   PASSWORD
+   ===================================================== */
+
 .login-password-wrap {
   position: relative;
+
+  width: 100%;
+  max-width: 100%;
+
+  min-width: 0;
 }
 
 .login-password-wrap input {
@@ -362,9 +421,15 @@
     #f7f8fa;
 }
 
+/* =====================================================
+   OPTIONS
+   ===================================================== */
+
 .login-options {
   display: flex;
   justify-content: flex-end;
+
+  width: 100%;
 
   margin-top: -4px;
 }
@@ -381,14 +446,24 @@
   text-decoration: underline;
 }
 
+/* =====================================================
+   SUBMIT BUTTON
+   ===================================================== */
+
 .login-submit {
   display: flex;
   align-items: center;
   justify-content: center;
+
   gap: 9px;
 
   width: 100%;
+  max-width: 100%;
+
   min-height: 48px;
+
+  padding:
+    0 16px;
 
   border:
     1px solid
@@ -433,6 +508,7 @@
 .login-submit:disabled,
 .login-google:disabled {
   opacity: 0.62;
+
   cursor: not-allowed;
 }
 
@@ -441,10 +517,17 @@
   font-weight: 500 !important;
 }
 
+/* =====================================================
+   GOOGLE
+   ===================================================== */
+
 .login-divider {
   display: flex;
   align-items: center;
+
   gap: 12px;
+
+  width: 100%;
 
   margin:
     20px 0;
@@ -473,10 +556,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
   gap: 9px;
 
   width: 100%;
+  max-width: 100%;
+
   min-height: 46px;
+
+  padding:
+    0 16px;
 
   border:
     1px solid
@@ -499,7 +588,8 @@
 
   transition:
     border-color 150ms ease,
-    background-color 150ms ease;
+    background-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .login-google:hover:not(:disabled) {
@@ -518,12 +608,12 @@
   margin:
     18px 0 0;
 
-  text-align: center;
-
   color:
     var(--login-ink-300);
 
   font-size: 13px;
+
+  text-align: center;
 }
 
 .login-account-copy a {
@@ -531,6 +621,15 @@
     var(--login-orange-700);
 
   font-weight: 500;
+}
+
+/* =====================================================
+   MOBILE / TABLET UTILITY FOOTER
+   Hidden on desktop.
+   ===================================================== */
+
+.login-mobile-utility-footer {
+  display: none;
 }
 
 /* =====================================================
@@ -547,7 +646,9 @@
 
   width: 100%;
   min-width: 0;
+
   min-height: 100vh;
+  min-height: 100dvh;
 
   overflow: hidden;
 
@@ -559,10 +660,12 @@
   position: relative;
   isolation: isolate;
 
-  overflow: hidden;
-
   width: 100%;
+
   min-height: 100vh;
+  min-height: 100dvh;
+
+  overflow: hidden;
 
   border-left:
     1px solid
@@ -579,9 +682,9 @@
 
 .login-visual-canvas::before,
 .login-visual-canvas::after {
-  content: "";
-
   position: absolute;
+
+  content: "";
 
   border:
     1px solid
@@ -608,7 +711,9 @@
   height: 430px;
 }
 
-/* orbit */
+/* =====================================================
+   ARTWORK
+   ===================================================== */
 
 .login-artwork {
   position: absolute;
@@ -685,8 +790,6 @@
 }
 
 .login-artwork-orb::after {
-  content: "";
-
   position: absolute;
 
   top: 11%;
@@ -694,6 +797,8 @@
 
   width: 42%;
   height: 28%;
+
+  content: "";
 
   border-radius: 50%;
 
@@ -712,11 +817,11 @@
 .login-artwork-ring {
   position: absolute;
 
-  border-radius: 50%;
-
   border:
     1.5px solid
     rgba(255, 83, 3, 0.52);
+
+  border-radius: 50%;
 }
 
 .login-artwork-ring--one {
@@ -765,6 +870,7 @@
 
 .login-artwork-dot {
   position: absolute;
+
   border-radius: 50%;
 }
 
@@ -798,6 +904,10 @@
     );
 }
 
+/* =====================================================
+   SIDE NOTE
+   ===================================================== */
+
 .login-side-note {
   position: absolute;
 
@@ -805,6 +915,7 @@
   right: 34px;
 
   display: grid;
+
   gap: 4px;
 
   color:
@@ -812,9 +923,9 @@
 
   font-size: 8px;
   font-weight: 500;
+  line-height: 1.5;
   letter-spacing:
     0.22em;
-  line-height: 1.5;
 }
 
 .login-side-note i {
@@ -829,15 +940,20 @@
     var(--login-orange-600);
 }
 
+/* =====================================================
+   VISUAL MESSAGE
+   ===================================================== */
+
 .login-right-message {
   position: absolute;
 
   right: 42px;
+
   bottom:
     clamp(
-      110px,
-      13vh,
-      150px
+      150px,
+      16vh,
+      190px
     );
 
   left: 42px;
@@ -873,10 +989,10 @@
     15px auto
     18px;
 
+  border-radius: 999px;
+
   background:
     var(--login-orange-600);
-
-  border-radius: 999px;
 }
 
 .login-right-message > small {
@@ -896,24 +1012,165 @@
 }
 
 /* =====================================================
-   TABLET
+   VISUAL FOOTER
+   ===================================================== */
+
+.login-visual-footer {
+  position: absolute;
+
+  right: 34px;
+  bottom: 28px;
+  left: 34px;
+
+  z-index: 3;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+}
+
+.login-visual-footer a {
+  color:
+    var(--login-ink-300);
+
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.4;
+
+  transition:
+    color 150ms ease;
+}
+
+.login-visual-footer a:hover {
+  color:
+    var(--login-ink-500);
+}
+
+.login-visual-footer a:focus-visible {
+  border-radius: 3px;
+
+  outline:
+    2px solid
+    rgba(76, 88, 103, 0.20);
+
+  outline-offset: 3px;
+}
+
+.login-visual-footer small {
+  color:
+    var(--login-ink-300);
+
+  font-size: 8px;
+  font-weight: 400;
+  line-height: 1.4;
+
+  text-align: right;
+}
+
+/* =====================================================
+   TABLET / SMALL LAPTOP
    ===================================================== */
 
 @media (max-width: 1000px) {
   .login-page {
-    grid-template-columns: 1fr;
+    display: block;
+
+    width: 100%;
+
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    overflow-x: hidden;
   }
 
+  .login-form-side {
+    width: 100%;
+
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    padding: 0;
+  }
+
+  /*
+    Do not force the inner form itself to a full viewport.
+    This removes the large artificial empty areas.
+  */
   .login-form-inner {
     width:
       min(
         100%,
         520px
       );
+
+    min-height: auto;
+
+    padding:
+      30px
+      28px
+      28px;
+  }
+
+  .login-brand-row {
+    margin-bottom: 48px;
+  }
+
+  .login-heading {
+    margin-bottom: 28px;
+  }
+
+  /*
+    16px prevents automatic focus zoom on iOS/WebKit
+    browsers, including Chrome on iPhone.
+  */
+  .login-field input {
+    font-size: 16px;
   }
 
   .login-visual-side {
     display: none;
+  }
+
+  .login-mobile-utility-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 18px;
+
+    width: 100%;
+
+    /*
+      Previously this was margin-top:auto, which could
+      create a very large blank space on responsive screens.
+    */
+    margin-top: 34px;
+
+    padding-top: 24px;
+
+    border-top:
+      1px solid
+      #eef1f5;
+  }
+
+  .login-mobile-utility-footer a {
+    color:
+      var(--login-ink-300);
+
+    font-size: 9px;
+    font-weight: 400;
+  }
+
+  .login-mobile-utility-footer small {
+    color:
+      var(--login-ink-300);
+
+    font-size: 8px;
+    font-weight: 400;
+
+    text-align: right;
   }
 }
 
@@ -924,10 +1181,14 @@
 @media (max-width: 640px) {
   .login-page {
     display: block;
+
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .login-form-side {
     min-height: 100vh;
+    min-height: 100dvh;
 
     background:
       #ffffff;
@@ -937,16 +1198,16 @@
     width: 100%;
     max-width: 390px;
 
-    min-height: 100vh;
+    min-height: auto;
 
     padding:
       18px
       18px
-      30px;
+      24px;
   }
 
   .login-brand-row {
-    margin-bottom: 42px;
+    margin-bottom: 30px;
   }
 
   .login-brand img {
@@ -963,7 +1224,7 @@
   }
 
   .login-heading {
-    margin-bottom: 28px;
+    margin-bottom: 22px;
 
     text-align: left;
   }
@@ -985,8 +1246,14 @@
     line-height: 1.55;
   }
 
+  .login-error {
+    margin-bottom: 14px;
+
+    font-size: 11px;
+  }
+
   .login-form {
-    gap: 16px;
+    gap: 14px;
   }
 
   .login-field > span {
@@ -995,13 +1262,28 @@
     font-size: 10px;
   }
 
+  /*
+    Keep mobile form controls at 16px.
+    Do not reduce this to 12px or 13px.
+  */
   .login-field input {
-    min-height: 44px;
+    min-height: 46px;
+
+    padding:
+      0 12px;
 
     border-radius:
       9px;
 
-    font-size: 12px;
+    font-size: 16px;
+  }
+
+  .login-password-wrap input {
+    padding-right: 44px;
+  }
+
+  .login-options {
+    margin-top: -2px;
   }
 
   .login-forgot {
@@ -1014,22 +1296,62 @@
     border-radius:
       9px;
 
-    font-size: 13px;
+    font-size:
+      13px !important;
+  }
+
+  .login-divider {
+    margin:
+      16px 0;
   }
 
   .login-google {
-    min-height: 44px;
+    min-height: 46px;
 
     border-radius:
       9px;
 
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    line-height: 1.2 !important;
+    font-size:
+      13px !important;
+
+    font-weight:
+      500 !important;
+
+    line-height:
+      1.2 !important;
   }
 
   .login-account-copy {
+    margin-top: 16px;
+
     font-size: 13px;
+  }
+
+  .login-mobile-utility-footer {
+    margin-top: 28px;
+
+    padding-top: 20px;
+  }
+}
+
+/* =====================================================
+   SMALL MOBILE
+   ===================================================== */
+
+@media (max-width: 440px) {
+  .login-form-inner {
+    max-width: 100%;
+  }
+
+  .login-mobile-utility-footer {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 7px;
+  }
+
+  .login-mobile-utility-footer small {
+    text-align: left;
   }
 }
 
@@ -1038,6 +1360,14 @@
     padding:
       16px
       14px
-      28px;
+      22px;
+  }
+
+  .login-brand-row {
+    margin-bottom: 26px;
+  }
+
+  .login-heading {
+    margin-bottom: 20px;
   }
 }

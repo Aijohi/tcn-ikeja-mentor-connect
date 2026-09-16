@@ -120,6 +120,11 @@ const menus = {
       icon: GitPullRequest,
       path: "/admin/dashboard/mentorship-requests",
     },
+    {
+      label: "Sessions",
+      icon: CalendarDays,
+      path: "/admin/dashboard/sessions",
+    },
   ],
 };
 
@@ -228,7 +233,6 @@ function DashboardLayout({
       );
     };
   }, [signOutOpen]);
-
 
   /*
     Lock the page behind the responsive drawer.
@@ -466,16 +470,14 @@ function DashboardLayout({
 
       window.scrollTo(0, scrollY);
 
-      window.requestAnimationFrame(
-        () => {
-          restoreStyle(
-            html,
-            "scroll-behavior",
-            previous.htmlScrollBehavior,
-            previous.htmlScrollBehaviorPriority,
-          );
-        },
-      );
+      window.requestAnimationFrame(() => {
+        restoreStyle(
+          html,
+          "scroll-behavior",
+          previous.htmlScrollBehavior,
+          previous.htmlScrollBehaviorPriority,
+        );
+      });
     };
   }, [menuOpen]);
 
@@ -485,6 +487,7 @@ function DashboardLayout({
     }
 
     const body = document.body;
+
     const previousOverflow =
       body.style.overflow;
 
@@ -501,7 +504,9 @@ function DashboardLayout({
     return (
       <main className="page-message">
         <div className="loader" />
-        <p>Preparing your dashboard...</p>
+        <p>
+          Preparing your dashboard...
+        </p>
       </main>
     );
   }
@@ -566,6 +571,20 @@ function DashboardLayout({
     user.email ||
     "Mentor Connect user";
 
+  /*
+    Send each account type back to its own sign-in page.
+
+    Admin / safeguarding lead -> admin login
+    Mentor -> mentor login
+    Mentee -> member login
+  */
+  const signOutRedirectPath =
+    administratorRoles.includes(role)
+      ? "/admin/login"
+      : role === "mentor"
+        ? "/mentor/login"
+        : "/login";
+
   function openSignOutConfirmation() {
     setMenuOpen(false);
     setSignOutOpen(true);
@@ -590,7 +609,8 @@ function DashboardLayout({
       const {
         error: signOutError,
       } = await signOut({
-        redirectTo: "/",
+        redirectTo:
+          signOutRedirectPath,
       });
 
       if (signOutError) {
@@ -755,7 +775,9 @@ function DashboardLayout({
           <button
             type="button"
             className="sign-out-button"
-            onClick={openSignOutConfirmation}
+            onClick={
+              openSignOutConfirmation
+            }
           >
             <LogOut
               size={18}
@@ -786,6 +808,7 @@ function DashboardLayout({
 
           <div className="dashboard-header-actions">
             {(
+              administratorRoles.includes(role) ||
               role === "mentor" ||
               (
                 role === "mentee" &&

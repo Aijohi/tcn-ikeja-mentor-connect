@@ -7,144 +7,101 @@ import {
 
 import {
   Bell,
+  CalendarDays,
   CheckCheck,
+  ClipboardCheck,
+  GitPullRequest,
   MessageCircle,
+  UserCheck,
   X,
 } from "lucide-react";
 
-import {
-  useNavigate,
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { supabase } from "../lib/supabase";
 
 import "./NotificationBell.css";
 
-function NotificationBell({
-  userId,
-}) {
-  const navigate =
-    useNavigate();
+function NotificationBell({ userId }) {
+  const navigate = useNavigate();
 
-  const [
-    panelOpen,
-    setPanelOpen,
-  ] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [
-    notifications,
-    setNotifications,
-  ] = useState([]);
+  const unreadCount = useMemo(
+    () =>
+      notifications.filter(
+        (notification) => !notification.read_at,
+      ).length,
+    [notifications],
+  );
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(false);
+  const loadNotifications = useCallback(async () => {
+    if (!userId) {
+      setNotifications([]);
+      setLoading(false);
+      return;
+    }
 
-  const [
-    actionLoading,
-    setActionLoading,
-  ] = useState(false);
+    setLoading(true);
+    setError("");
 
-  const [
-    error,
-    setError,
-  ] = useState("");
+    try {
+      const { data, error: notificationError } = await supabase
+        .from("notifications")
+        .select(
+          `
+            id,
+            user_id,
+            type,
+            title,
+            message,
+            link,
+            read_at,
+            created_at
+          `,
+        )
+        .eq("user_id", userId)
+        .order("created_at", {
+          ascending: false,
+        })
+        .limit(50);
 
-  const unreadCount =
-    useMemo(
-      () =>
-        notifications.filter(
-          (notification) =>
-            !notification.read_at,
-        ).length,
-      [notifications],
-    );
+      if (notificationError) {
+        console.error(
+          "Unable to load notifications:",
+          notificationError.message,
+        );
 
-  const loadNotifications =
-    useCallback(
-      async () => {
-        if (!userId) {
-          setNotifications([]);
-          return;
-        }
-
-        setLoading(true);
-        setError("");
-
-        try {
-          const {
-            data,
-            error:
-              notificationError,
-          } = await supabase
-            .from("notifications")
-            .select(`
-              id,
-              user_id,
-              type,
-              title,
-              message,
-              link,
-              read_at,
-              created_at
-            `)
-            .eq(
-              "user_id",
-              userId,
-            )
-            .order(
-              "created_at",
-              {
-                ascending:
-                  false,
-              },
-            )
-            .limit(50);
-
-          if (
-            notificationError
-          ) {
-            console.error(
-              "Unable to load notifications:",
-              notificationError.message,
-            );
-
-            setError(
-              "We could not load your notifications.",
-            );
-
-            setLoading(false);
-            return;
-          }
-
-          setNotifications(
-            data ?? [],
-          );
-        } catch (
-          loadError
-        ) {
-          console.error(
-            "Unexpected notification error:",
-            loadError,
-          );
-
-          setError(
-            "We could not load your notifications.",
-          );
-        }
-
+        setError("We could not load your notifications.");
         setLoading(false);
-      },
-      [userId],
-    );
+        return;
+      }
+
+      setNotifications(data ?? []);
+    } catch (loadError) {
+      console.error(
+        "Unexpected notification error:",
+        loadError,
+      );
+
+      setError("We could not load your notifications.");
+    }
+
+    setLoading(false);
+  }, [userId]);
 
   useEffect(() => {
     loadNotifications();
-  }, [
-    loadNotifications,
-  ]);
+  }, [loadNotifications]);
 
+  /*
+    Listen for new notifications so the bell count updates
+    without requiring a page refresh.
+  */
   useEffect(() => {
     if (!userId) {
       return undefined;
@@ -153,72 +110,47 @@ function NotificationBell({
     let channel;
 
     try {
-      const suffix =
-        Math.random()
-          .toString(36)
-          .slice(2, 9);
+      const suffix = Math.random()
+        .toString(36)
+        .slice(2, 9);
 
-      channel =
-        supabase
-          .channel(
-            `notification-centre-${userId}-${suffix}`,
-          )
-          .on(
-            "postgres_changes",
-            {
-              event: "INSERT",
-              schema: "public",
-              table:
-                "notifications",
-              filter:
-                `user_id=eq.${userId}`,
-            },
-            (
-              payload,
-            ) => {
-              const incoming =
-                payload.new;
+      channel = supabase
+        .channel(
+          `notification-centre-${userId}-${suffix}`,
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            const incoming = payload.new;
 
-              setNotifications(
-                (current) => {
-                  const exists =
-                    current.some(
-                      (
-                        notification,
-                      ) =>
-                        notification.id ===
-                        incoming.id,
-                    );
-
-                  if (exists) {
-                    return current;
-                  }
-
-                  return [
-                    incoming,
-                    ...current,
-                  ];
-                },
+            setNotifications((current) => {
+              const alreadyExists = current.some(
+                (notification) =>
+                  notification.id === incoming.id,
               );
-            },
-          )
-          .subscribe(
-            (
-              status,
-            ) => {
-              if (
-                status ===
-                "CHANNEL_ERROR"
-              ) {
-                console.error(
-                  "Notification realtime channel could not start.",
-                );
+
+              if (alreadyExists) {
+                return current;
               }
-            },
-          );
-    } catch (
-      realtimeError
-    ) {
+
+              return [incoming, ...current].slice(0, 50);
+            });
+          },
+        )
+        .subscribe((status) => {
+          if (status === "CHANNEL_ERROR") {
+            console.error(
+              "Notification realtime channel could not start.",
+            );
+          }
+        });
+    } catch (realtimeError) {
       console.error(
         "Unable to start notification realtime:",
         realtimeError,
@@ -227,37 +159,26 @@ function NotificationBell({
 
     return () => {
       if (channel) {
-        supabase.removeChannel(
-          channel,
-        );
+        supabase.removeChannel(channel);
       }
     };
-  }, [
-    userId,
-  ]);
+  }, [userId]);
 
+  /*
+    Close the notification panel when Escape is pressed.
+  */
   useEffect(() => {
     if (!panelOpen) {
       return undefined;
     }
 
-    function handleEscape(
-      event,
-    ) {
-      if (
-        event.key ===
-        "Escape"
-      ) {
-        setPanelOpen(
-          false,
-        );
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        setPanelOpen(false);
       }
     }
 
-    window.addEventListener(
-      "keydown",
-      handleEscape,
-    );
+    window.addEventListener("keydown", handleEscape);
 
     return () => {
       window.removeEventListener(
@@ -265,35 +186,110 @@ function NotificationBell({
         handleEscape,
       );
     };
-  }, [
-    panelOpen,
-  ]);
+  }, [panelOpen]);
 
-  async function openNotification(
-    notification,
-  ) {
-    if (
-      !notification.read_at
-    ) {
-      const now =
-        new Date().toISOString();
+  /*
+    Lock the page behind the notification panel.
 
-      const {
-        error:
-          updateError,
-      } = await supabase
+    The scrollbar width is preserved while the page is locked
+    so opening the panel does not cause the dashboard content
+    to move horizontally.
+  */
+  useEffect(() => {
+    if (!panelOpen) {
+      return undefined;
+    }
+
+    const html = document.documentElement;
+    const body = document.body;
+
+    const previousBodyOverflow =
+      body.style.getPropertyValue("overflow");
+
+    const previousBodyOverflowPriority =
+      body.style.getPropertyPriority("overflow");
+
+    const previousBodyPaddingRight =
+      body.style.getPropertyValue("padding-right");
+
+    const previousBodyPaddingRightPriority =
+      body.style.getPropertyPriority("padding-right");
+
+    const previousHtmlOverflow =
+      html.style.getPropertyValue("overflow");
+
+    const previousHtmlOverflowPriority =
+      html.style.getPropertyPriority("overflow");
+
+    const scrollbarWidth =
+      window.innerWidth -
+      document.documentElement.clientWidth;
+
+    const computedBodyPaddingRight =
+      Number.parseFloat(
+        window
+          .getComputedStyle(body)
+          .paddingRight,
+      ) || 0;
+
+    body.style.setProperty(
+      "overflow",
+      "hidden",
+      "important",
+    );
+
+    html.style.setProperty(
+      "overflow",
+      "hidden",
+      "important",
+    );
+
+    if (scrollbarWidth > 0) {
+      body.style.setProperty(
+        "padding-right",
+        `${
+          computedBodyPaddingRight +
+          scrollbarWidth
+        }px`,
+        "important",
+      );
+    }
+
+    return () => {
+      restoreInlineStyle(
+        body,
+        "overflow",
+        previousBodyOverflow,
+        previousBodyOverflowPriority,
+      );
+
+      restoreInlineStyle(
+        body,
+        "padding-right",
+        previousBodyPaddingRight,
+        previousBodyPaddingRightPriority,
+      );
+
+      restoreInlineStyle(
+        html,
+        "overflow",
+        previousHtmlOverflow,
+        previousHtmlOverflowPriority,
+      );
+    };
+  }, [panelOpen]);
+
+  async function openNotification(notification) {
+    if (!notification.read_at) {
+      const now = new Date().toISOString();
+
+      const { error: updateError } = await supabase
         .from("notifications")
         .update({
           read_at: now,
         })
-        .eq(
-          "id",
-          notification.id,
-        )
-        .eq(
-          "user_id",
-          userId,
-        );
+        .eq("id", notification.id)
+        .eq("user_id", userId);
 
       if (updateError) {
         console.error(
@@ -301,33 +297,22 @@ function NotificationBell({
           updateError.message,
         );
       } else {
-        setNotifications(
-          (current) =>
-            current.map(
-              (item) =>
-                item.id ===
-                notification.id
-                  ? {
-                      ...item,
-                      read_at:
-                        now,
-                    }
-                  : item,
-            ),
+        setNotifications((current) =>
+          current.map((item) =>
+            item.id === notification.id
+              ? {
+                  ...item,
+                  read_at: now,
+                }
+              : item,
+          ),
         );
       }
     }
 
-    if (
-      notification.link
-    ) {
-      setPanelOpen(
-        false,
-      );
-
-      navigate(
-        notification.link,
-      );
+    if (notification.link) {
+      setPanelOpen(false);
+      navigate(notification.link);
     }
   }
 
@@ -343,25 +328,15 @@ function NotificationBell({
     setActionLoading(true);
     setError("");
 
-    const now =
-      new Date().toISOString();
+    const now = new Date().toISOString();
 
-    const {
-      error:
-        updateError,
-    } = await supabase
+    const { error: updateError } = await supabase
       .from("notifications")
       .update({
         read_at: now,
       })
-      .eq(
-        "user_id",
-        userId,
-      )
-      .is(
-        "read_at",
-        null,
-      );
+      .eq("user_id", userId)
+      .is("read_at", null);
 
     if (updateError) {
       console.error(
@@ -377,18 +352,11 @@ function NotificationBell({
       return;
     }
 
-    setNotifications(
-      (current) =>
-        current.map(
-          (
-            notification,
-          ) => ({
-            ...notification,
-            read_at:
-              notification.read_at ||
-              now,
-          }),
-        ),
+    setNotifications((current) =>
+      current.map((notification) => ({
+        ...notification,
+        read_at: notification.read_at || now,
+      })),
     );
 
     setActionLoading(false);
@@ -400,20 +368,13 @@ function NotificationBell({
   ) {
     event.stopPropagation();
 
-    const {
-      error:
-        deleteError,
-    } = await supabase
+    setError("");
+
+    const { error: deleteError } = await supabase
       .from("notifications")
       .delete()
-      .eq(
-        "id",
-        notificationId,
-      )
-      .eq(
-        "user_id",
-        userId,
-      );
+      .eq("id", notificationId)
+      .eq("user_id", userId);
 
     if (deleteError) {
       console.error(
@@ -428,15 +389,11 @@ function NotificationBell({
       return;
     }
 
-    setNotifications(
-      (current) =>
-        current.filter(
-          (
-            notification,
-          ) =>
-            notification.id !==
-            notificationId,
-        ),
+    setNotifications((current) =>
+      current.filter(
+        (notification) =>
+          notification.id !== notificationId,
+      ),
     );
   }
 
@@ -454,13 +411,10 @@ function NotificationBell({
             ? `Notifications, ${unreadCount} unread`
             : "Notifications"
         }
-        aria-expanded={
-          panelOpen
-        }
+        aria-controls="notification-panel"
+        aria-expanded={panelOpen}
         onClick={() =>
-          setPanelOpen(
-            true,
-          )
+          setPanelOpen((current) => !current)
         }
       >
         <Bell
@@ -468,11 +422,9 @@ function NotificationBell({
           strokeWidth={1.8}
         />
 
-        {unreadCount >
-          0 && (
+        {unreadCount > 0 && (
           <span className="notification-bell-count">
-            {unreadCount >
-            99
+            {unreadCount > 99
               ? "99+"
               : unreadCount}
           </span>
@@ -482,40 +434,30 @@ function NotificationBell({
       <button
         type="button"
         className={`notification-panel-overlay${
-          panelOpen
-            ? " is-open"
-            : ""
+          panelOpen ? " is-open" : ""
         }`}
         aria-label="Close notifications"
-        tabIndex={
-          panelOpen
-            ? 0
-            : -1
-        }
+        aria-hidden={!panelOpen}
+        tabIndex={panelOpen ? 0 : -1}
         onClick={() =>
-          setPanelOpen(
-            false,
-          )
+          setPanelOpen(false)
         }
       />
 
       <aside
+        id="notification-panel"
         className={`notification-panel${
-          panelOpen
-            ? " is-open"
-            : ""
+          panelOpen ? " is-open" : ""
         }`}
+        role="dialog"
+        aria-modal="true"
         aria-label="Notifications"
+        aria-hidden={!panelOpen}
       >
         <div className="notification-panel-header">
           <div>
-            <span>
-              NOTIFICATIONS
-            </span>
-
-            <h2>
-              Your updates
-            </h2>
+            <span>NOTIFICATIONS</span>
+            <h2>Your updates</h2>
           </div>
 
           <button
@@ -523,9 +465,7 @@ function NotificationBell({
             className="notification-panel-close"
             aria-label="Close notifications"
             onClick={() =>
-              setPanelOpen(
-                false,
-              )
+              setPanelOpen(false)
             }
           >
             <X
@@ -537,32 +477,26 @@ function NotificationBell({
 
         <div className="notification-panel-toolbar">
           <p>
-            {unreadCount >
-            0
+            {unreadCount > 0
               ? `${unreadCount} unread ${
-                  unreadCount ===
-                  1
+                  unreadCount === 1
                     ? "notification"
                     : "notifications"
                 }`
               : "You're all caught up"}
           </p>
 
-          {unreadCount >
-            0 && (
+          {unreadCount > 0 && (
             <button
               type="button"
-              onClick={
-                markAllAsRead
-              }
-              disabled={
-                actionLoading
-              }
+              onClick={markAllAsRead}
+              disabled={actionLoading}
             >
-              <CheckCheck
-                size={15}
-              />
-              Mark all read
+              <CheckCheck size={15} />
+
+              {actionLoading
+                ? "Updating..."
+                : "Mark all read"}
             </button>
           )}
         </div>
@@ -580,107 +514,35 @@ function NotificationBell({
           {loading ? (
             <div className="notification-panel-empty">
               <div className="loader" />
-              <h3>
-                Loading notifications
-              </h3>
-            </div>
-          ) : notifications.length ===
-            0 ? (
-            <div className="notification-panel-empty">
-              <span className="notification-panel-empty-icon">
-                <Bell
-                  size={21}
-                />
-              </span>
 
-              <h3>
-                No notifications yet
-              </h3>
+              <h3>Loading notifications</h3>
 
               <p>
-                New messages and important updates will appear here.
+                Please wait while we get your latest updates.
+              </p>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="notification-panel-empty">
+              <span className="notification-panel-empty-icon">
+                <Bell size={21} />
+              </span>
+
+              <h3>No notifications yet</h3>
+
+              <p>
+                New requests, applications, sessions and
+                other important updates will appear here.
               </p>
             </div>
           ) : (
-            notifications.map(
-              (
-                notification,
-              ) => (
-                <article
-                  key={
-                    notification.id
-                  }
-                  className={`notification-item${
-                    notification.read_at
-                      ? ""
-                      : " is-unread"
-                  }`}
-                >
-                  <button
-                    type="button"
-                    className="notification-item-main"
-                    onClick={() =>
-                      openNotification(
-                        notification,
-                      )
-                    }
-                  >
-                    <span className="notification-item-icon">
-                      <MessageCircle
-                        size={17}
-                      />
-                    </span>
-
-                    <span className="notification-item-copy">
-                      <span className="notification-item-title-row">
-                        <strong>
-                          {
-                            notification.title
-                          }
-                        </strong>
-
-                        {!notification.read_at && (
-                          <span className="notification-item-unread-dot" />
-                        )}
-                      </span>
-
-                      {notification.message && (
-                        <small className="notification-item-message">
-                          {
-                            notification.message
-                          }
-                        </small>
-                      )}
-
-                      <small className="notification-item-time">
-                        {formatNotificationTime(
-                          notification.created_at,
-                        )}
-                      </small>
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="notification-item-clear"
-                    aria-label="Clear notification"
-                    title="Clear notification"
-                    onClick={(
-                      event,
-                    ) =>
-                      removeNotification(
-                        notification.id,
-                        event,
-                      )
-                    }
-                  >
-                    <X
-                      size={15}
-                    />
-                  </button>
-                </article>
-              ),
-            )
+            notifications.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onOpen={openNotification}
+                onRemove={removeNotification}
+              />
+            ))
           )}
         </div>
       </aside>
@@ -688,31 +550,147 @@ function NotificationBell({
   );
 }
 
-function formatNotificationTime(
-  value,
-) {
+function NotificationItem({
+  notification,
+  onOpen,
+  onRemove,
+}) {
+  const NotificationIcon = getNotificationIcon(
+    notification.type,
+  );
+
+  return (
+    <article
+      className={`notification-item${
+        notification.read_at
+          ? ""
+          : " is-unread"
+      }`}
+    >
+      <button
+        type="button"
+        className="notification-item-main"
+        onClick={() =>
+          onOpen(notification)
+        }
+      >
+        <span className="notification-item-icon">
+          <NotificationIcon
+            size={17}
+            strokeWidth={1.8}
+          />
+        </span>
+
+        <span className="notification-item-copy">
+          <span className="notification-item-title-row">
+            <strong>
+              {notification.title ||
+                "New notification"}
+            </strong>
+
+            {!notification.read_at && (
+              <span
+                className="notification-item-unread-dot"
+                aria-label="Unread"
+              />
+            )}
+          </span>
+
+          {notification.message && (
+            <small className="notification-item-message">
+              {notification.message}
+            </small>
+          )}
+
+          <small className="notification-item-time">
+            {formatNotificationTime(
+              notification.created_at,
+            )}
+          </small>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        className="notification-item-clear"
+        aria-label={`Clear ${
+          notification.title || "notification"
+        }`}
+        title="Clear notification"
+        onClick={(event) =>
+          onRemove(
+            notification.id,
+            event,
+          )
+        }
+      >
+        <X size={15} />
+      </button>
+    </article>
+  );
+}
+
+function getNotificationIcon(type) {
+  const normalizedType = String(
+    type || "",
+  )
+    .toLowerCase()
+    .replaceAll("-", "_");
+
+  if (
+    normalizedType.includes("mentor_application") ||
+    normalizedType.includes("application")
+  ) {
+    return ClipboardCheck;
+  }
+
+  if (
+    normalizedType.includes("mentorship_request") ||
+    normalizedType.includes("request")
+  ) {
+    return GitPullRequest;
+  }
+
+  if (
+    normalizedType.includes("session") ||
+    normalizedType.includes("schedule") ||
+    normalizedType.includes("reschedule")
+  ) {
+    return CalendarDays;
+  }
+
+  if (
+    normalizedType.includes("membership") ||
+    normalizedType.includes("account") ||
+    normalizedType.includes("verification")
+  ) {
+    return UserCheck;
+  }
+
+  if (
+    normalizedType.includes("message") ||
+    normalizedType.includes("chat")
+  ) {
+    return MessageCircle;
+  }
+
+  return Bell;
+}
+
+function formatNotificationTime(value) {
   if (!value) {
     return "";
   }
 
-  const date =
-    new Date(value);
-
-  const now =
-    new Date();
+  const date = new Date(value);
+  const now = new Date();
 
   const difference =
-    now.getTime() -
-    date.getTime();
+    now.getTime() - date.getTime();
 
-  const minute =
-    60 * 1000;
-
-  const hour =
-    60 * minute;
-
-  const day =
-    24 * hour;
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
 
   if (
     difference >= 0 &&
@@ -722,36 +700,56 @@ function formatNotificationTime(
   }
 
   if (
-    difference >=
-      minute &&
+    difference >= minute &&
     difference < hour
   ) {
     return `${Math.floor(
-      difference /
-        minute,
+      difference / minute,
     )}m ago`;
   }
 
   if (
-    difference >=
-      hour &&
+    difference >= hour &&
     difference < day
   ) {
     return `${Math.floor(
-      difference /
-        hour,
+      difference / hour,
     )}h ago`;
   }
 
   return new Intl.DateTimeFormat(
-    "en-US",
+    "en-NG",
     {
-      month: "short",
       day: "numeric",
+      month: "short",
+      year:
+        date.getFullYear() !==
+        now.getFullYear()
+          ? "numeric"
+          : undefined,
       hour: "numeric",
       minute: "2-digit",
     },
   ).format(date);
+}
+
+function restoreInlineStyle(
+  element,
+  property,
+  value,
+  priority,
+) {
+  if (value) {
+    element.style.setProperty(
+      property,
+      value,
+      priority,
+    );
+  } else {
+    element.style.removeProperty(
+      property,
+    );
+  }
 }
 
 export default NotificationBell;
