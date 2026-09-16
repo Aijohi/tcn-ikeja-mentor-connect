@@ -223,7 +223,7 @@ body:has(.login-page) #root {
   color:
     var(--login-ink-400);
 
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.6;
 }
 
@@ -277,7 +277,7 @@ body:has(.login-page) #root {
   color:
     var(--login-ink-600);
 
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -305,7 +305,7 @@ body:has(.login-page) #root {
   background:
     #ffffff;
 
-  font-size: 13px;
+  font-size: 14px;
 
   transition:
     border-color 150ms ease,
@@ -423,7 +423,7 @@ body:has(.login-page) #root {
   color:
     var(--login-orange-700);
 
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -460,7 +460,7 @@ body:has(.login-page) #root {
   background:
     var(--login-orange-600);
 
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 
   cursor: pointer;
@@ -543,7 +543,7 @@ body:has(.login-page) #root {
   background:
     #ffffff;
 
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 
   cursor: pointer;
@@ -1085,15 +1085,40 @@ body:has(.login-page) #root {
   .login-brand-row {
     flex: 0 0 auto;
 
-    margin-bottom: 32px;
+    margin-bottom: 48px;
   }
 
   .login-heading {
-    margin-bottom: 20px;
+    margin-bottom: 26px;
+  }
+
+  .login-field > span {
+    margin-bottom: 7px;
+
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .login-heading p {
+    font-size: 14px;
+  }
+
+  .login-forgot {
+    font-size: 14px;
   }
 
   .login-field input {
     font-size: 16px;
+  }
+
+  .login-submit,
+  .login-google {
+    font-size: 14px;
+  }
+
+  .login-account-copy,
+  .login-account-copy a {
+    font-size: 14px;
   }
 
   .login-visual-side {
@@ -1290,7 +1315,7 @@ body:has(.login-page) #root {
   }
 
   .login-brand-row {
-    margin-bottom: 30px;
+    margin-bottom: 48px;
   }
 
   .login-brand {
@@ -1312,7 +1337,7 @@ body:has(.login-page) #root {
   }
 
   .login-heading {
-    margin-bottom: 18px;
+    margin-bottom: 26px;
   }
 
   .login-heading > span {
@@ -1323,25 +1348,27 @@ body:has(.login-page) #root {
     margin:
       0 0 6px;
 
-    font-size: 24px;
-    line-height: 1.12;
+    font-size: 26px;
+    line-height: 1.15;
   }
 
   .login-heading p {
     max-width: 370px;
 
-    font-size: 12px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.6;
   }
 
   .login-form {
-    gap: 13px;
+    gap: 17px;
   }
 
   .login-field > span {
-    margin-bottom: 5px;
+    margin-bottom: 7px;
 
-    font-size: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
   }
 
   .login-field input {
@@ -1354,11 +1381,11 @@ body:has(.login-page) #root {
 
   .login-submit,
   .login-google {
-    min-height: 46px;
+    min-height: 48px;
 
     border-radius: 10px;
 
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .login-divider {
@@ -1367,13 +1394,14 @@ body:has(.login-page) #root {
   }
 
   .login-account-copy {
-    margin-top: 13px;
+    margin-top: 16px;
 
-    font-size: 13px;
+    font-size: 14px;
+    line-height: 1.5;
   }
 
   .login-account-copy a {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .login-responsive-utility,
@@ -1471,4 +1499,16 @@ body,
 
 .login-visual-canvas {
   background-image: none !important;
+}
+
+
+/* =====================================================
+   AUTH ACCESS CLEANUP
+   Administrator access remains on the public website only.
+   ===================================================== */
+
+.login-responsive-utility,
+.login-mobile-utility-footer,
+.login-visual-footer {
+  display: none !important;
 }

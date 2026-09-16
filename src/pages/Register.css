@@ -182,7 +182,7 @@ body:has(.register-page) #root {
    ===================================================== */
 
 .register-heading {
-  margin-bottom: 26px;
+  margin-bottom: 46px;
 }
 
 .register-heading > span {
@@ -215,7 +215,7 @@ body:has(.register-page) #root {
   color:
     var(--register-ink-400);
 
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.6;
 }
 
@@ -271,7 +271,7 @@ body:has(.register-page) #root {
   color:
     var(--register-ink-600);
 
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -301,7 +301,7 @@ body:has(.register-page) #root {
   background:
     #ffffff;
 
-  font-size: 13px;
+  font-size: 14px;
 
   transition:
     border-color 150ms ease,
@@ -432,8 +432,8 @@ body:has(.register-page) #root {
   color:
     var(--register-ink-400);
 
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .register-terms input {
@@ -486,7 +486,7 @@ body:has(.register-page) #root {
   background:
     var(--register-orange-600);
 
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 
   cursor: pointer;
@@ -566,7 +566,7 @@ body:has(.register-page) #root {
   background:
     #ffffff;
 
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 
   cursor: pointer;
@@ -1098,12 +1098,38 @@ body:has(.register-page) #root {
   }
 
   .register-heading {
-    margin-bottom: 22px;
+    margin-bottom: 28px;
+  }
+
+  .register-field > span {
+    margin-bottom: 7px;
+
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .register-heading p {
+    font-size: 14px;
   }
 
   .register-field input,
   .register-select-wrap select {
     font-size: 16px;
+  }
+
+  .register-terms {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .register-submit,
+  .register-google {
+    font-size: 14px;
+  }
+
+  .register-bottom-signin,
+  .register-bottom-signin a {
+    font-size: 14px;
   }
 
   .register-visual-side {
@@ -1215,7 +1241,7 @@ body:has(.register-page) #root {
   }
 
   .register-brand-row {
-    margin-bottom: 20px;
+    margin-bottom: 44px;
   }
 
   .register-brand {
@@ -1239,7 +1265,7 @@ body:has(.register-page) #root {
   .register-heading {
     margin-top: 0;
 
-    margin-bottom: 20px;
+    margin-bottom: 28px;
 
     text-align: left;
   }
@@ -1253,22 +1279,24 @@ body:has(.register-page) #root {
       0 0 7px;
 
     font-size: 28px;
-    line-height: 1.12;
+    line-height: 1.15;
   }
 
   .register-heading p {
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.6;
   }
 
   .register-form {
-    gap: 14px;
+    gap: 18px;
   }
 
   .register-field > span {
-    margin-bottom: 5px;
+    margin-bottom: 7px;
 
-    font-size: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
   }
 
   .register-field input,
@@ -1292,15 +1320,17 @@ body:has(.register-page) #root {
   }
 
   .register-terms {
-    font-size: 11px;
-    line-height: 1.5;
+    font-size: 13px;
+    line-height: 1.6;
   }
 
   .register-submit,
   .register-google {
-    min-height: 46px;
+    min-height: 48px;
 
     border-radius: 10px;
+
+    font-size: 14px;
   }
 
   .register-divider {
@@ -1309,9 +1339,10 @@ body:has(.register-page) #root {
   }
 
   .register-bottom-signin {
-    margin-top: 13px;
+    margin-top: 16px;
 
     font-size: 14px;
+    line-height: 1.5;
   }
 
   .register-bottom-signin a {
@@ -1489,4 +1520,22 @@ body,
 
 .register-visual-canvas {
   background-image: none !important;
+}
+
+
+@media (max-width: 1000px) {
+  .register-field > small {
+    font-size: 12px;
+    line-height: 1.55;
+  }
+}
+
+/* =====================================================
+   AUTH ACCESS CLEANUP
+   Administrator access remains on the public website only.
+   ===================================================== */
+
+.register-mobile-utility-footer,
+.register-visual-footer {
+  display: none !important;
 }
