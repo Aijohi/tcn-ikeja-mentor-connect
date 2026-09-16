@@ -47,6 +47,19 @@
   text-size-adjust: 100%;
 }
 
+/* =====================================================
+   AUTH PAGE CANVAS
+   Keep the browser/root canvas pure white on every size.
+   This also covers mobile overscroll/bounce areas.
+   ===================================================== */
+
+html:has(.register-page),
+body:has(.register-page),
+body:has(.register-page) #root {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
 .register-page *,
 .register-page *::before,
 .register-page *::after {
@@ -1106,7 +1119,12 @@
 
     width: 100%;
 
-    margin-top: 28px;
+    margin-top:
+      clamp(
+        140px,
+        18vh,
+        220px
+      );
 
     padding-top: 12px;
   }
@@ -1127,7 +1145,7 @@
     background:
       transparent;
 
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     line-height: 1.2;
   }
@@ -1273,7 +1291,12 @@
   }
 
   .register-mobile-utility-footer {
-    margin-top: 22px;
+    margin-top:
+      clamp(
+        170px,
+        22vh,
+        260px
+      );
 
     padding-top: 8px;
   }
@@ -1281,7 +1304,7 @@
   .register-mobile-utility-footer a {
     min-height: 42px;
 
-    font-size: 14px;
+    font-size: 13px;
   }
 }
 

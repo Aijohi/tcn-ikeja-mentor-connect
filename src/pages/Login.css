@@ -47,6 +47,19 @@
   text-size-adjust: 100%;
 }
 
+/* =====================================================
+   AUTH PAGE CANVAS
+   Keep the browser/root canvas pure white on every size.
+   This also covers mobile overscroll/bounce areas.
+   ===================================================== */
+
+html:has(.login-page),
+body:has(.login-page),
+body:has(.login-page) #root {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
 .login-page *,
 .login-page *::before,
 .login-page *::after {
@@ -1102,9 +1115,9 @@
 
     margin-top:
       clamp(
-        96px,
-        16vh,
-        150px
+        170px,
+        21vh,
+        240px
       );
 
     padding-top: 0;
@@ -1183,9 +1196,9 @@
 
     margin-top:
       clamp(
-        96px,
-        16vh,
-        150px
+        170px,
+        21vh,
+        240px
       );
 
     padding-top: 0;
@@ -1339,9 +1352,9 @@
   .login-mobile-utility-footer {
     margin-top:
       clamp(
-        110px,
-        18vh,
-        170px
+        220px,
+        26vh,
+        300px
       );
   }
 
@@ -1367,7 +1380,7 @@
 
   .login-responsive-utility,
   .login-mobile-utility-footer {
-    margin-top: 72px;
+    margin-top: 120px;
   }
 }
 

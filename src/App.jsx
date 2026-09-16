@@ -41,6 +41,7 @@ import MentorMentees from "./pages/MentorMentees";
 import MentorSessions from "./pages/MentorSessions";
 import MentorScheduleSession from "./pages/MentorScheduleSession";
 import MentorMessages from "./pages/MentorMessages";
+import MentorComingSoon from "./pages/MentorComingSoon";
 import BecomeAMentee from "./pages/BecomeAMentee";
 
 import AdminDashboard from "./pages/AdminDashboard";
@@ -57,10 +58,6 @@ function App() {
             element={<Home />}
           />
 
-          {/* =====================================================
-              REGISTRATION
-              ===================================================== */}
-
           <Route
             path="/register"
             element={<Register />}
@@ -71,15 +68,15 @@ function App() {
             element={<MentorRegister />}
           />
 
-          {/* =====================================================
-              LOGIN
-              ===================================================== */}
-
           <Route
             path="/login"
             element={<Login />}
           />
 
+          {/*
+            Mentor sign-out uses /mentor/login.
+            It intentionally reuses the same member Login screen.
+          */}
           <Route
             path="/mentor/login"
             element={<Login />}
@@ -89,10 +86,6 @@ function App() {
             path="/admin/login"
             element={<AdminLogin />}
           />
-
-          {/* =====================================================
-              AUTHENTICATION
-              ===================================================== */}
 
           <Route
             path="/auth/callback"
@@ -154,10 +147,6 @@ function App() {
               <AccountSuspended />
             }
           />
-
-          {/* =====================================================
-              MENTEE
-              ===================================================== */}
 
           <Route
             path="/mentee/dashboard"
@@ -276,10 +265,6 @@ function App() {
             }
           />
 
-          {/* =====================================================
-              BECOME A MENTOR
-              ===================================================== */}
-
           <Route
             path="/mentor/apply"
             element={
@@ -315,10 +300,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-          {/* =====================================================
-              MENTOR
-              ===================================================== */}
 
           <Route
             path="/mentor/dashboard"
@@ -450,10 +431,6 @@ function App() {
             }
           />
 
-          {/* =====================================================
-              ADMIN
-              ===================================================== */}
-
           <Route
             path="/admin/dashboard/*"
             element={
@@ -467,10 +444,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-          {/* =====================================================
-              FALLBACK
-              ===================================================== */}
 
           <Route
             path="*"

@@ -9,7 +9,6 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [signingOut, setSigningOut] = useState(false);
 
   async function loadProfile(userId) {
     if (!userId) {
@@ -47,7 +46,10 @@ export function AuthProvider({ children }) {
       }
 
       if (error) {
-        console.error("Unable to load authentication session:", error.message);
+        console.error(
+          "Unable to load authentication session:",
+          error.message,
+        );
       }
 
       setSession(currentSession ?? null);
@@ -67,23 +69,25 @@ export function AuthProvider({ children }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      setSession(currentSession ?? null);
+    } = supabase.auth.onAuthStateChange(
+      (_event, currentSession) => {
+        setSession(currentSession ?? null);
 
-      if (!currentSession?.user) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      window.setTimeout(async () => {
-        await loadProfile(currentSession.user.id);
-
-        if (isMounted) {
+        if (!currentSession?.user) {
+          setProfile(null);
           setLoading(false);
+          return;
         }
-      }, 0);
-    });
+
+        window.setTimeout(async () => {
+          await loadProfile(currentSession.user.id);
+
+          if (isMounted) {
+            setLoading(false);
+          }
+        }, 0);
+      },
+    );
 
     return () => {
       isMounted = false;
@@ -91,7 +95,13 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  async function signUp({ fullName, email, phoneNumber, password, role }) {
+  async function signUp({
+    fullName,
+    email,
+    phoneNumber,
+    password,
+    role,
+  }) {
     return supabase.auth.signUp({
       email,
       password,
@@ -102,126 +112,145 @@ export function AuthProvider({ children }) {
           role: "mentee",
           signup_intent: role,
         },
-        emailRedirectTo: `${window.location.origin}/verify-email`,
+        emailRedirectTo:
+          `${window.location.origin}/verify-email`,
       },
     });
   }
 
-  async function signUpApprovedMentor({
-    fullName,
-    email,
-    phoneNumber,
-    password,
-    invitationToken,
-  }) {
-    return supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          phone_number: phoneNumber || null,
-          role: "mentor",
-          signup_intent: "mentor",
-          mentor_invite_token: invitationToken,
-        },
-        emailRedirectTo: `${window.location.origin}/verify-email?account=mentor`,
-      },
-    });
-  }
+  async function signInWithGoogle(
+    accountIntent = null,
+  ) {
+    const allowedAccountIntents = [
+      "mentee",
+      "mentor",
+    ];
 
-  async function signInWithGoogle(accountIntent = null) {
-    const allowedAccountIntents = ["mentee", "mentor"];
-
-    if (allowedAccountIntents.includes(accountIntent)) {
-      sessionStorage.setItem(GOOGLE_ACCOUNT_INTENT_KEY, accountIntent);
+    if (
+      allowedAccountIntents.includes(
+        accountIntent,
+      )
+    ) {
+      sessionStorage.setItem(
+        GOOGLE_ACCOUNT_INTENT_KEY,
+        accountIntent,
+      );
     } else {
-      sessionStorage.removeItem(GOOGLE_ACCOUNT_INTENT_KEY);
+      sessionStorage.removeItem(
+        GOOGLE_ACCOUNT_INTENT_KEY,
+      );
     }
 
-    const result = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: {
-          prompt: "select_account",
+    const result =
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo:
+            `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: "select_account",
+          },
         },
-      },
-    });
+      });
 
     if (result.error) {
-      sessionStorage.removeItem(GOOGLE_ACCOUNT_INTENT_KEY);
+      sessionStorage.removeItem(
+        GOOGLE_ACCOUNT_INTENT_KEY,
+      );
     }
 
     return result;
   }
 
   function getGoogleAccountIntent() {
-    const accountIntent = sessionStorage.getItem(GOOGLE_ACCOUNT_INTENT_KEY);
+    const accountIntent =
+      sessionStorage.getItem(
+        GOOGLE_ACCOUNT_INTENT_KEY,
+      );
 
-    return ["mentee", "mentor"].includes(accountIntent) ? accountIntent : null;
+    return [
+      "mentee",
+      "mentor",
+    ].includes(accountIntent)
+      ? accountIntent
+      : null;
   }
 
   function clearGoogleAccountIntent() {
-    sessionStorage.removeItem(GOOGLE_ACCOUNT_INTENT_KEY);
+    sessionStorage.removeItem(
+      GOOGLE_ACCOUNT_INTENT_KEY,
+    );
   }
 
-  async function signIn(email, password) {
-    const result = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  async function signIn(
+    email,
+    password,
+  ) {
+    const result =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
     if (result.data.user) {
-      await loadProfile(result.data.user.id);
+      await loadProfile(
+        result.data.user.id,
+      );
     }
 
     return result;
   }
 
-  async function signOut(options = {}) {
-    const {
-      redirectTo = null,
-    } = options;
+  /*
+    signOut now accepts the destination selected by DashboardLayout.
 
-    setSigningOut(true);
+    Mentee -> /login
+    Mentor -> /mentor/login
+    Admin -> /admin/login
 
+    Redirect only after Supabase confirms the local sign-out.
+  */
+  async function signOut({
+    redirectTo = "/login",
+  } = {}) {
     const result =
       await supabase.auth.signOut({
         scope: "local",
       });
 
+    if (result.error) {
+      return result;
+    }
+
     sessionStorage.removeItem(
       GOOGLE_ACCOUNT_INTENT_KEY,
     );
 
-    if (result.error) {
-      setSigningOut(false);
-      return result;
-    }
-
-    if (redirectTo) {
-      window.location.replace(
-        redirectTo,
-      );
-
-      return result;
-    }
-
-    setSession(null);
-    setProfile(null);
-    setSigningOut(false);
+    /*
+      Use a full location replacement so the previous authenticated
+      dashboard is not left in browser history and cannot briefly
+      win a routing race while the auth state is clearing.
+    */
+    window.location.replace(
+      redirectTo,
+    );
 
     return result;
   }
 
   async function resetPassword(email) {
-    return supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    return supabase.auth.resetPasswordForEmail(
+      email,
+      {
+        redirectTo:
+          `${window.location.origin}/reset-password`,
+      },
+    );
   }
 
-  async function updatePassword(password) {
+  async function updatePassword(
+    password,
+  ) {
     return supabase.auth.updateUser({
       password,
     });
@@ -233,19 +262,20 @@ export function AuthProvider({ children }) {
       return null;
     }
 
-    return loadProfile(session.user.id);
+    return loadProfile(
+      session.user.id,
+    );
   }
 
   return (
     <AuthContext.Provider
       value={{
         session,
-        user: session?.user ?? null,
+        user:
+          session?.user ?? null,
         profile,
         loading,
-        signingOut,
         signUp,
-        signUpApprovedMentor,
         signIn,
         signInWithGoogle,
         signOut,
@@ -262,10 +292,13 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context =
+    useContext(AuthContext);
 
   if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider.");
+    throw new Error(
+      "useAuth must be used inside AuthProvider.",
+    );
   }
 
   return context;
