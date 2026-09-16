@@ -146,14 +146,14 @@ body:has(.login-page) #root {
   display: flex;
   align-items: center;
 
-  gap: 10px;
+  gap: 12px;
 }
 
 .login-brand img {
   display: block;
 
-  width: 66px;
-  height: 40px;
+  width: 78px;
+  height: 46px;
 
   object-fit: contain;
   object-position: left center;
@@ -169,15 +169,15 @@ body:has(.login-page) #root {
   color:
     var(--login-ink-600);
 
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 650;
 }
 
 .login-brand small {
   color:
     var(--login-ink-300);
 
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 500;
   letter-spacing:
     0.14em;
@@ -1246,6 +1246,29 @@ body:has(.login-page) #root {
 }
 
 /* =====================================================
+   TABLET BRAND SCALE
+   ===================================================== */
+
+@media (min-width: 641px) and (max-width: 1000px) {
+  .login-brand {
+    gap: 11px;
+  }
+
+  .login-brand img {
+    width: 74px;
+    height: 44px;
+  }
+
+  .login-brand strong {
+    font-size: 14px;
+  }
+
+  .login-brand small {
+    font-size: 8px;
+  }
+}
+
+/* =====================================================
    MOBILE
    ===================================================== */
 
@@ -1270,17 +1293,22 @@ body:has(.login-page) #root {
     margin-bottom: 30px;
   }
 
+  .login-brand {
+    gap: 10px;
+  }
+
   .login-brand img {
-    width: 56px;
-    height: 32px;
+    width: 68px;
+    height: 40px;
   }
 
   .login-brand strong {
-    font-size: 11px;
+    font-size: 14px;
+    font-weight: 650;
   }
 
   .login-brand small {
-    font-size: 6px;
+    font-size: 8px;
   }
 
   .login-heading {
@@ -1406,4 +1434,41 @@ body:has(.login-page) #root {
   .login-heading h1 {
     font-size: 24px;
   }
+}
+
+
+/* =====================================================
+   ADMIN ACCESS REMOVED FROM AUTH SCREEN
+   Administrator access lives on the public website only.
+   ===================================================== */
+
+.login-responsive-utility,
+.login-mobile-utility-footer,
+.login-visual-footer {
+  display: none !important;
+}
+
+
+html,
+body,
+#root,
+.login-page,
+.login-form-side,
+.login-form-inner,
+.login-visual-side,
+.login-visual-canvas {
+  background-color: #ffffff !important;
+}
+
+html,
+body,
+#root,
+.login-page,
+.login-form-side,
+.login-form-inner {
+  background-image: none !important;
+}
+
+.login-visual-canvas {
+  background-image: none !important;
 }

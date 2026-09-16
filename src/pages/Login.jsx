@@ -36,20 +36,17 @@ function GoogleIcon() {
         fill="#4285F4"
         d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41Z"
       />
-
       <path
         fill="#34A853"
         d="M12 22c2.7 0 4.98-.9 6.63-2.36l-3.24-2.54c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z"
       />
-
       <path
         fill="#FBBC05"
         d="M6.39 13.93A6.02 6.02 0 0 1 6.08 12c0-.67.11-1.32.31-1.93V7.45H3.04A10 10 0 0 0 2 12c0 1.61.38 3.14 1.04 4.55l3.35-2.62Z"
       />
-
       <path
         fill="#EA4335"
-        d="M12 5.94c1.47 0 2.79.5 3.83 1.5l2.87-2.87A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.96 5.45l3.35-2.62C7.18 7.7 9.39 5.94 12 5.94Z"
+        d="M12 5.94c1.47 0 2.79.5 3.83 1.5l2.87-2.87A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.96 5.45l3.35 2.62C7.18 7.7 9.39 5.94 12 5.94Z"
       />
     </svg>
   );
@@ -63,13 +60,11 @@ function Login() {
     signInWithGoogle,
   } = useAuth();
 
-  const [
-    form,
-    setForm,
-  ] = useState({
-    email: "",
-    password: "",
-  });
+  const [form, setForm] =
+    useState({
+      email: "",
+      password: "",
+    });
 
   const [
     showPassword,
@@ -86,17 +81,9 @@ function Login() {
     setGoogleSubmitting,
   ] = useState(false);
 
-  const [
-    error,
-    setError,
-  ] = useState("");
+  const [error, setError] =
+    useState("");
 
-  /*
-    React Router can preserve the scroll position from
-    the previous screen.
-
-    Authentication pages should always start at the top.
-  */
   useLayoutEffect(() => {
     const resetScroll = () => {
       window.scrollTo({
@@ -234,7 +221,7 @@ function Login() {
       )
     ) {
       setError(
-        "This is the mentor and mentee sign-in page. Please use the administrator portal.",
+        "This is the mentor and mentee sign-in page.",
       );
 
       return;
@@ -272,22 +259,8 @@ function Login() {
     if (
       profile.role === "mentor"
     ) {
-      if (
-        profile.account_status ===
-        "active"
-      ) {
-        navigate(
-          "/mentor/dashboard",
-          {
-            replace: true,
-          },
-        );
-
-        return;
-      }
-
       navigate(
-        "/membership-pending",
+        "/mentor/dashboard",
         {
           replace: true,
         },
@@ -359,212 +332,186 @@ function Login() {
             </Link>
           </div>
 
-          <div className="login-main-content">
-            <div className="login-heading">
+          <div className="login-heading">
+            <span>
+              WELCOME BACK
+            </span>
+
+            <h1>
+              Sign in to your account
+            </h1>
+
+            <p>
+              Continue your mentoring
+              journey from where you
+              left off.
+            </p>
+          </div>
+
+          {error && (
+            <p
+              className="login-error"
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
+
+          <form
+            className="login-form"
+            onSubmit={
+              handleSubmit
+            }
+          >
+            <label className="login-field">
               <span>
-                WELCOME BACK
+                Email address
               </span>
 
-              <h1>
-                Sign in to your account
-              </h1>
+              <input
+                type="email"
+                name="email"
+                value={
+                  form.email
+                }
+                onChange={
+                  updateForm
+                }
+                placeholder="Enter your email address"
+                autoComplete="email"
+                disabled={
+                  authenticationInProgress
+                }
+                required
+              />
+            </label>
 
-              <p>
-                Continue your mentoring
-                journey from where you
-                left off.
-              </p>
-            </div>
+            <label className="login-field">
+              <span>
+                Password
+              </span>
 
-            {error && (
-              <p
-                className="login-error"
-                role="alert"
-              >
-                {error}
-              </p>
-            )}
-
-            <form
-              className="login-form"
-              onSubmit={
-                handleSubmit
-              }
-            >
-              <label className="login-field">
-                <span>
-                  Email address
-                </span>
-
+              <div className="login-password-wrap">
                 <input
-                  type="email"
-                  name="email"
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  name="password"
                   value={
-                    form.email
+                    form.password
                   }
                   onChange={
                     updateForm
                   }
-                  placeholder="Enter your email address"
-                  autoComplete="email"
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
                   disabled={
                     authenticationInProgress
                   }
                   required
                 />
-              </label>
 
-              <label className="login-field">
-                <span>
-                  Password
-                </span>
-
-                <div className="login-password-wrap">
-                  <input
-                    type={
-                      showPassword
-                        ? "text"
-                        : "password"
-                    }
-                    name="password"
-                    value={
-                      form.password
-                    }
-                    onChange={
-                      updateForm
-                    }
-                    placeholder="Enter your password"
-                    autoComplete="current-password"
-                    disabled={
-                      authenticationInProgress
-                    }
-                    required
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPassword(
-                        (current) =>
-                          !current,
-                      )
-                    }
-                    aria-label={
-                      showPassword
-                        ? "Hide password"
-                        : "Show password"
-                    }
-                    disabled={
-                      authenticationInProgress
-                    }
-                  >
-                    {showPassword ? (
-                      <EyeOff
-                        size={17}
-                      />
-                    ) : (
-                      <Eye
-                        size={17}
-                      />
-                    )}
-                  </button>
-                </div>
-              </label>
-
-              <div className="login-options">
-                <Link
-                  to="/forgot-password"
-                  className="login-forgot"
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPassword(
+                      (current) =>
+                        !current,
+                    )
+                  }
+                  aria-label={
+                    showPassword
+                      ? "Hide password"
+                      : "Show password"
+                  }
+                  disabled={
+                    authenticationInProgress
+                  }
                 >
-                  Forgot password?
-                </Link>
+                  {showPassword ? (
+                    <EyeOff
+                      size={17}
+                    />
+                  ) : (
+                    <Eye
+                      size={17}
+                    />
+                  )}
+                </button>
               </div>
+            </label>
 
-              <button
-                type="submit"
-                className="login-submit"
-                disabled={
-                  authenticationInProgress
-                }
+            <div className="login-options">
+              <Link
+                to="/forgot-password"
+                className="login-forgot"
               >
-                <span>
-                  {submitting
-                    ? "Signing in..."
-                    : "Sign in"}
-                </span>
-
-                {!submitting && (
-                  <ArrowRight
-                    size={17}
-                  />
-                )}
-              </button>
-            </form>
-
-            <div className="login-divider">
-              <span>
-                or
-              </span>
+                Forgot password?
+              </Link>
             </div>
 
             <button
-              type="button"
-              className="login-google"
-              onClick={
-                handleGoogleSignIn
-              }
+              type="submit"
+              className="login-submit"
               disabled={
                 authenticationInProgress
               }
             >
-              <GoogleIcon />
-
-              {googleSubmitting
-                ? "Connecting to Google..."
-                : "Continue with Google"}
-            </button>
-
-            <p className="login-account-copy">
-              New to Mentor Connect?{" "}
-
-              <Link to="/register">
-                Create an account
-              </Link>
-            </p>
-          </div>
-
-          <div className="login-responsive-utility">
-            <span className="login-responsive-utility-label">
-              Platform administration
-            </span>
-
-            <Link
-              to="/admin/login"
-              className="login-admin-access"
-            >
               <span>
-                TCN Administrator
+                {submitting
+                  ? "Signing in..."
+                  : "Sign in"}
               </span>
 
-              <ArrowRight
-                size={16}
-                aria-hidden="true"
-              />
-            </Link>
+              {!submitting && (
+                <ArrowRight
+                  size={17}
+                />
+              )}
+            </button>
+          </form>
 
-            <small>
-              © 2026 TCN Ikeja
-            </small>
+          <div className="login-divider">
+            <span>
+              or
+            </span>
           </div>
+
+          <button
+            type="button"
+            className="login-google"
+            onClick={
+              handleGoogleSignIn
+            }
+            disabled={
+              authenticationInProgress
+            }
+          >
+            <GoogleIcon />
+
+            {googleSubmitting
+              ? "Connecting to Google..."
+              : "Continue with Google"}
+          </button>
+
+          <p className="login-account-copy">
+            New to Mentor Connect?{" "}
+
+            <Link to="/register">
+              Create an account
+            </Link>
+          </p>
         </div>
       </section>
 
-      <aside className="login-visual-side">
+      <aside
+        className="login-visual-side"
+        aria-hidden="true"
+      >
         <div className="login-visual-canvas">
-          <div
-            className="login-artwork"
-            aria-hidden="true"
-          >
+          <div className="login-artwork">
             <span className="login-artwork-halo" />
             <span className="login-artwork-ring login-artwork-ring--one" />
             <span className="login-artwork-ring login-artwork-ring--two" />
@@ -574,10 +521,7 @@ function Login() {
             <span className="login-artwork-dot login-artwork-dot--two" />
           </div>
 
-          <div
-            className="login-side-note"
-            aria-hidden="true"
-          >
+          <div className="login-side-note">
             <span>
               GROW WITH
             </span>
@@ -589,10 +533,7 @@ function Login() {
             <i />
           </div>
 
-          <div
-            className="login-right-message"
-            aria-hidden="true"
-          >
+          <div className="login-right-message">
             <p>
               PURPOSEFUL CONVERSATIONS
             </p>
@@ -601,16 +542,6 @@ function Login() {
 
             <small>
               MEANINGFUL GROWTH
-            </small>
-          </div>
-
-          <div className="login-visual-footer">
-            <Link to="/admin/login">
-              TCN Administrator
-            </Link>
-
-            <small>
-              © 2026 TCN Ikeja
             </small>
           </div>
         </div>

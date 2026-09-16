@@ -140,14 +140,14 @@ body:has(.register-page) #root {
   display: flex;
   align-items: center;
 
-  gap: 10px;
+  gap: 12px;
 }
 
 .register-brand img {
   display: block;
 
-  width: 66px;
-  height: 40px;
+  width: 78px;
+  height: 46px;
 
   object-fit: contain;
   object-position: left center;
@@ -163,15 +163,15 @@ body:has(.register-page) #root {
   color:
     var(--register-ink-600);
 
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 650;
 }
 
 .register-brand small {
   color:
     var(--register-ink-300);
 
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 500;
   letter-spacing:
     0.14em;
@@ -1171,6 +1171,29 @@ body:has(.register-page) #root {
 }
 
 /* =====================================================
+   TABLET BRAND SCALE
+   ===================================================== */
+
+@media (min-width: 641px) and (max-width: 1000px) {
+  .register-brand {
+    gap: 11px;
+  }
+
+  .register-brand img {
+    width: 74px;
+    height: 44px;
+  }
+
+  .register-brand strong {
+    font-size: 14px;
+  }
+
+  .register-brand small {
+    font-size: 8px;
+  }
+}
+
+/* =====================================================
    MOBILE
    ===================================================== */
 
@@ -1195,17 +1218,22 @@ body:has(.register-page) #root {
     margin-bottom: 20px;
   }
 
+  .register-brand {
+    gap: 10px;
+  }
+
   .register-brand img {
-    width: 58px;
-    height: 34px;
+    width: 68px;
+    height: 40px;
   }
 
   .register-brand strong {
-    font-size: 11px;
+    font-size: 14px;
+    font-weight: 650;
   }
 
   .register-brand small {
-    font-size: 6px;
+    font-size: 8px;
   }
 
   .register-heading {
@@ -1425,4 +1453,40 @@ body:has(.register-page) #root {
     not-allowed;
 
   opacity: 1;
+}
+
+
+/* =====================================================
+   ADMIN ACCESS REMOVED FROM AUTH SCREEN
+   Administrator access lives on the public website only.
+   ===================================================== */
+
+.register-mobile-utility-footer,
+.register-visual-footer {
+  display: none !important;
+}
+
+
+html,
+body,
+#root,
+.register-page,
+.register-form-side,
+.register-form-inner,
+.register-visual-side,
+.register-visual-canvas {
+  background-color: #ffffff !important;
+}
+
+html,
+body,
+#root,
+.register-page,
+.register-form-side,
+.register-form-inner {
+  background-image: none !important;
+}
+
+.register-visual-canvas {
+  background-image: none !important;
 }
