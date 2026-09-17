@@ -1,457 +1,312 @@
-/* =========================================================
-   COMPLETE PROFILE
-   Compact membership verification form.
-   White + dark neutral + orange only.
-   ========================================================= */
-
-.complete-profile-page {
-  display: grid;
-  place-items: center;
-
-  width: 100%;
+.mentor-onboarding-page {
   min-height: 100vh;
-
-  padding:
-    32px 20px
-    max(
-      32px,
-      env(safe-area-inset-bottom)
-    );
-
+  padding: 38px 22px 56px;
   color: #101419;
   background: #ffffff;
-
-  font-family:
-    "Inter",
-    "Segoe UI",
-    Arial,
-    sans-serif;
 }
 
-.complete-profile-page *,
-.complete-profile-page *::before,
-.complete-profile-page *::after {
-  box-sizing: border-box;
+.mentor-onboarding-shell {
+  width: min(1080px, 100%);
+  margin: 0 auto;
 }
 
-.complete-profile-page a {
-  text-decoration: none;
+.mentor-onboarding-heading {
+  max-width: 760px;
+  margin-bottom: 26px;
 }
 
-.complete-profile-card {
-  width: min(100%, 560px);
-
-  padding: 32px;
-
-  border: 1px solid #e4e8ef;
-  border-radius: 18px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 16px 44px
-    rgba(16, 20, 25, 0.055);
-}
-
-/* =========================================================
-   BRAND
-   ========================================================= */
-
-.complete-profile-brand {
-  display: inline-flex;
-  align-items: center;
-
-  gap: 10px;
-
-  width: fit-content;
-
-  color: inherit;
-}
-
-.complete-profile-brand img {
-  width: 58px;
-  height: 38px;
-
-  object-fit: contain;
-}
-
-.complete-profile-brand > span {
-  display: grid;
-
-  gap: 2px;
-}
-
-.complete-profile-brand strong {
-  color: #101419;
-
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.complete-profile-brand small {
-  color: #6f8095;
-
-  font-size: 7px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-}
-
-/* =========================================================
-   HEADING
-   ========================================================= */
-
-.complete-profile-heading {
-  margin-top: 30px;
-}
-
-.complete-profile-heading > span {
+.mentor-onboarding-eyebrow {
   display: block;
-
-  margin-bottom: 7px;
-
+  margin-bottom: 8px;
   color: #ff5303;
-
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-}
-
-.complete-profile-heading h1 {
-  margin: 0;
-
-  color: #101419;
-
-  font-size:
-    clamp(
-      28px,
-      4vw,
-      34px
-    );
-
-  font-weight: 650;
-  line-height: 1.12;
-  letter-spacing: -0.035em;
-}
-
-.complete-profile-heading p {
-  max-width: 440px;
-
-  margin: 9px 0 0;
-
-  color: #6f8095;
-
   font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.mentor-onboarding-heading h1 {
+  margin: 0;
+  color: #101419;
+  font-size: clamp(34px, 5vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.mentor-onboarding-heading p {
+  max-width: 680px;
+  margin: 13px 0 0;
+  color: #667487;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.mentor-onboarding-form {
+  display: grid;
+  gap: 18px;
+}
+
+.mentor-onboarding-card {
+  display: grid;
+  gap: 22px;
+  padding: 26px;
+  border: 1px solid #e2e7ed;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.mentor-onboarding-card-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.mentor-onboarding-card-heading > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border-radius: 10px;
+  color: #ff5303;
+  background: #fff1eb;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mentor-onboarding-card-heading h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.mentor-onboarding-card-heading p {
+  margin: 5px 0 0;
+  color: #6f7d8e;
+  font-size: 13px;
   line-height: 1.6;
 }
 
-/* =========================================================
-   FORM
-   ========================================================= */
-
-.complete-profile-form {
+.mentor-onboarding-grid {
   display: grid;
-
-  gap: 15px;
-
-  margin-top: 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
 }
 
-.complete-profile-field {
-  display: block;
-
+.mentor-onboarding-form label,
+.mentor-onboarding-options {
   min-width: 0;
 }
 
-.complete-profile-field > span {
-  display: block;
-
-  margin-bottom: 6px;
-
-  color: #101419;
-
-  font-size: 11px;
-  font-weight: 600;
+.mentor-onboarding-form label {
+  display: grid;
+  gap: 8px;
+  color: #202831;
+  font-size: 13px;
+  font-weight: 700;
 }
 
-.complete-profile-field input,
-.complete-profile-field select {
+.mentor-onboarding-form input,
+.mentor-onboarding-form select,
+.mentor-onboarding-form textarea {
   width: 100%;
-  min-height: 44px;
-
-  padding:
-    0
-    12px;
-
-  border: 1px solid #c9d2df;
-  border-radius: 9px;
-
-  outline: none;
-
+  box-sizing: border-box;
+  border: 1px solid #cbd4de;
+  border-radius: 11px;
   color: #101419;
   background: #ffffff;
-
-  font-family: inherit;
-  font-size: 12px;
+  font: inherit;
+  font-size: 15px;
   font-weight: 400;
-
-  box-shadow: none;
-
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    background-color 150ms ease;
-}
-
-.complete-profile-field input:hover:not(:disabled),
-.complete-profile-field select:hover:not(:disabled) {
-  border-color: #97aac2;
-}
-
-.complete-profile-field input:focus,
-.complete-profile-field input:focus-visible,
-.complete-profile-field select:focus,
-.complete-profile-field select:focus-visible {
-  border-color: #4c5867;
-
   outline: none;
-
-  box-shadow:
-    0 0 0 1px
-    rgba(76, 88, 103, 0.10);
 }
 
-.complete-profile-field input::placeholder {
-  color: #97aac2;
+.mentor-onboarding-form input,
+.mentor-onboarding-form select {
+  min-height: 52px;
+  padding: 0 14px;
 }
 
-.complete-profile-field input:disabled,
-.complete-profile-field select:disabled {
-  color: #4c5867;
-  background: #f8f9fb;
-
-  cursor: not-allowed;
-
-  opacity: 1;
+.mentor-onboarding-form textarea {
+  min-height: 130px;
+  padding: 14px;
+  resize: vertical;
+  line-height: 1.6;
 }
 
-.complete-profile-select-field {
-  position: relative;
+.mentor-onboarding-form input:focus,
+.mentor-onboarding-form select:focus,
+.mentor-onboarding-form textarea:focus {
+  border-color: #ff5303;
+  box-shadow: 0 0 0 3px rgba(255, 83, 3, 0.1);
 }
 
-.complete-profile-select-field select {
-  appearance: none;
-  -webkit-appearance: none;
-
-  padding-right: 40px;
-
-  cursor: pointer;
+.mentor-onboarding-form input:disabled,
+.mentor-onboarding-form select:disabled,
+.mentor-onboarding-form textarea:disabled {
+  color: #6f7d8e;
+  background: #f7f8fa;
 }
 
-.complete-profile-select-icon {
-  position: absolute;
-
-  top: 50%;
-  right: 12px;
-
-  color: #6f8095;
-
-  pointer-events: none;
-
-  transform:
-    translateY(-50%);
-}
-
-/* =========================================================
-   NOTICE / ERROR
-   ========================================================= */
-
-.complete-profile-notice {
-  display: flex;
-  align-items: center;
-
-  gap: 9px;
-
-  margin-top: 2px;
-  padding: 11px 12px;
-
-  border: 1px solid #e4e8ef;
-  border-radius: 9px;
-
-  color: #4c5867;
-  background: #f8f9fb;
-}
-
-.complete-profile-notice > svg {
-  flex: 0 0 auto;
-
-  color: #2d353f;
-}
-
-.complete-profile-notice p {
-  margin: 0;
-
-  font-size: 10px;
+.mentor-onboarding-form label > small {
+  color: #8491a1;
+  font-size: 11px;
+  font-weight: 400;
   line-height: 1.5;
 }
 
-.complete-profile-error {
-  margin: 0;
-
-  padding: 10px 12px;
-
-  border: 1px solid #efc5c8;
-  border-radius: 8px;
-
-  color: #8c2f37;
-  background: #fff7f7;
-
-  font-size: 10px;
-  line-height: 1.55;
+.mentor-onboarding-select-field {
+  position: relative;
 }
 
-/* =========================================================
-   SUBMIT
-   ========================================================= */
-
-.complete-profile-submit {
+.mentor-onboarding-select-field select {
   appearance: none;
-  -webkit-appearance: none;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 100%;
-  min-height: 44px;
-
-  padding: 0 16px;
-
-  border: 1px solid #ff5303;
-  border-radius: 9px;
-
-  color: #ffffff;
-  background: #ff5303;
-
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-
-  cursor: pointer;
-
-  transition:
-    border-color 150ms ease,
-    background-color 150ms ease;
+  padding-right: 44px;
 }
 
-.complete-profile-submit:hover:not(:disabled) {
-  border-color: #c13c00;
-
-  background: #c13c00;
+.mentor-onboarding-select-field svg {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  color: #667487;
+  pointer-events: none;
+  transform: translateY(-50%);
 }
 
-.complete-profile-submit:focus-visible {
-  outline:
-    1px solid
-    rgba(76, 88, 103, 0.28);
-
-  outline-offset: 2px;
-}
-
-.complete-profile-submit:disabled {
-  cursor: not-allowed;
-
-  opacity: 0.6;
-}
-
-/* =========================================================
-   LOADING
-   ========================================================= */
-
-.complete-profile-loading {
-  display: grid;
-  place-items: center;
-
-  gap: 10px;
-
-  min-height: 220px;
-
-  color: #4c5867;
-
-  text-align: center;
-}
-
-.complete-profile-loading p {
+.mentor-onboarding-options {
   margin: 0;
-
-  font-size: 11px;
+  padding: 0;
+  border: 0;
 }
 
-/* =========================================================
-   BROWSER AUTOFILL
-   ========================================================= */
-
-.complete-profile-field input:-webkit-autofill,
-.complete-profile-field input:-webkit-autofill:hover,
-.complete-profile-field input:-webkit-autofill:focus,
-.complete-profile-field input:-webkit-autofill:active {
-  -webkit-text-fill-color: #101419 !important;
-
-  caret-color: #101419;
-
-  -webkit-box-shadow:
-    0 0 0 1000px
-    #ffffff inset !important;
-
-  box-shadow:
-    0 0 0 1000px
-    #ffffff inset !important;
-
-  transition:
-    background-color
-    9999s
-    ease-out
-    0s;
+.mentor-onboarding-options legend {
+  margin-bottom: 10px;
+  color: #202831;
+  font-size: 13px;
+  font-weight: 700;
 }
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
+.mentor-onboarding-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mentor-onboarding-option-grid--categories {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mentor-onboarding-option-grid label {
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid #e0e5eb;
+  border-radius: 11px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.mentor-onboarding-option-grid input[type="checkbox"],
+.mentor-onboarding-option-grid input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  flex: 0 0 18px;
+  margin: 0;
+  accent-color: #ff5303;
+  box-shadow: none;
+}
+
+.mentor-onboarding-option-grid label:has(input:checked) {
+  border-color: #ff5303;
+  background: #fffaf7;
+}
+
+.mentor-onboarding-option-grid span {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mentor-onboarding-radio-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.mentor-onboarding-review-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 15px 16px;
+  border: 1px solid #e0e5eb;
+  border-radius: 12px;
+  color: #526071;
+  background: #fafbfc;
+}
+
+.mentor-onboarding-review-note svg {
+  flex: 0 0 auto;
+  color: #ff5303;
+}
+
+.mentor-onboarding-review-note p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.mentor-onboarding-error {
+  margin: 0;
+}
+
+.mentor-onboarding-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+.mentor-onboarding-actions .primary-button {
+  min-width: 220px;
+}
+
+@media (max-width: 820px) {
+  .mentor-onboarding-grid,
+  .mentor-onboarding-option-grid--categories,
+  .mentor-onboarding-radio-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 
 @media (max-width: 620px) {
-  .complete-profile-page {
-    place-items: start center;
-
-    padding:
-      16px
-      14px
-      max(
-        28px,
-        calc(
-          16px +
-          env(safe-area-inset-bottom)
-        )
-      );
+  .mentor-onboarding-page {
+    padding: 26px 16px 42px;
   }
 
-  .complete-profile-card {
+  .mentor-onboarding-heading h1 {
+    font-size: 36px;
+  }
+
+  .mentor-onboarding-card {
+    padding: 20px 16px;
+    border-radius: 15px;
+  }
+
+  .mentor-onboarding-grid,
+  .mentor-onboarding-option-grid,
+  .mentor-onboarding-option-grid--categories {
+    grid-template-columns: 1fr;
+  }
+
+  .mentor-onboarding-radio-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mentor-onboarding-form input,
+  .mentor-onboarding-form select,
+  .mentor-onboarding-form textarea {
+    font-size: 16px;
+  }
+
+  .mentor-onboarding-actions .primary-button {
     width: 100%;
-
-    padding:
-      24px
-      20px;
-
-    border-radius: 14px;
-  }
-
-  .complete-profile-heading {
-    margin-top: 26px;
-  }
-
-  .complete-profile-heading h1 {
-    font-size: 29px;
-  }
-
-  .complete-profile-heading p {
-    font-size: 10px;
   }
 }

@@ -23,6 +23,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import AdminSafetyCases from "./AdminSafetyCases";
+import AdminMentorApplications from "./AdminMentorApplications";
 
 import "./AdminDashboard.css";
 import "./AdminRequests.css";
@@ -30,6 +32,7 @@ import "./AdminSessions.css";
 import "./AdminReviews.css";
 import "./AdminMessages.css";
 import "./AdminActivity.css";
+import "./AdminRequestReferral.css";
 
 const ATTENTION_PAGE_SIZE = 5;
 const PEOPLE_PAGE_SIZE = 10;
@@ -47,6 +50,7 @@ const ADMIN_ROUTES = {
   sessions: "/admin/dashboard/sessions",
   messages: "/admin/dashboard/messages",
   reviews: "/admin/dashboard/reviews",
+  safety: "/admin/dashboard/safety-cases",
   activity: "/admin/dashboard/activity",
 };
 
@@ -99,6 +103,18 @@ const pageInformation = {
       "Review mentee feedback and manage which eligible reviews may appear on the public website.",
   },
 
+  safety: {
+    title: "Trust & safety",
+    description:
+      "Review sensitive reports, investigations, escalations and documented case outcomes.",
+  },
+
+  safetyCaseDetails: {
+    title: "Safety case details",
+    description:
+      "Review the case record, internal notes, evidence references and resolution status.",
+  },
+
   activity: {
     title: "Activity log",
     description:
@@ -122,6 +138,8 @@ const sectionPermissions = {
   sessionDetails: "sessions.view",
   messages: "messages.view",
   reviews: "feedback.view",
+  safety: "safety_cases.view",
+  safetyCaseDetails: "safety_cases.view",
   activity: "activity.view",
 };
 
@@ -184,6 +202,17 @@ function getAdminSection(pathname) {
     cleanPath === "/admin/dashboard/requests"
   ) {
     return "requests";
+  }
+
+  if (
+    cleanPath.startsWith(`${ADMIN_ROUTES.safety}/`) &&
+    cleanPath !== ADMIN_ROUTES.safety
+  ) {
+    return "safetyCaseDetails";
+  }
+
+  if (cleanPath === ADMIN_ROUTES.safety) {
+    return "safety";
   }
 
   if (cleanPath === ADMIN_ROUTES.messages) {
@@ -332,6 +361,18 @@ function AdminDashboard() {
       "people.restrict",
     );
 
+  const canManageRequests =
+    hasAdminPermission(
+      adminPermissions,
+      "requests.manage",
+    );
+
+  const canVerifyMembership =
+    hasAdminPermission(
+      adminPermissions,
+      "membership.verify",
+    );
+
   const canRecommendApplications =
     hasAdminPermission(
       adminPermissions,
@@ -347,6 +388,12 @@ function AdminDashboard() {
   const isFullAccessAdmin =
     adminAccessLevel === "full" ||
     adminPermissions.includes("*");
+
+  const canManageSafetyCases =
+    hasAdminPermission(
+      adminPermissions,
+      "safety_cases.manage",
+    );
 
   const canSendAdminMessages =
     hasAdminPermission(
@@ -426,7 +473,7 @@ function AdminDashboard() {
 
       {section ===
         "applications" && (
-        <ApplicationsPage
+        <AdminMentorApplications
           canRecommendApplications={
             canRecommendApplications
           }
@@ -435,6 +482,9 @@ function AdminDashboard() {
           }
           isFullAccessAdmin={
             isFullAccessAdmin
+          }
+          canVerifyMembership={
+            canVerifyMembership
           }
           adminOperationalRole={
             adminOperationalRole
@@ -448,7 +498,11 @@ function AdminDashboard() {
 
       {section ===
         "requestDetails" && (
-        <RequestDetailsPage />
+        <RequestDetailsPage
+          canManageRequests={
+            canManageRequests
+          }
+        />
       )}
 
       {section === "sessions" && (
@@ -467,6 +521,15 @@ function AdminDashboard() {
         <ReviewsPage
           canPublishTestimonials={
             canPublishTestimonials
+          }
+        />
+      )}
+
+      {(section === "safety" ||
+        section === "safetyCaseDetails") && (
+        <AdminSafetyCases
+          canManage={
+            canManageSafetyCases
           }
         />
       )}
@@ -1375,6 +1438,21 @@ function MemberActions({ person, onAction }) {
 
   if (isAdministrator) {
     return <span className="admin-protected-account">Protected account</span>;
+  }
+
+  if (
+    person.signup_intent === "mentor" &&
+    person.membership_verified !== true &&
+    ["pending", "rejected"].includes(person.account_status)
+  ) {
+    return (
+      <Link
+        to="/admin/dashboard/mentor-applications"
+        className="admin-verify-button"
+      >
+        Review membership
+      </Link>
+    );
   }
 
   if (
@@ -2976,7 +3054,9 @@ function RequestsPage() {
   );
 }
 
-function RequestDetailsPage() {
+function RequestDetailsPage({
+  canManageRequests = false,
+}) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -2986,6 +3066,13 @@ function RequestDetailsPage() {
     .pop();
 
   const [request, setRequest] = useState(null);
+  const [referralHistory, setReferralHistory] = useState([]);
+  const [eligibleMentors, setEligibleMentors] = useState([]);
+  const [referralModalOpen, setReferralModalOpen] = useState(false);
+  const [selectedReferralMentorId, setSelectedReferralMentorId] = useState("");
+  const [referralNote, setReferralNote] = useState("");
+  const [referralProcessing, setReferralProcessing] = useState(false);
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -3081,6 +3168,107 @@ function RequestDetailsPage() {
       }
 
       setRequest(result.data);
+
+      const {
+        data: referralRows,
+        error: referralHistoryError,
+      } = await supabase
+        .from("mentorship_request_referrals")
+        .select(`
+          id,
+          request_id,
+          from_mentor_id,
+          to_mentor_id,
+          reason,
+          created_at,
+          from_mentor:profiles!mentorship_request_referrals_from_mentor_id_fkey (
+            full_name,
+            email
+          ),
+          to_mentor:profiles!mentorship_request_referrals_to_mentor_id_fkey (
+            full_name,
+            email
+          )
+        `)
+        .eq("request_id", requestId)
+        .order("created_at", {
+          ascending: true,
+        });
+
+      if (!referralHistoryError) {
+        setReferralHistory(referralRows ?? []);
+      } else {
+        console.warn(
+          "Unable to load referral history:",
+          referralHistoryError,
+        );
+      }
+
+      if (
+        canManageRequests &&
+        result.data.status === "referred"
+      ) {
+        const {
+          data: mentorRows,
+          error: mentorRowsError,
+        } = await supabase
+          .from("mentor_profiles")
+          .select(`
+            mentor_id,
+            current_active_mentees,
+            maximum_active_mentees,
+            accepting_requests,
+            mentorship_categories,
+            expertise
+          `)
+          .eq("approval_status", "approved")
+          .eq("accepting_requests", true);
+
+        if (!mentorRowsError) {
+          const availableRows = (mentorRows ?? []).filter(
+            (mentor) =>
+              mentor.mentor_id !== result.data.mentor_id &&
+              Number(mentor.current_active_mentees ?? 0) <
+                Number(mentor.maximum_active_mentees ?? 0),
+          );
+
+          const mentorIds = availableRows.map(
+            (mentor) => mentor.mentor_id,
+          );
+
+          if (mentorIds.length > 0) {
+            const { data: mentorProfiles } = await supabase
+              .from("profiles")
+              .select("id, full_name, email")
+              .in("id", mentorIds);
+
+            const profileMap = new Map(
+              (mentorProfiles ?? []).map((mentor) => [mentor.id, mentor]),
+            );
+
+            setEligibleMentors(
+              availableRows
+                .map((mentor) => ({
+                  ...mentor,
+                  profile: profileMap.get(mentor.mentor_id) ?? null,
+                }))
+                .sort((first, second) =>
+                  String(first.profile?.full_name || "").localeCompare(
+                    String(second.profile?.full_name || ""),
+                  ),
+                ),
+            );
+          } else {
+            setEligibleMentors([]);
+          }
+        } else {
+          console.warn(
+            "Unable to load eligible mentors:",
+            mentorRowsError,
+          );
+        }
+      }
+
       setLoading(false);
     }
 
@@ -3089,13 +3277,97 @@ function RequestDetailsPage() {
     return () => {
       isMounted = false;
     };
-  }, [requestId]);
+  }, [requestId, canManageRequests]);
+
+  async function handleAdminReferral() {
+    if (
+      !request?.id ||
+      !selectedReferralMentorId ||
+      referralProcessing
+    ) {
+      return;
+    }
+
+    setReferralProcessing(true);
+    setError("");
+    setSuccess("");
+
+    const selectedMentor = eligibleMentors.find(
+      (mentor) => mentor.mentor_id === selectedReferralMentorId,
+    );
+
+    const {
+      data: updatedRequest,
+      error: referralError,
+    } = await supabase.rpc(
+      "admin_reassign_referred_request",
+      {
+        p_request_id: request.id,
+        p_new_mentor_id: selectedReferralMentorId,
+        p_note: referralNote.trim() || null,
+      },
+    );
+
+    if (referralError) {
+      console.error(
+        "Unable to reassign referred request:",
+        referralError,
+      );
+      setError(
+        referralError.message ||
+          "We could not refer this mentee to the selected mentor.",
+      );
+      setReferralProcessing(false);
+      return;
+    }
+
+    const now = new Date().toISOString();
+
+    setRequest((current) => ({
+      ...current,
+      ...(updatedRequest || {}),
+      status: "pending",
+      mentor_id: selectedReferralMentorId,
+      mentor: {
+        full_name: selectedMentor?.profile?.full_name || "Mentor",
+        email: selectedMentor?.profile?.email || "",
+      },
+      updated_at: updatedRequest?.updated_at || now,
+    }));
+
+    setReferralHistory((current) => [
+      ...current,
+      {
+        id: `local-${Date.now()}`,
+        request_id: request.id,
+        from_mentor_id: request.mentor_id,
+        to_mentor_id: selectedReferralMentorId,
+        reason:
+          referralNote.trim() ||
+          request.referral_reason ||
+          "Reassigned by the mentoring team after referral.",
+        created_at: now,
+        from_mentor: request.mentor,
+        to_mentor: selectedMentor?.profile || null,
+      },
+    ]);
+
+    setSuccess(
+      `The request has been referred to ${
+        selectedMentor?.profile?.full_name || "the selected mentor"
+      }.`,
+    );
+    setReferralModalOpen(false);
+    setSelectedReferralMentorId("");
+    setReferralNote("");
+    setReferralProcessing(false);
+  }
 
   if (loading) {
     return <AdminLoadingState />;
   }
 
-  if (error) {
+  if (error && !request) {
     return (
       <section className="admin-request-details-page">
         <button
@@ -3122,6 +3394,18 @@ function RequestDetailsPage() {
         <ArrowLeft size={16} />
         Back to requests
       </button>
+
+      {success && (
+        <p className="admin-referral-success" role="status">
+          {success}
+        </p>
+      )}
+
+      {error && request && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="admin-request-details-hero">
         <div>
@@ -3195,7 +3479,156 @@ function RequestDetailsPage() {
         </div>
       )}
 
-      <RequestOutcomeHistory request={request} />
+      {request.status === "referred" && (
+        <section className="admin-referral-action-card">
+          <div>
+            <span className="admin-section-eyebrow">MATCHING ACTION</span>
+            <h3>Refer this mentee to another mentor</h3>
+            <p>
+              The original mentor has referred this request for matching support. Choose another approved mentor who is accepting requests and has space available.
+            </p>
+          </div>
+
+          {canManageRequests ? (
+            <button
+              type="button"
+              className="admin-referral-primary-button"
+              onClick={() => {
+                setReferralModalOpen(true);
+                setError("");
+                setSuccess("");
+              }}
+            >
+              Refer to another mentor
+            </button>
+          ) : (
+            <span className="admin-referral-restricted-note">
+              Awaiting the Mentee Matching team.
+            </span>
+          )}
+        </section>
+      )}
+
+      <RequestOutcomeHistory
+        request={request}
+        referralHistory={referralHistory}
+      />
+
+      {referralModalOpen && (
+        <div
+          className="admin-referral-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (
+              event.target === event.currentTarget &&
+              !referralProcessing
+            ) {
+              setReferralModalOpen(false);
+            }
+          }}
+        >
+          <section
+            className="admin-referral-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-referral-modal-title"
+          >
+            <div className="admin-referral-modal-heading">
+              <div>
+                <span className="admin-section-eyebrow">REFER MENTEE</span>
+                <h2 id="admin-referral-modal-title">
+                  Choose another mentor
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                className="admin-modal-close-button"
+                aria-label="Close referral"
+                disabled={referralProcessing}
+                onClick={() => setReferralModalOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p>
+              Only approved mentors who are accepting requests and still have space are shown.
+            </p>
+
+            <label>
+              Mentor
+              <select
+                value={selectedReferralMentorId}
+                onChange={(event) =>
+                  setSelectedReferralMentorId(event.target.value)
+                }
+                disabled={referralProcessing}
+              >
+                <option value="">Select a mentor</option>
+                {eligibleMentors.map((mentor) => (
+                  <option
+                    key={mentor.mentor_id}
+                    value={mentor.mentor_id}
+                  >
+                    {mentor.profile?.full_name || mentor.profile?.email || "Mentor"}
+                    {` · ${Math.max(
+                      0,
+                      Number(mentor.maximum_active_mentees ?? 0) -
+                        Number(mentor.current_active_mentees ?? 0),
+                    )} spaces available`}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Referral note
+              <textarea
+                rows={4}
+                value={referralNote}
+                onChange={(event) => setReferralNote(event.target.value)}
+                placeholder={
+                  request.referral_reason ||
+                  "Add any information the new mentor should know about this referral."
+                }
+                disabled={referralProcessing}
+              />
+            </label>
+
+            {eligibleMentors.length === 0 && (
+              <p className="admin-referral-empty-note">
+                No other approved mentor with available capacity is currently accepting requests.
+              </p>
+            )}
+
+            <div className="admin-referral-modal-actions">
+              <button
+                type="button"
+                className="admin-referral-secondary-button"
+                onClick={() => setReferralModalOpen(false)}
+                disabled={referralProcessing}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="admin-referral-primary-button"
+                onClick={handleAdminReferral}
+                disabled={
+                  referralProcessing ||
+                  !selectedReferralMentorId
+                }
+              >
+                {referralProcessing
+                  ? "Referring..."
+                  : "Refer mentee"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   );
 }
@@ -3219,7 +3652,10 @@ function RequestInformation({ label, value }) {
   );
 }
 
-function RequestOutcomeHistory({ request }) {
+function RequestOutcomeHistory({
+  request,
+  referralHistory = [],
+}) {
   const historyItems = [
     {
       key: "submitted",
@@ -3281,6 +3717,25 @@ function RequestOutcomeHistory({ request }) {
       date: request.updated_at,
     });
   }
+
+  referralHistory.forEach((referral) => {
+    historyItems.push({
+      key: `admin-referral-${referral.id}`,
+      title: "Referred to another mentor",
+      description: `${
+        referral.to_mentor?.full_name ||
+        referral.to_mentor?.email ||
+        "A new mentor"
+      } was assigned to this request. ${referral.reason || ""}`.trim(),
+      date: referral.created_at,
+    });
+  });
+
+  historyItems.sort((first, second) => {
+    const firstTime = first.date ? new Date(first.date).getTime() : 0;
+    const secondTime = second.date ? new Date(second.date).getTime() : 0;
+    return firstTime - secondTime;
+  });
 
   return (
     <section className="admin-request-history">
@@ -4984,6 +5439,10 @@ function ActivityLogPage() {
               value: "testimonials",
               label: "Testimonials",
             },
+            {
+              value: "safety",
+              label: "Safety cases",
+            },
           ].map(
             (filter) => (
               <button
@@ -5313,6 +5772,14 @@ function getActivityCategory(
     return "testimonials";
   }
 
+  if (
+    action.startsWith(
+      "safety_case_",
+    )
+  ) {
+    return "safety";
+  }
+
   return "other";
 }
 
@@ -5331,6 +5798,7 @@ function getActivityAreaLabel(
     messages: "Messages",
     testimonials:
       "Testimonials",
+    safety: "Safety cases",
     other: "Administration",
   };
 
@@ -5366,6 +5834,12 @@ function getActivityLabel(
       "Admin conversation updated",
     admin_message_sent:
       "Admin message sent",
+    safety_case_created:
+      "Safety case created",
+    safety_case_updated:
+      "Safety case updated",
+    safety_case_note_added:
+      "Safety case note added",
   };
 
   return (
@@ -5389,6 +5863,8 @@ function getEntityLabel(
       "Conversation",
     admin_messages:
       "Message",
+    safety_cases:
+      "Safety case",
   };
 
   return (

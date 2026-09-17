@@ -582,3 +582,51 @@ span {
     letter-spacing: 0.1em;
   }
 }
+
+/* =========================================================
+   MOBILE HEADER BRAND ACCESSIBILITY FIX
+   Keep Mentor Connect readable on the white responsive header.
+   ========================================================= */
+
+@media (max-width: 1180px) {
+  .dashboard-mobile-header .dashboard-brand-text strong {
+    display: block !important;
+    color: #101419 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1.05 !important;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text small {
+    display: block !important;
+    color: #6f8095 !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    line-height: 1.05 !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-mobile-header .dashboard-brand {
+    max-width: calc(100% - 108px) !important;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text {
+    display: flex !important;
+    gap: 3px !important;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text strong {
+    display: block !important;
+    color: #101419 !important;
+    font-size: 12px !important;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text small {
+    display: block !important;
+    min-height: 0 !important;
+    color: #738397 !important;
+    font-size: 8px !important;
+    letter-spacing: 0.1em !important;
+  }
+}

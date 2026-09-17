@@ -9,6 +9,8 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Home from "./pages/Home";
+import WebsiteTermsPortal from "./pages/WebsiteTermsPortal";
+import TermsConditions from "./pages/TermsConditions";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import MentorRegister from "./pages/MentorRegister";
@@ -32,6 +34,7 @@ import MenteeRequests from "./pages/MenteeRequests";
 import MenteeRequestDetails from "./pages/MenteeRequestDetails";
 import MenteeSessions from "./pages/MenteeSessions";
 import MenteeMessages from "./pages/MenteeMessages";
+import SafetyReports from "./pages/SafetyReports";
 import BecomeAMentor from "./pages/BecomeAMentor";
 
 import MentorApplicationStatus from "./pages/MentorApplicationStatus";
@@ -56,12 +59,22 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={<Home />}
+            element={
+              <>
+                <Home />
+                <WebsiteTermsPortal />
+              </>
+            }
           />
 
           <Route
             path="/register"
             element={<Register />}
+          />
+
+          <Route
+            path="/terms"
+            element={<TermsConditions />}
           />
 
           <Route
@@ -277,6 +290,19 @@ function App() {
           />
 
           <Route
+            path="/mentee/safety"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "mentee",
+                ]}
+              >
+                <SafetyReports />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/mentor/apply"
             element={
               <ProtectedRoute
@@ -425,6 +451,19 @@ function App() {
                 ]}
               >
                 <MentorMessages />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentor/safety"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "mentor",
+                ]}
+              >
+                <SafetyReports />
               </ProtectedRoute>
             }
           />

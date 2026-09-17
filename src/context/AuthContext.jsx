@@ -5,27 +5,58 @@ import {
   useState,
 } from "react";
 
-import { supabase } from "../lib/supabase";
+import {
+  supabase,
+} from "../lib/supabase";
 
-const AuthContext = createContext(null);
+const AuthContext =
+  createContext(null);
 
 const GOOGLE_ACCOUNT_INTENT_KEY =
   "mentorConnectGoogleAccountIntent";
 
+const PRODUCTION_APP_URL =
+  "https://mentorship.tcnikeja.org";
+
+function getAppBaseUrl() {
+  if (
+    import.meta.env.DEV
+  ) {
+    return window.location.origin;
+  }
+
+  const configuredUrl =
+    String(
+      import.meta.env
+        .VITE_APP_URL ||
+        "",
+    )
+      .trim()
+      .replace(/\/+$/, "");
+
+  return (
+    configuredUrl ||
+    PRODUCTION_APP_URL
+  );
+}
+
 export function AuthProvider({
   children,
 }) {
-  const [session, setSession] =
-    useState(null);
+  const [
+    session,
+    setSession,
+  ] = useState(null);
 
-  const [profile, setProfile] =
-    useState(null);
+  const [
+    profile,
+    setProfile,
+  ] = useState(null);
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [signingOut, setSigningOut] =
-    useState(false);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
   async function loadProfile(
     userId,
@@ -41,7 +72,10 @@ export function AuthProvider({
     } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", userId)
+      .eq(
+        "id",
+        userId,
+      )
       .maybeSingle();
 
     if (error) {
@@ -54,7 +88,9 @@ export function AuthProvider({
       return null;
     }
 
-    setProfile(data ?? null);
+    setProfile(
+      data ?? null,
+    );
 
     return data ?? null;
   }
@@ -84,7 +120,8 @@ export function AuthProvider({
       }
 
       setSession(
-        currentSession ?? null,
+        currentSession ??
+          null,
       );
 
       if (
@@ -114,34 +151,39 @@ export function AuthProvider({
           _event,
           currentSession,
         ) => {
-          if (!isMounted) {
-            return;
-          }
-
           setSession(
-            currentSession ?? null,
+            currentSession ??
+              null,
           );
 
           if (
-            !currentSession?.user
+            !currentSession
+              ?.user
           ) {
-            setProfile(null);
-            setLoading(false);
+            setProfile(
+              null,
+            );
+
+            setLoading(
+              false,
+            );
+
             return;
           }
 
           window.setTimeout(
             async () => {
-              if (!isMounted) {
-                return;
-              }
-
               await loadProfile(
-                currentSession.user.id,
+                currentSession
+                  .user.id,
               );
 
-              if (isMounted) {
-                setLoading(false);
+              if (
+                isMounted
+              ) {
+                setLoading(
+                  false,
+                );
               }
             },
             0,
@@ -151,7 +193,6 @@ export function AuthProvider({
 
     return () => {
       isMounted = false;
-
       subscription.unsubscribe();
     };
   }, []);
@@ -163,34 +204,43 @@ export function AuthProvider({
     password,
     role,
   }) {
-    return supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name:
-            fullName,
-          phone_number:
-            phoneNumber,
-          role: "mentee",
-          signup_intent: role,
+    const accountIntent =
+      role === "mentor"
+        ? "mentor"
+        : "mentee";
+
+    return supabase.auth.signUp(
+      {
+        email,
+        password,
+        options: {
+          data: {
+            full_name:
+              fullName,
+            phone_number:
+              phoneNumber,
+            role:
+              "mentee",
+            signup_intent:
+              accountIntent,
+          },
+          emailRedirectTo:
+            `${getAppBaseUrl()}/verify-email`,
         },
-        emailRedirectTo:
-          `${window.location.origin}/verify-email`,
       },
-    });
+    );
   }
 
   async function signInWithGoogle(
     accountIntent = null,
   ) {
-    const allowedAccountIntents = [
+    const allowedIntents = [
       "mentee",
       "mentor",
     ];
 
     if (
-      allowedAccountIntents.includes(
+      allowedIntents.includes(
         accountIntent,
       )
     ) {
@@ -207,10 +257,11 @@ export function AuthProvider({
     const result =
       await supabase.auth.signInWithOAuth(
         {
-          provider: "google",
+          provider:
+            "google",
           options: {
             redirectTo:
-              `${window.location.origin}/auth/callback`,
+              `${getAppBaseUrl()}/auth/callback`,
             queryParams: {
               prompt:
                 "select_account",
@@ -237,7 +288,9 @@ export function AuthProvider({
     return [
       "mentee",
       "mentor",
-    ].includes(accountIntent)
+    ].includes(
+      accountIntent,
+    )
       ? accountIntent
       : null;
   }
@@ -271,56 +324,22 @@ export function AuthProvider({
     return result;
   }
 
-  async function signOut({
-    redirectTo = "/login",
-  } = {}) {
-    if (signingOut) {
-      return {
-        data: null,
-        error: null,
-      };
-    }
-
-    setSigningOut(true);
-
-    try {
-      const result =
-        await supabase.auth.signOut(
-          {
-            scope: "local",
-          },
-        );
-
-      if (result.error) {
-        setSigningOut(false);
-        return result;
-      }
-
-      sessionStorage.removeItem(
-        GOOGLE_ACCOUNT_INTENT_KEY,
+  async function signOut() {
+    const result =
+      await supabase.auth.signOut(
+        {
+          scope: "local",
+        },
       );
 
-      setSession(null);
-      setProfile(null);
+    setSession(null);
+    setProfile(null);
 
-      window.location.replace(
-        redirectTo,
-      );
+    sessionStorage.removeItem(
+      GOOGLE_ACCOUNT_INTENT_KEY,
+    );
 
-      return result;
-    } catch (error) {
-      console.error(
-        "Unable to sign out:",
-        error,
-      );
-
-      setSigningOut(false);
-
-      return {
-        data: null,
-        error,
-      };
-    }
+    return result;
   }
 
   async function resetPassword(
@@ -330,7 +349,7 @@ export function AuthProvider({
       email,
       {
         redirectTo:
-          `${window.location.origin}/reset-password`,
+          `${getAppBaseUrl()}/reset-password`,
       },
     );
   }
@@ -346,7 +365,9 @@ export function AuthProvider({
   }
 
   async function refreshProfile() {
-    if (!session?.user) {
+    if (
+      !session?.user
+    ) {
       setProfile(null);
       return null;
     }
@@ -365,7 +386,6 @@ export function AuthProvider({
           null,
         profile,
         loading,
-        signingOut,
         signUp,
         signIn,
         signInWithGoogle,

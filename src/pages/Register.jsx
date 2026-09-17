@@ -15,7 +15,10 @@ import {
   useSearchParams,
 } from "react-router-dom";
 
-import { useAuth } from "../context/AuthContext";
+import {
+  useAuth,
+} from "../context/AuthContext";
+
 import "./Register.css";
 
 const initialForm = {
@@ -35,6 +38,7 @@ function GoogleIcon() {
       height="18"
       viewBox="0 0 24 24"
       aria-hidden="true"
+      focusable="false"
     >
       <path
         fill="#4285F4"
@@ -56,18 +60,65 @@ function GoogleIcon() {
   );
 }
 
+function getRegistrationError(
+  signUpError,
+  signUpData,
+  isMenteeHandoff,
+) {
+  const message =
+    String(
+      signUpError?.message ||
+        "",
+    ).toLowerCase();
+
+  const duplicateEmail =
+    message.includes(
+      "already registered",
+    ) ||
+    message.includes(
+      "already exists",
+    ) ||
+    message.includes(
+      "user already",
+    ) ||
+    (
+      signUpData?.user &&
+      Array.isArray(
+        signUpData.user.identities,
+      ) &&
+      signUpData.user.identities.length ===
+        0
+    );
+
+  if (duplicateEmail) {
+    if (isMenteeHandoff) {
+      return "That email address is already connected to an account. Your mentee account must use a different email from your mentor account.";
+    }
+
+    return "This email address has already been used to create an account. Please sign in or try another email address.";
+  }
+
+  return (
+    signUpError?.message ||
+    "Your account could not be created. Please try again."
+  );
+}
+
 function Register() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
   const [
     searchParams,
   ] = useSearchParams();
 
   const isMenteeHandoff =
-    searchParams.get("account") ===
-      "mentee" &&
-    searchParams.get("from") ===
-      "mentor";
+    searchParams.get(
+      "account",
+    ) === "mentee" &&
+    searchParams.get(
+      "from",
+    ) === "mentor";
 
   const {
     signUp,
@@ -110,7 +161,9 @@ function Register() {
     setError,
   ] = useState("");
 
-  function updateForm(event) {
+  function updateForm(
+    event,
+  ) {
     const {
       name,
       value,
@@ -118,18 +171,23 @@ function Register() {
       checked,
     } = event.target;
 
-    setForm((current) => ({
-      ...current,
-      [name]:
-        type === "checkbox"
-          ? checked
-          : value,
-    }));
+    setForm(
+      (current) => ({
+        ...current,
+        [name]:
+          type ===
+          "checkbox"
+            ? checked
+            : value,
+      }),
+    );
 
     setError("");
   }
 
-  async function handleSubmit(event) {
+  async function handleSubmit(
+    event,
+  ) {
     event.preventDefault();
     setError("");
 
@@ -140,7 +198,10 @@ function Register() {
       return;
     }
 
-    if (form.password.length < 8) {
+    if (
+      form.password.length <
+      8
+    ) {
       setError(
         "Your password must contain at least 8 characters.",
       );
@@ -157,9 +218,11 @@ function Register() {
       return;
     }
 
-    if (!form.acceptedTerms) {
+    if (
+      !form.acceptedTerms
+    ) {
       setError(
-        "Please accept the terms, privacy notice, code of conduct and safety guidelines.",
+        "Please agree to the Terms & Conditions before creating your account.",
       );
       return;
     }
@@ -167,7 +230,10 @@ function Register() {
     setSubmitting(true);
 
     const {
-      error: signUpError,
+      data:
+        signUpData,
+      error:
+        signUpError,
     } = await signUp({
       fullName:
         form.fullName.trim(),
@@ -185,50 +251,42 @@ function Register() {
 
     setSubmitting(false);
 
-    if (signUpError) {
-      const message =
-        String(
-          signUpError.message ||
-            "",
-        ).toLowerCase();
-
-      if (
-        isMenteeHandoff &&
-        (
-          message.includes(
-            "already registered",
-          ) ||
-          message.includes(
-            "already exists",
-          ) ||
-          message.includes(
-            "user already",
-          )
-        )
-      ) {
-        setError(
-          "That email address is already connected to an account. Your mentee account must use a different email from your mentor account.",
-        );
-      } else {
-        setError(
-          signUpError.message ||
-            "Your account could not be created. Please try again.",
-        );
-      }
-
+    if (
+      signUpError ||
+      (
+        signUpData?.user &&
+        Array.isArray(
+          signUpData.user
+            .identities,
+        ) &&
+        signUpData.user
+          .identities.length ===
+          0
+      )
+    ) {
+      setError(
+        getRegistrationError(
+          signUpError,
+          signUpData,
+          isMenteeHandoff,
+        ),
+      );
       return;
     }
 
-    navigate("/check-email", {
-      state: {
-        email:
-          form.email
-            .trim()
-            .toLowerCase(),
-        accountType:
-          form.role,
+    navigate(
+      "/check-email",
+      {
+        state: {
+          email:
+            form.email
+              .trim()
+              .toLowerCase(),
+          accountType:
+            form.role,
+        },
       },
-    });
+    );
   }
 
   async function handleGoogleSignIn() {
@@ -244,10 +302,12 @@ function Register() {
     setGoogleSubmitting(true);
 
     const {
-      error: googleError,
-    } = await signInWithGoogle(
-      form.role,
-    );
+      error:
+        googleError,
+    } =
+      await signInWithGoogle(
+        form.role,
+      );
 
     if (googleError) {
       setError(
@@ -255,7 +315,9 @@ function Register() {
           "Google registration could not be started. Please try again.",
       );
 
-      setGoogleSubmitting(false);
+      setGoogleSubmitting(
+        false,
+      );
     }
   }
 
@@ -315,9 +377,8 @@ function Register() {
               </strong>
 
               <p>
-                Use a different email
-                address from your mentor
-                account.
+                Use a different email address
+                from your mentor account.
               </p>
             </div>
           )}
@@ -347,7 +408,9 @@ function Register() {
               <div className="register-select-wrap">
                 <select
                   name="role"
-                  value={form.role}
+                  value={
+                    form.role
+                  }
                   onChange={
                     updateForm
                   }
@@ -397,7 +460,9 @@ function Register() {
                 }
                 placeholder="Enter your full name"
                 autoComplete="name"
-                disabled={busy}
+                disabled={
+                  busy
+                }
                 required
               />
             </label>
@@ -410,7 +475,9 @@ function Register() {
               <input
                 type="email"
                 name="email"
-                value={form.email}
+                value={
+                  form.email
+                }
                 onChange={
                   updateForm
                 }
@@ -420,7 +487,9 @@ function Register() {
                     : "Enter your email address"
                 }
                 autoComplete="email"
-                disabled={busy}
+                disabled={
+                  busy
+                }
                 required
               />
 
@@ -449,7 +518,9 @@ function Register() {
                 placeholder="Enter your mobile number"
                 autoComplete="tel"
                 inputMode="tel"
-                disabled={busy}
+                disabled={
+                  busy
+                }
                 required
               />
             </label>
@@ -476,7 +547,9 @@ function Register() {
                   placeholder="Minimum of 8 characters"
                   autoComplete="new-password"
                   minLength={8}
-                  disabled={busy}
+                  disabled={
+                    busy
+                  }
                   required
                 />
 
@@ -484,7 +557,9 @@ function Register() {
                   type="button"
                   onClick={() =>
                     setShowPassword(
-                      (current) =>
+                      (
+                        current,
+                      ) =>
                         !current,
                     )
                   }
@@ -493,11 +568,18 @@ function Register() {
                       ? "Hide password"
                       : "Show password"
                   }
+                  disabled={
+                    busy
+                  }
                 >
                   {showPassword ? (
-                    <EyeOff size={17} />
+                    <EyeOff
+                      size={17}
+                    />
                   ) : (
-                    <Eye size={17} />
+                    <Eye
+                      size={17}
+                    />
                   )}
                 </button>
               </div>
@@ -525,7 +607,9 @@ function Register() {
                   placeholder="Enter your password again"
                   autoComplete="new-password"
                   minLength={8}
-                  disabled={busy}
+                  disabled={
+                    busy
+                  }
                   required
                 />
 
@@ -533,7 +617,9 @@ function Register() {
                   type="button"
                   onClick={() =>
                     setShowConfirmPassword(
-                      (current) =>
+                      (
+                        current,
+                      ) =>
                         !current,
                     )
                   }
@@ -542,11 +628,18 @@ function Register() {
                       ? "Hide confirmed password"
                       : "Show confirmed password"
                   }
+                  disabled={
+                    busy
+                  }
                 >
                   {showConfirmPassword ? (
-                    <EyeOff size={17} />
+                    <EyeOff
+                      size={17}
+                    />
                   ) : (
-                    <Eye size={17} />
+                    <Eye
+                      size={17}
+                    />
                   )}
                 </button>
               </div>
@@ -562,28 +655,32 @@ function Register() {
                 onChange={
                   updateForm
                 }
-                disabled={busy}
+                disabled={
+                  busy
+                }
                 required
               />
 
               <span>
                 I agree to the{" "}
-                <a href="/terms">
-                  terms
+                <a
+                  href="/terms?from=register"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Terms &amp; Conditions
                 </a>
-                ,{" "}
-                <a href="/privacy">
-                  privacy notice
-                </a>
-                , code of conduct and
-                safety guidelines.
+                , Privacy Notice, Code of
+                Conduct and Safety Guidelines.
               </span>
             </label>
 
             <button
               type="submit"
               className="register-submit"
-              disabled={busy}
+              disabled={
+                busy
+              }
             >
               <span>
                 {submitting
@@ -611,7 +708,9 @@ function Register() {
             onClick={
               handleGoogleSignIn
             }
-            disabled={busy}
+            disabled={
+              busy
+            }
           >
             <GoogleIcon />
 

@@ -9,6 +9,7 @@ import {
   Menu,
   MessageCircle,
   Search,
+  ShieldAlert,
   Sparkles,
   Star,
   UserRound,
@@ -58,6 +59,11 @@ const menus = {
       icon: MessageCircle,
       path: "/mentee/messages",
     },
+    {
+      label: "Report a concern",
+      icon: ShieldAlert,
+      path: "/mentee/safety",
+    },
   ],
 
   mentor: [
@@ -90,6 +96,11 @@ const menus = {
       label: "Messages",
       icon: MessageCircle,
       path: "/mentor/messages",
+    },
+    {
+      label: "Report a concern",
+      icon: ShieldAlert,
+      path: "/mentor/safety",
     },
   ],
 
@@ -143,6 +154,12 @@ const menus = {
       icon: Star,
       path: "/admin/dashboard/reviews",
       permission: "feedback.view",
+    },
+    {
+      label: "Trust & safety",
+      icon: ShieldAlert,
+      path: "/admin/dashboard/safety-cases",
+      permission: "safety_cases.view",
     },
     {
       label: "Activity log",

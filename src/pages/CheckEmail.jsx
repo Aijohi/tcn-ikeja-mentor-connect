@@ -3,23 +3,29 @@ import {
   MailCheck,
   ShieldCheck,
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+} from "react-router-dom";
 
 import "./CheckEmail.css";
 
 function CheckEmail() {
-  const location = useLocation();
+  const location =
+    useLocation();
 
   const email =
     location.state?.email ||
     "";
 
   const accountType =
-    location.state?.accountType ||
+    location.state
+      ?.accountType ||
     "member";
 
   const isMentorAccount =
-    accountType === "mentor";
+    accountType ===
+    "mentor";
 
   return (
     <main className="check-email-page">
@@ -79,6 +85,25 @@ function CheckEmail() {
               account.
             </p>
 
+            <div className="check-email-mentor-note">
+              <ShieldCheck
+                size={18}
+                strokeWidth={1.8}
+              />
+
+              <p>
+                If the message does not
+                appear in your inbox
+                after a few minutes,
+                please check your spam,
+                junk or promotions
+                folder. Sometimes email
+                providers place new
+                verification messages
+                there.
+              </p>
+            </div>
+
             {isMentorAccount && (
               <div className="check-email-mentor-note">
                 <ShieldCheck
@@ -91,7 +116,8 @@ function CheckEmail() {
                   for your new mentor
                   account. Your mentee
                   account remains
-                  separate and unchanged.
+                  separate and
+                  unchanged.
                 </p>
               </div>
             )}
@@ -134,8 +160,8 @@ function CheckEmail() {
                 </strong>
 
                 <p>
-                  Look for the email from
-                  Mentor Connect.
+                  Look for the email
+                  from Mentor Connect.
                 </p>
               </div>
             </div>
@@ -147,12 +173,14 @@ function CheckEmail() {
 
               <div>
                 <strong>
-                  Verify your email
+                  Check spam if needed
                 </strong>
 
                 <p>
-                  Select the verification
-                  link in the message.
+                  If you cannot see the
+                  message, check your
+                  spam, junk or
+                  promotions folder.
                 </p>
               </div>
             </div>
@@ -164,14 +192,14 @@ function CheckEmail() {
 
               <div>
                 <strong>
-                  Sign in
+                  Verify and sign in
                 </strong>
 
                 <p>
-                  Return to Mentor
-                  Connect and sign in
-                  with your verified
-                  account.
+                  Open the verification
+                  link, then return to
+                  Mentor Connect and
+                  sign in.
                 </p>
               </div>
             </div>
@@ -184,9 +212,11 @@ function CheckEmail() {
             />
 
             <p>
-              If you do not see the
-              email, check your spam or
-              promotions folder.
+              The verification email
+              may take a few minutes to
+              arrive. You do not need
+              to create another account
+              while you wait.
             </p>
           </div>
         </aside>

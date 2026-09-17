@@ -1,8 +1,25 @@
-import { Link } from "react-router-dom";
+import {
+  Clock3,
+  LogOut,
+  ShieldCheck,
+} from "lucide-react";
 
-import { useAuth } from "../context/AuthContext";
+import {
+  useEffect,
+  useState,
+} from "react";
 
-import "./MembershipPending.css";
+import {
+  Navigate,
+} from "react-router-dom";
+
+import {
+  useAuth,
+} from "../context/AuthContext";
+
+import {
+  supabase,
+} from "../lib/supabase";
 
 function MembershipPending() {
   const {
@@ -10,98 +27,201 @@ function MembershipPending() {
     signOut,
   } = useAuth();
 
-  async function handleSignOut() {
-    await signOut({
-      redirectTo: "/",
-    });
+  const [
+    application,
+    setApplication,
+  ] = useState(null);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const isMentorSignup =
+    profile?.signup_intent ===
+      "mentor" ||
+    profile?.role ===
+      "mentor";
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadApplication() {
+      if (!profile?.id || !isMentorSignup) {
+        setLoading(false);
+        return;
+      }
+
+      const {
+        data,
+        error,
+      } = await supabase
+        .from(
+          "mentor_applications",
+        )
+        .select(
+          `
+            id,
+            status,
+            admin_feedback,
+            operations_feedback,
+            onboarding_recommendation,
+            operations_decision,
+            created_at,
+            updated_at
+          `,
+        )
+        .eq(
+          "applicant_user_id",
+          profile.id,
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          },
+        )
+        .limit(1)
+        .maybeSingle();
+
+      if (!mounted) {
+        return;
+      }
+
+      if (error) {
+        console.error(
+          "Unable to load mentor application status:",
+          error,
+        );
+      }
+
+      setApplication(
+        data ?? null,
+      );
+      setLoading(false);
+    }
+
+    loadApplication();
+
+    return () => {
+      mounted = false;
+    };
+  }, [
+    isMentorSignup,
+    profile?.id,
+  ]);
+
+  if (!isMentorSignup) {
+    return (
+      <Navigate
+        to="/mentee/dashboard"
+        replace
+      />
+    );
   }
 
+  async function handleSignOut() {
+    await signOut();
+
+    window.location.replace(
+      "/",
+    );
+  }
+
+  const applicationStatus =
+    application?.status ||
+    (profile?.account_status ===
+    "rejected"
+      ? "rejected"
+      : "pending");
+
   const isRejected =
-    profile?.account_status ===
+    applicationStatus ===
     "rejected";
 
-  const firstName =
-    profile?.full_name
-      ?.trim()
-      ?.split(/\s+/)
-      ?.[0] || "";
+  const isApproved =
+    applicationStatus ===
+    "approved" ||
+    profile?.role ===
+      "mentor";
+
+  if (isApproved) {
+    return (
+      <Navigate
+        to="/mentor/dashboard"
+        replace
+      />
+    );
+  }
+
+  const feedback =
+    application?.operations_feedback ||
+    application?.admin_feedback ||
+    "";
 
   return (
-    <main className="membership-pending-page">
-      <section className="membership-pending-card">
-        <Link
-          to="/"
-          className="membership-pending-brand"
-          aria-label="Return to Mentor Connect homepage"
-        >
-          <img
-            src="/images/hothub-logo.png"
-            alt="HOTHUB"
+    <main className="page-message">
+      <span className="status-icon">
+        {isRejected ? (
+          <ShieldCheck
+            size={38}
           />
+        ) : (
+          <Clock3
+            size={38}
+          />
+        )}
+      </span>
 
-          <span>
-            <strong>
-              Mentor Connect
-            </strong>
+      <span className="eyebrow">
+        {isRejected
+          ? "MENTOR APPLICATION REVIEWED"
+          : "MENTOR APPLICATION UNDER REVIEW"}
+      </span>
 
-            <small>
-              TCN IKEJA
-            </small>
-          </span>
-        </Link>
-
-        <div className="membership-pending-content">
-          <span
-            className={`membership-pending-eyebrow ${
-              isRejected
-                ? "membership-pending-eyebrow--rejected"
+      <h1>
+        {isRejected
+          ? "Your mentor application was not approved"
+          : `Thank you${
+              profile?.full_name
+                ? `, ${profile.full_name}`
                 : ""
             }`}
-          >
-            {isRejected
-              ? "MEMBERSHIP REVIEWED"
-              : "MEMBERSHIP UNDER REVIEW"}
-          </span>
+      </h1>
 
-          <h1>
-            {isRejected
-              ? "We could not verify your membership"
-              : firstName
-                ? `Thank you, ${firstName}`
-                : "Thank you"}
-          </h1>
+      <p>
+        {isRejected
+          ? "The TCN Ikeja administration team has completed its review of your mentor application."
+          : "Your membership information and mentor application have been submitted together. You do not need to complete another verification form."}
+      </p>
 
-          <p className="membership-pending-description">
-            {isRejected
-              ? "Please contact the TCN Ikeja administration team if you believe this decision was made in error."
-              : "Your membership information has been submitted to the TCN Ikeja administration team for verification."}
-          </p>
+      <div className="restricted-notice">
+        <ShieldCheck
+          size={18}
+        />
 
-          <div
-            className={`membership-pending-notice ${
-              isRejected
-                ? "membership-pending-notice--rejected"
-                : ""
-            }`}
-          >
-            <p>
-              {isRejected
-                ? "Your account will remain restricted until an administrator reviews it again."
-                : "You will receive access to the member dashboard after your membership is verified."}
-            </p>
-          </div>
+        <span>
+          {isRejected
+            ? feedback ||
+              "Please contact the TCN Ikeja administration team if you need more information about the decision."
+            : loading
+              ? "Checking the latest application status..."
+              : "You will receive access to the mentor dashboard after the application receives final approval."}
+        </span>
+      </div>
 
-          <button
-            type="button"
-            className="membership-sign-out-button"
-            onClick={
-              handleSignOut
-            }
-          >
-            Sign out
-          </button>
-        </div>
-      </section>
+      <button
+        type="button"
+        className="membership-sign-out-button"
+        onClick={
+          handleSignOut
+        }
+      >
+        <LogOut
+          size={17}
+        />
+        Sign out
+      </button>
     </main>
   );
 }

@@ -1,998 +1,436 @@
 /* =========================================================
-   HOME — PUBLIC MENTOR + TESTIMONIAL DISCOVERY
-   Production styling
+   HOME PUBLIC DISCOVERY
+   Final 4 x 4 mentor grid direction.
    ========================================================= */
 
-/* ---------------------------------------------------------
-   MENTOR SECTION
-   --------------------------------------------------------- */
-
-#mentors {
+.hmc-public-mentor-section {
   position: relative;
   overflow: hidden;
-
+  padding: 76px 0 84px;
   background:
-    radial-gradient(
-      circle at 85% 12%,
-      rgba(255, 83, 3, 0.09),
-      transparent 34%
-    ),
-    #0d1218;
+    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px),
+    radial-gradient(circle at 12% 0%, rgba(255,88,30,.08), transparent 31rem),
+    #080b0e;
+  background-size: 72px 72px, 72px 72px, auto, auto;
 }
 
-#mentors::before {
-  content: "";
-
-  position: absolute;
-  inset: 0;
-
-  pointer-events: none;
-
-  background:
-    linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.018) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      rgba(255, 255, 255, 0.018) 1px,
-      transparent 1px
-    );
-
-  background-size: 72px 72px;
-
-  mask-image:
-    linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.55),
-      transparent 82%
-    );
+.hmc-public-mentor-heading {
+  max-width: 960px;
 }
 
-#mentors .hmc-shell {
-  position: relative;
-  z-index: 1;
-}
-
-#mentors .hmc-section-heading {
-  max-width: 720px;
-  margin: 0 0 28px;
-}
-
-#mentors .hmc-section-heading > p {
-  color: #ff7a42;
-}
-
-#mentors .hmc-section-heading h2 {
-  color: #ffffff;
-}
-
-#mentors .hmc-section-heading > span {
-  color: #aeb8c6;
-}
-
-#mentors .hmc-tabs {
-  margin: 0 0 24px;
-}
-
-#mentors .hmc-tabs button {
-  border-color:
-    rgba(255, 255, 255, 0.1);
-
-  color: #cbd3dd;
-  background:
-    rgba(255, 255, 255, 0.045);
-}
-
-#mentors .hmc-tabs button:hover {
-  border-color:
-    rgba(255, 255, 255, 0.2);
-
-  color: #ffffff;
-  background:
-    rgba(255, 255, 255, 0.075);
-}
-
-#mentors .hmc-tabs button.is-active {
-  border-color:
-    rgba(255, 122, 66, 0.72);
-
-  color: #ffffff;
-  background:
-    rgba(255, 83, 3, 0.16);
-}
-
-#mentors .hmc-mentor-grid {
-  display: grid;
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
-  gap: 18px;
-}
-
-#mentors .hmc-mentor-card {
-  display: flex;
-  flex-direction: column;
-
-  min-width: 0;
-  min-height: 320px;
-  padding: 22px;
-
-  border: 1px solid #e6ebf0;
-  border-radius: 20px;
-
-  color: #17202a;
-  background: #ffffff;
-
-  box-shadow:
-    0 18px 50px
-    rgba(0, 0, 0, 0.16);
-
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease,
-    border-color 180ms ease;
-}
-
-#mentors .hmc-mentor-card:hover {
-  border-color:
-    rgba(255, 122, 66, 0.38);
-
-  transform:
-    translateY(-3px);
-
-  box-shadow:
-    0 24px 58px
-    rgba(0, 0, 0, 0.24);
-}
-
-#mentors .hmc-mentor-card--placeholder {
-  border:
-    1px dashed
-    rgba(255, 255, 255, 0.16);
-
-  color: #d8dee7;
-  background:
-    rgba(255, 255, 255, 0.035);
-
-  box-shadow: none;
-}
-
-#mentors
-  .hmc-mentor-card--placeholder:hover {
-  border-color:
-    rgba(255, 122, 66, 0.34);
-
-  background:
-    rgba(255, 255, 255, 0.05);
-
-  box-shadow: none;
-}
-
-#mentors
-  .hmc-mentor-card--placeholder
-  .hmc-mentor-card-top
-  strong {
-  color: #f4f6f8;
-}
-
-#mentors
-  .hmc-mentor-card--placeholder
-  .hmc-mentor-card-top
-  small,
-#mentors
-  .hmc-mentor-card--placeholder
-  .hmc-mentor-placeholder-copy,
-#mentors
-  .hmc-mentor-card--placeholder
-  .hmc-mentor-placeholder-link {
-  color: #929eac;
-}
-
-#mentors
-  .hmc-mentor-card--placeholder
-  .hmc-public-mentor-tags
-  span {
-  border-color:
-    rgba(255, 255, 255, 0.1);
-
-  color: #aab4c0;
-  background:
-    rgba(255, 255, 255, 0.055);
-}
-
-#mentors
-  .hmc-mentor-card--placeholder
-  .hmc-mentor-card-bottom {
-  border-top-color:
-    rgba(255, 255, 255, 0.08);
-}
-
-#mentors
-  .hmc-mentor-card--placeholder
-  .hmc-sample-badge--placeholder {
-  color: #aab4c0;
-  background:
-    rgba(255, 255, 255, 0.06);
-}
-
-#mentors .hmc-mentor-card-top {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-#mentors .hmc-avatar {
-  display: grid;
-  place-items: center;
-  flex: 0 0 52px;
-
-  width: 52px;
-  height: 52px;
-
-  border-radius: 15px;
-
-  font-size: 16px;
+.hmc-public-mentor-heading > p {
+  margin: 0 0 14px;
+  color: #ef8a73;
+  font-size: 10px;
   font-weight: 800;
+  letter-spacing: .2em;
 }
 
-#mentors .hmc-avatar--initials {
-  border: 1px solid #aee7de;
-
-  color: #087f74;
-  background: #e9faf7;
+.hmc-public-mentor-heading h2 {
+  max-width: 900px;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(42px, 5.2vw, 70px);
+  line-height: 1.03;
+  letter-spacing: -.055em;
 }
 
-#mentors .hmc-avatar--placeholder {
-  border: 1px solid #ffd8c8;
-
-  color: #ff5303;
-  background: #fff3ec;
-}
-
-#mentors .hmc-avatar-image {
-  object-fit: cover;
-}
-
-#mentors .hmc-mentor-card-top strong {
-  color: #101419;
-
-  font-size: 15px;
-  line-height: 1.3;
-}
-
-#mentors .hmc-mentor-card-top small {
+.hmc-public-mentor-heading > span {
   display: block;
-  margin-top: 4px;
-
-  color: #6e7b8b;
-
-  font-size: 10px;
-  line-height: 1.5;
-}
-
-#mentors .hmc-mentor-description {
-  display: -webkit-box;
-  overflow: hidden;
-
+  max-width: 890px;
   margin-top: 18px;
-
-  color: #536171;
-
-  font-size: 12px;
-  line-height: 1.75;
-
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 5;
-  line-clamp: 5;
+  color: #b8c0c6;
+  font-size: 14px;
+  line-height: 1.72;
 }
 
-#mentors .hmc-mentor-placeholder-copy {
-  color: #6a7686;
-}
-
-#mentors .hmc-public-mentor-tags {
+/* category pills */
+.hmc-public-mentor-tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-
-  margin-top: 16px;
-  padding-bottom: 20px;
-}
-
-#mentors .hmc-public-mentor-tags span {
-  padding: 6px 9px;
-
-  border: 1px solid #e5eaf0;
-  border-radius: 999px;
-
-  color: #566474;
-  background: #f6f8fa;
-
-  font-size: 9px;
-  font-weight: 700;
-}
-
-#mentors .hmc-mentor-card-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-
-  margin-top: auto;
-  padding-top: 18px;
-
-  border-top: 1px solid #e7ebef;
-}
-
-#mentors .hmc-sample-badge {
-  display: inline-flex;
-  align-items: center;
-
-  padding: 6px 9px;
-
-  border-radius: 999px;
-
-  color: #3f4c59;
-  background: #f4f7f9;
-
-  font-size: 9px;
-  font-weight: 750;
-}
-
-#mentors .hmc-sample-badge--placeholder {
-  color: #5f6e7e;
-  background: #eef2f6;
-}
-
-#mentors .hmc-mentor-connect-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-
-  min-height: 36px;
-  margin-left: auto;
-  padding: 4px 0 4px 14px;
-
-  border: 0;
-  border-radius: 0;
-
-  color: #0aa88f;
-  background: transparent;
-
-  font-size: 10px;
-  font-weight: 750;
-  text-decoration: none;
-
-  transition:
-    color 160ms ease,
-    transform 160ms ease;
-}
-
-#mentors .hmc-mentor-connect-link:hover {
-  color: #087f74;
-  background: transparent;
-
-  transform:
-    translateX(2px);
-}
-
-#mentors
-  .hmc-mentor-connect-link:focus-visible {
-  outline:
-    2px solid
-    rgba(10, 168, 143, 0.28);
-
-  outline-offset: 4px;
-}
-
-#mentors .hmc-mentor-placeholder-link {
-  color: #8795a6;
-
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.hmc-mentor-section-footer {
-  display: flex;
-  justify-content: center;
-
+  gap: 10px;
   margin-top: 28px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.hmc-public-mentor-tabs::-webkit-scrollbar,
+.hmc-public-mentor-viewport::-webkit-scrollbar { display: none; }
+
+.hmc-public-mentor-tabs button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 0 19px;
+  border: 1px solid #353b41;
+  border-radius: 999px;
+  color: #c7cdd2;
+  background: #171b1f;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
+.hmc-public-mentor-tabs button:hover {
+  color: #fff;
+  border-color: #4b535a;
+  background: #1d2227;
+}
+
+.hmc-public-mentor-tabs button.is-active {
+  color: #fff;
+  border-color: #b65438;
+  background: #4f2b24;
+}
+
+/* states */
 .hmc-public-loading,
 .hmc-public-empty {
   display: grid;
   justify-items: center;
   gap: 10px;
-
   width: 100%;
-  padding: 38px 22px;
-
-  border: 1px solid
-    rgba(255, 255, 255, 0.12);
+  padding: 36px 22px;
+  border: 1px solid #e4e8ef;
   border-radius: 18px;
-
-  color: #c2cad4;
-  background:
-    rgba(255, 255, 255, 0.045);
-
+  color: #4c5867;
+  background: #fff;
   text-align: center;
 }
-
 .hmc-public-loading p,
 .hmc-public-empty p {
-  max-width: 520px;
   margin: 0;
-
   font-size: 13px;
   line-height: 1.65;
 }
+.hmc-public-mentor-state { margin-top: 44px; }
 
-/* ---------------------------------------------------------
-   TESTIMONIALS
-   --------------------------------------------------------- */
-
-.hmc-testimonials-section {
-  background: #ffffff;
+/* =========================================================
+   DESKTOP: 4 columns x up to 4 rows = 16 mentors per page.
+   Cards are intentionally compact, not long.
+   ========================================================= */
+.hmc-public-mentor-viewport {
+  width: 100%;
+  margin-top: 42px;
+  overflow: visible;
 }
 
+.hmc-public-mentor-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.hmc-public-mentor-card {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  height: 392px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 18px;
+  background: #4d5356;
+  box-shadow: 0 18px 38px rgba(0,0,0,.22);
+}
+
+.hmc-public-mentor-photo {
+  position: absolute;
+  inset: -12px 0 0;
+  z-index: 0;
+  width: 100%;
+  height: calc(100% + 12px);
+  display: block;
+  object-fit: cover;
+  object-position: center 7%;
+}
+
+.hmc-public-mentor-photo--placeholder {
+  display: grid;
+  place-items: center;
+  color: #d8dde0;
+  background: linear-gradient(145deg, #5f676b, #262b2e);
+}
+.hmc-public-mentor-photo--placeholder span {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -.05em;
+}
+
+/* Rich secondary-colour gradient behind the written information.
+   The portrait stays clear above, while the lower section moves from
+   transparent image into the platform's deep navy secondary colour. */
+.hmc-public-mentor-image-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 18% 100%,
+      rgba(255, 83, 3, 0.13) 0%,
+      rgba(255, 83, 3, 0.05) 24%,
+      transparent 44%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(7, 19, 29, 0) 0%,
+      rgba(7, 19, 29, 0) 42%,
+      rgba(7, 19, 29, 0.12) 50%,
+      rgba(7, 19, 29, 0.42) 59%,
+      rgba(7, 19, 29, 0.74) 68%,
+      rgba(7, 19, 29, 0.91) 78%,
+      rgba(7, 19, 29, 0.98) 90%,
+      #07131d 100%
+    );
+}
+
+.hmc-public-mentor-content {
+  position: absolute;
+  right: 14px;
+  bottom: 11px;
+  left: 14px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.hmc-public-mentor-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 7px;
+}
+.hmc-public-mentor-card-tags span {
+  padding: 4px 7px;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(20,24,28,.62);
+  backdrop-filter: blur(7px);
+  font-size: 7px;
+  font-weight: 500;
+}
+
+.hmc-public-mentor-content h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1.05;
+  letter-spacing: -.03em;
+}
+.hmc-public-mentor-role {
+  margin: 4px 0 0;
+  color: #e0e5e7;
+  font-size: 8.5px;
+  line-height: 1.4;
+}
+
+.hmc-public-mentor-rating {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,.14);
+}
+.hmc-public-mentor-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  color: #f5c84c;
+}
+.hmc-public-mentor-stars svg { width: 12px; height: 12px; }
+.hmc-public-mentor-rating > span {
+  color: #d3d9dc;
+  font-size: 7.5px;
+}
+
+.hmc-public-mentor-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 7px;
+}
+.hmc-public-mentor-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #dde2e4;
+  font-size: 7.5px;
+}
+.hmc-public-mentor-meta svg { width: 13px; height: 13px; }
+
+/* tertiary action, not a button */
+.hmc-public-mentor-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 9px;
+  padding-top: 9px;
+  border: 0;
+  border-top: 1px solid rgba(255,255,255,.14);
+  border-radius: 0;
+  color: #fff;
+  background: transparent;
+  font-size: 8.5px;
+  font-weight: 750;
+  text-decoration: none;
+}
+.hmc-public-mentor-view:hover { color: #ffb08b; }
+.hmc-public-mentor-view svg { transition: transform 160ms ease; }
+.hmc-public-mentor-view:hover svg { transform: translateX(3px); }
+
+/* pagination */
+.hmc-public-mentor-pagination {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  margin-top: 28px;
+}
+.hmc-public-mentor-page-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: max-content;
+  min-height: 40px;
+  padding: 0 15px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 999px;
+  color: #dce1e3;
+  background: rgba(255,255,255,.04);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hmc-public-mentor-page-arrow:last-child { justify-self: end; }
+.hmc-public-mentor-page-arrow:disabled { opacity: .32; cursor: not-allowed; }
+.hmc-public-mentor-page-numbers {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.hmc-public-mentor-page-item { display: inline-flex; align-items: center; gap: 7px; }
+.hmc-public-mentor-page-item > i { color: #687379; font-size: 11px; font-style: normal; }
+.hmc-public-mentor-page-item > button {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 37px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 50%;
+  color: #b8c1c5;
+  background: rgba(255,255,255,.035);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.hmc-public-mentor-page-item > button.is-current {
+  color: #fff;
+  border-color: #b65438;
+  background: #4f2b24;
+}
+.hmc-public-mentor-mobile-hint { display: none; }
+
+/* testimonials already used by the homepage */
+.hmc-testimonials-section { background: #fff; }
 .hmc-testimonial-grid {
   display: grid;
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0,1fr));
   gap: 18px;
 }
-
 .hmc-testimonial-card {
   display: flex;
   flex-direction: column;
-
   min-width: 0;
   min-height: 250px;
   padding: 24px;
-
   border: 1px solid #e4e8ef;
   border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(16,20,25,.04);
+}
+.hmc-testimonial-quote { color: #ff5303; }
+.hmc-testimonial-stars { display:flex; align-items:center; gap:3px; margin-top:18px; color:#ff5303; }
+.hmc-testimonial-card > p { margin:18px 0 24px; color:#2d353f; font-size:14px; line-height:1.75; }
+.hmc-testimonial-card footer { display:grid; gap:4px; margin-top:auto; padding-top:16px; border-top:1px solid #e4e8ef; }
+.hmc-testimonial-card footer strong { color:#101419; font-size:13px; }
+.hmc-testimonial-card footer span { color:#6f8095; font-size:11px; line-height:1.45; }
 
-  background: #ffffff;
-
-  box-shadow:
-    0 10px 28px
-    rgba(16, 20, 25, 0.04);
+/* tablet: 2 columns, 8 mentors per page */
+@media (max-width: 1000px) {
+  .hmc-public-mentor-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .hmc-public-mentor-card { height: 400px; }
+  .hmc-testimonial-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
-.hmc-testimonial-quote {
-  color: #ff5303;
-}
+/* mobile: 3 mentors per page, swipe one card at a time */
+@media (max-width: 680px) {
+  .hmc-public-mentor-section { padding: 58px 0 68px; }
+  .hmc-public-mentor-heading > p { margin-bottom: 11px; font-size: 9px; }
+  .hmc-public-mentor-heading h2 { font-size: clamp(35px, 11vw, 47px); }
+  .hmc-public-mentor-heading > span { margin-top: 15px; font-size: 12px; line-height:1.65; }
+  .hmc-public-mentor-tabs { gap:8px; margin-top:24px; }
+  .hmc-public-mentor-tabs button { min-height:40px; padding:0 15px; font-size:10px; }
 
-.hmc-testimonial-stars {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-
-  margin-top: 18px;
-
-  color: #ff5303;
-}
-
-.hmc-testimonial-card > p {
-  margin: 18px 0 24px;
-
-  color: #2d353f;
-
-  font-size: 14px;
-  line-height: 1.75;
-}
-
-.hmc-testimonial-card footer {
-  display: grid;
-  gap: 4px;
-
-  margin-top: auto;
-  padding-top: 16px;
-
-  border-top: 1px solid #e4e8ef;
-}
-
-.hmc-testimonial-card footer strong {
-  color: #101419;
-
-  font-size: 13px;
-}
-
-.hmc-testimonial-card footer span {
-  color: #6f8095;
-
-  font-size: 11px;
-  line-height: 1.45;
-}
-
-/* ---------------------------------------------------------
-   RESPONSIVE
-   --------------------------------------------------------- */
-
-@media (max-width: 980px) {
-  #mentors .hmc-mentor-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-  }
-
-  .hmc-testimonial-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  #mentors .hmc-section-heading {
-    margin-bottom: 22px;
-  }
-
-  #mentors .hmc-tabs {
-    display: flex;
+  .hmc-public-mentor-viewport {
+    width: calc(100vw - 28px);
+    margin-top: 36px;
     overflow-x: auto;
-    flex-wrap: nowrap;
-
-    padding-bottom: 2px;
-
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x mandatory;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
-
-  #mentors .hmc-tabs::-webkit-scrollbar {
-    display: none;
+  .hmc-public-mentor-grid {
+    display: flex;
+    gap: 12px;
+    width: max-content;
+    min-width: 100%;
   }
-
-  #mentors .hmc-tabs button {
-    flex: 0 0 auto;
+  .hmc-public-mentor-card {
+    flex: 0 0 calc(100vw - 42px);
+    width: calc(100vw - 42px);
+    max-width: 380px;
+    height: 430px;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
+  .hmc-public-mentor-photo { object-position: center 5%; }
+  .hmc-public-mentor-content { right:15px; bottom:12px; left:15px; }
+  .hmc-public-mentor-content h3 { font-size:21px; }
+  .hmc-public-mentor-role { font-size:9.5px; }
+  .hmc-public-mentor-card-tags span { font-size:7.5px; }
+  .hmc-public-mentor-rating > span,
+  .hmc-public-mentor-meta span { font-size:8px; }
+  .hmc-public-mentor-view { font-size:9px; }
 
-  #mentors .hmc-mentor-grid {
-    grid-template-columns: 1fr;
+  .hmc-public-mentor-pagination {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    margin-top: 21px;
   }
-
-  #mentors .hmc-mentor-card {
-    min-height: 0;
-    padding: 18px;
+  .hmc-public-mentor-page-arrow { width:100%; min-width:0; padding:0 10px; }
+  .hmc-public-mentor-page-arrow span { display:none; }
+  .hmc-public-mentor-page-numbers { gap:5px; }
+  .hmc-public-mentor-page-item > button { width:35px; height:35px; }
+  .hmc-public-mentor-mobile-hint {
+    display:block;
+    margin:11px 0 0;
+    color:#8f999e;
+    font-size:9px;
+    text-align:center;
   }
-
-  #mentors .hmc-mentor-card-bottom {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  #mentors .hmc-mentor-connect-link {
-    width: 100%;
-  }
-
-  .hmc-mentor-section-footer {
-    justify-content: stretch;
-  }
-
-  .hmc-mentor-section-footer .hmc-pill {
-    width: 100%;
-  }
-
-  .hmc-testimonial-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .hmc-testimonial-card {
-    min-height: 0;
-    padding: 20px;
-  }
-}
-
-
-/* =========================================================
-   FINAL MENTOR CARD OVERRIDES
-   These rules intentionally use stronger selectors and
-   !important because older Home.css mentor-card versions
-   also use !important.
-   ========================================================= */
-
-/* Real mentor card: soft brand-tinted surface, not grey/glass */
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) {
-  border:
-    1px solid
-    rgba(10, 168, 143, 0.16) !important;
-
-  background:
-    #f2fbf8 !important;
-
-  box-shadow:
-    0 14px 34px
-    rgba(0, 0, 0, 0.14) !important;
-
-  backdrop-filter:
-    none !important;
-
-  -webkit-backdrop-filter:
-    none !important;
-}
-
-/* Do not allow old frosted-card decorations back in */
-#mentors
-  .hmc-mentor-card:not(.hmc-mentor-card--placeholder)::before,
-#mentors
-  .hmc-mentor-card:not(.hmc-mentor-card--placeholder)::after {
-  content:
-    none !important;
-}
-
-/* Mentor initials use the secondary teal colour */
-#mentors
-  .hmc-mentor-card:not(.hmc-mentor-card--placeholder)
-  .hmc-avatar--initials {
-  border:
-    1px solid
-    rgba(10, 168, 143, 0.22) !important;
-
-  color:
-    #087f74 !important;
-
-  background:
-    #dff7f1 !important;
-
-  box-shadow:
-    none !important;
-
-  backdrop-filter:
-    none !important;
-
-  -webkit-backdrop-filter:
-    none !important;
-}
-
-/* Job title / organisation is plain text, aligned with the name */
-#mentors
-  .hmc-mentor-card:not(.hmc-mentor-card--placeholder)
-  .hmc-mentor-card-top
-  small {
-  display: block !important;
-
-  width: auto !important;
-  margin:
-    4px 0 0 !important;
-  padding:
-    0 !important;
-
-  border:
-    0 !important;
-  border-radius:
-    0 !important;
-
-  color:
-    #617181 !important;
-
-  background:
-    transparent !important;
-
-  box-shadow:
-    none !important;
-
-  font-size:
-    10px !important;
-  font-weight:
-    550 !important;
-  line-height:
-    1.5 !important;
-}
-
-/* Mentorship area tags: compact, borderless, secondary-colour tint */
-#mentors
-  .hmc-mentor-card:not(.hmc-mentor-card--placeholder)
-  .hmc-public-mentor-tags {
-  gap:
-    8px !important;
-
-  margin-top:
-    18px !important;
-  padding-bottom:
-    22px !important;
-}
-
-#mentors
-  .hmc-mentor-card:not(.hmc-mentor-card--placeholder)
-  .hmc-public-mentor-tags
-  span {
-  min-height:
-    28px;
-
-  display:
-    inline-flex;
-  align-items:
-    center;
-
-  padding:
-    0 10px !important;
-
-  border:
-    0 !important;
-  border-radius:
-    999px !important;
-
-  color:
-    #356a63 !important;
-
-  background:
-    #e2f5f0 !important;
-
-  font-size:
-    9px !important;
-  font-weight:
-    650 !important;
-  letter-spacing:
-    0 !important;
-}
-
-/* Footer divider gets proper breathing room */
-#mentors
-  .hmc-mentor-card:not(.hmc-mentor-card--placeholder)
-  .hmc-mentor-card-bottom {
-  justify-content:
-    space-between !important;
-
-  gap:
-    18px !important;
-
-  margin-top:
-    auto !important;
-  padding-top:
-    18px !important;
-
-  border-top:
-    1px solid
-    rgba(10, 168, 143, 0.14) !important;
-}
-
-/* Available-spaces status: small status chip with teal dot */
-#mentors
-  .hmc-mentor-card:not(.hmc-mentor-card--placeholder)
-  .hmc-sample-badge {
-  display:
-    inline-flex !important;
-  align-items:
-    center !important;
-  gap:
-    7px !important;
-
-  min-height:
-    30px !important;
-
-  padding:
-    0 10px !important;
-
-  border:
-    0 !important;
-  border-radius:
-    999px !important;
-
-  color:
-    #33444f !important;
-
-  background:
-    rgba(255, 255, 255, 0.78) !important;
-
-  box-shadow:
-    none !important;
-
-  backdrop-filter:
-    none !important;
-
-  -webkit-backdrop-filter:
-    none !important;
-
-  font-size:
-    9px !important;
-  font-weight:
-    700 !important;
-  letter-spacing:
-    0 !important;
-}
-
-#mentors
-  .hmc-mentor-card:not(.hmc-mentor-card--placeholder)
-  .hmc-sample-badge::before {
-  content:
-    "";
-
-  flex:
-    0 0 7px;
-
-  width:
-    7px;
-  height:
-    7px;
-
-  border-radius:
-    50%;
-
-  background:
-    #0aa88f;
-}
-
-/* Tertiary action in the secondary brand colour */
-#mentors
-  .hmc-mentor-card:not(.hmc-mentor-card--placeholder)
-  .hmc-mentor-connect-link {
-  display:
-    inline-flex !important;
-  align-items:
-    center !important;
-  justify-content:
-    flex-end !important;
-  gap:
-    6px !important;
-
-  min-height:
-    36px !important;
-
-  margin-left:
-    auto !important;
-
-  padding:
-    4px 0 4px 12px !important;
-
-  border:
-    0 !important;
-  border-radius:
-    0 !important;
-
-  color:
-    #0aa88f !important;
-
-  background:
-    transparent !important;
-
-  box-shadow:
-    none !important;
-
-  font-size:
-    10px !important;
-  font-weight:
-    750 !important;
-  text-decoration:
-    none !important;
-}
-
-#mentors
-  .hmc-mentor-card:not(.hmc-mentor-card--placeholder)
-  .hmc-mentor-connect-link:hover {
-  color:
-    #087f74 !important;
-
-  background:
-    transparent !important;
-
-  transform:
-    translateX(2px);
-}
-
-/* Keep placeholder cards visually different from real mentor cards */
-#mentors .hmc-mentor-card--placeholder {
-  border:
-    1px dashed
-    rgba(255, 255, 255, 0.16) !important;
-
-  background:
-    rgba(255, 255, 255, 0.035) !important;
-
-  box-shadow:
-    none !important;
-
-  backdrop-filter:
-    none !important;
-
-  -webkit-backdrop-filter:
-    none !important;
-}
-
-
-/* =========================================================
-   SECONDARY-COLOUR MENTOR CARD CORRECTION
-   Website secondary = ink / charcoal, NOT teal.
-   ========================================================= */
-
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) {
-  border: 1px solid rgba(201, 210, 223, 0.55) !important;
-  background: #f8f9fb !important;
-  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.16) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) .hmc-avatar--initials {
-  border: 1px solid #dbe2ea !important;
-  color: #101419 !important;
-  background: #ffffff !important;
-  box-shadow: none !important;
-}
-
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) .hmc-mentor-card-top small {
-  margin: 4px 0 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  color: #6f8095 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) .hmc-public-mentor-tags {
-  gap: 8px !important;
-  margin-top: 18px !important;
-  padding-bottom: 22px !important;
-}
-
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) .hmc-public-mentor-tags span {
-  min-height: 28px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 10px !important;
-  border: 1px solid #dbe2ea !important;
-  border-radius: 999px !important;
-  color: #2d353f !important;
-  background: #ffffff !important;
-  font-size: 9px !important;
-  font-weight: 650 !important;
-}
-
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) .hmc-mentor-card-bottom {
-  gap: 18px !important;
-  padding-top: 18px !important;
-  border-top: 1px solid #dde3ea !important;
-}
-
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) .hmc-sample-badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 7px !important;
-  min-height: 30px !important;
-  padding: 0 10px !important;
-  border: 1px solid #dbe2ea !important;
-  border-radius: 999px !important;
-  color: #2d353f !important;
-  background: #ffffff !important;
-  box-shadow: none !important;
-  font-size: 9px !important;
-  font-weight: 700 !important;
-}
-
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) .hmc-sample-badge::before {
-  content: "";
-  flex: 0 0 7px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #2d353f;
-}
-
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) .hmc-mentor-connect-link {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  gap: 6px !important;
-  min-height: 36px !important;
-  margin-left: auto !important;
-  padding: 4px 0 4px 12px !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  color: #101419 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  font-size: 10px !important;
-  font-weight: 750 !important;
-  text-decoration: none !important;
-}
-
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) .hmc-mentor-connect-link:hover {
-  color: #2d353f !important;
-  background: transparent !important;
-  transform: translateX(2px);
-}
-
-#mentors .hmc-mentor-card:not(.hmc-mentor-card--placeholder) .hmc-mentor-connect-link:focus-visible {
-  outline: 2px solid rgba(45, 53, 63, 0.24);
-  outline-offset: 4px;
+  .hmc-testimonial-grid { grid-template-columns:1fr; }
+  .hmc-testimonial-card { min-height:0; padding:20px; }
 }

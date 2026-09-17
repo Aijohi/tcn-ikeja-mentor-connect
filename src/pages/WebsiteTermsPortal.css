@@ -1,0 +1,12 @@
+.hmc-footer-terms-link {
+  color: #cdd3d7;
+  font-size: 10px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.hmc-footer-terms-link:hover {
+  color: #ff8a4c;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

@@ -1,62 +1,145 @@
 import {
-  BriefcaseBusiness,
-  Check,
-  Languages,
-  Save,
-  Users,
-} from "lucide-react";
-
-import {
   useEffect,
-  useMemo,
+  useRef,
   useState,
 } from "react";
 
+import {
+  Camera,
+  Trash2,
+  X,
+} from "lucide-react";
+
 import DashboardLayout from "../layouts/DashboardLayout";
-import { useAuth } from "../context/AuthContext";
-import { supabase } from "../lib/supabase";
+import {
+  useAuth,
+} from "../context/AuthContext";
+import {
+  supabase,
+} from "../lib/supabase";
 
 import "./MentorMyProfile.css";
 
-const EMPTY_FORM = {
-  biography: "",
+const PHOTO_BUCKET =
+  "mentor-profile-photos";
+
+const initialForm = {
   jobTitle: "",
   organisation: "",
+  yearsOfExperience: "",
+  biography: "",
   expertise: "",
   mentorshipCategories: "",
-  languages: "",
-  meetingFormats: "",
-  sessionLengths: "",
-  yearsOfExperience: "",
+  languages: "English",
+  meetingFormat: "Virtual",
+  sessionLength: "30",
   maximumActiveMentees: "3",
-  acceptingRequests: false,
+  acceptingRequests: true,
 };
 
+function convertTextToArray(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getStoragePathFromPublicUrl(
+  publicUrl,
+) {
+  if (!publicUrl) {
+    return "";
+  }
+
+  const marker =
+    `/storage/v1/object/public/${PHOTO_BUCKET}/`;
+
+  const markerIndex =
+    publicUrl.indexOf(marker);
+
+  if (markerIndex === -1) {
+    return "";
+  }
+
+  return decodeURIComponent(
+    publicUrl.slice(
+      markerIndex +
+        marker.length,
+    ),
+  );
+}
+
 function MentorMyProfile() {
-  const { user } = useAuth();
+  const {
+    user,
+    profile,
+    refreshProfile,
+  } = useAuth();
 
-  const [mentorProfile, setMentorProfile] =
-    useState(null);
+  const photoInputRef =
+    useRef(null);
 
-  const [form, setForm] =
-    useState(EMPTY_FORM);
+  const [
+    form,
+    setForm,
+  ] = useState(
+    initialForm,
+  );
 
-  const [loading, setLoading] =
-    useState(true);
+  const [
+    fullName,
+    setFullName,
+  ] = useState("");
 
-  const [saving, setSaving] =
-    useState(false);
+  const [
+    photoUrl,
+    setPhotoUrl,
+  ] = useState("");
 
-  const [error, setError] =
-    useState("");
+  const [
+    currentActiveMentees,
+    setCurrentActiveMentees,
+  ] = useState(0);
 
-  const [success, setSuccess] =
-    useState("");
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    saving,
+    setSaving,
+  ] = useState(false);
+
+  const [
+    uploadingPhoto,
+    setUploadingPhoto,
+  ] = useState(false);
+
+  const [
+    deletingPhoto,
+    setDeletingPhoto,
+  ] = useState(false);
+
+  const [
+    deleteModalOpen,
+    setDeleteModalOpen,
+  ] = useState(false);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const [
+    success,
+    setSuccess,
+  ] = useState("");
 
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
 
-    async function loadMentorProfile() {
+    async function loadProfile() {
       if (!user?.id) {
         return;
       }
@@ -64,41 +147,61 @@ function MentorMyProfile() {
       setLoading(true);
       setError("");
 
-      const {
-        data,
-        error: profileError,
-      } = await supabase
-        .from("mentor_profiles")
-        .select(`
-          mentor_id,
-          biography,
-          job_title,
-          organisation,
-          expertise,
-          mentorship_categories,
-          languages,
-          meeting_formats,
-          session_lengths,
-          maximum_active_mentees,
-          current_active_mentees,
-          years_of_experience,
-          accepting_requests,
-          approval_status
-        `)
-        .eq(
-          "mentor_id",
-          user.id,
-        )
-        .maybeSingle();
+      const [
+        profileResult,
+        mentorResult,
+      ] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select(`
+            full_name,
+            profile_photo_url
+          `)
+          .eq(
+            "id",
+            user.id,
+          )
+          .maybeSingle(),
 
-      if (!isMounted) {
+        supabase
+          .from(
+            "mentor_profiles",
+          )
+          .select(`
+            mentor_id,
+            biography,
+            job_title,
+            organisation,
+            expertise,
+            mentorship_categories,
+            languages,
+            meeting_formats,
+            session_lengths,
+            maximum_active_mentees,
+            current_active_mentees,
+            years_of_experience,
+            accepting_requests,
+            approval_status
+          `)
+          .eq(
+            "mentor_id",
+            user.id,
+          )
+          .maybeSingle(),
+      ]);
+
+      if (!mounted) {
         return;
       }
 
-      if (profileError) {
+      if (
+        profileResult.error ||
+        mentorResult.error
+      ) {
         console.error(
           "Unable to load mentor profile:",
-          profileError.message,
+          profileResult.error?.message ||
+            mentorResult.error?.message,
         );
 
         setError(
@@ -109,251 +212,301 @@ function MentorMyProfile() {
         return;
       }
 
-      if (!data) {
+      const personalProfile =
+        profileResult.data ??
+        profile ??
+        {};
+
+      const mentor =
+        mentorResult.data;
+
+      if (!mentor) {
         setError(
-          "Your mentor profile could not be found. Please contact an administrator.",
+          "Your mentor profile is not available yet.",
         );
 
         setLoading(false);
         return;
       }
 
-      setMentorProfile(data);
+      setFullName(
+        personalProfile.full_name ||
+          profile?.full_name ||
+          "Mentor",
+      );
+
+      setPhotoUrl(
+        personalProfile.profile_photo_url ||
+          profile?.profile_photo_url ||
+          "",
+      );
+
+      setCurrentActiveMentees(
+        Number(
+          mentor.current_active_mentees ??
+            0,
+        ),
+      );
 
       setForm({
-        biography:
-          data.biography ?? "",
         jobTitle:
-          data.job_title ?? "",
+          mentor.job_title ??
+          "",
         organisation:
-          data.organisation ?? "",
-        expertise:
-          listToText(
-            data.expertise,
-          ),
-        mentorshipCategories:
-          listToText(
-            data.mentorship_categories,
-          ),
-        languages:
-          listToText(
-            data.languages,
-          ),
-        meetingFormats:
-          listToText(
-            data.meeting_formats,
-          ),
-        sessionLengths:
-          (data.session_lengths ?? [])
-            .join(", "),
+          mentor.organisation ??
+          "",
         yearsOfExperience:
+          mentor.years_of_experience ===
+          null
+            ? ""
+            : String(
+                mentor.years_of_experience ??
+                  "",
+              ),
+        biography:
+          mentor.biography ??
+          "",
+        expertise:
+          (
+            mentor.expertise ??
+            []
+          ).join(", "),
+        mentorshipCategories:
+          (
+            mentor.mentorship_categories ??
+            []
+          ).join(", "),
+        languages:
+          (
+            mentor.languages ??
+            ["English"]
+          ).join(", "),
+        meetingFormat:
+          mentor.meeting_formats?.[0] ??
+          "Virtual",
+        sessionLength:
           String(
-            data.years_of_experience ??
-              "",
+            mentor.session_lengths?.[0] ??
+              60,
           ),
         maximumActiveMentees:
           String(
-            data.maximum_active_mentees ??
+            mentor.maximum_active_mentees ??
               3,
           ),
         acceptingRequests:
-          data.accepting_requests ===
+          mentor.accepting_requests ===
           true,
       });
 
       setLoading(false);
     }
 
-    loadMentorProfile();
+    loadProfile();
 
     return () => {
-      isMounted = false;
+      mounted = false;
     };
-  }, [user?.id]);
+  }, [
+    user?.id,
+    profile?.full_name,
+    profile?.profile_photo_url,
+  ]);
 
-  const currentActiveMentees =
-    Number(
-      mentorProfile?.current_active_mentees ??
-        0,
-    );
+  useEffect(() => {
+    if (!deleteModalOpen) {
+      return undefined;
+    }
 
-  const maximumActiveMentees =
-    Number(
-      form.maximumActiveMentees ||
-        0,
-    );
-
-  const availableSpaces =
-    Math.max(
-      maximumActiveMentees -
-        currentActiveMentees,
-      0,
-    );
-
-  const canAcceptRequests =
-    mentorProfile?.approval_status ===
-      "approved" &&
-    availableSpaces > 0;
-
-  const availabilityText =
-    useMemo(() => {
+    function handleEscape(
+      event,
+    ) {
       if (
-        mentorProfile?.approval_status !==
-        "approved"
+        event.key ===
+          "Escape" &&
+        !deletingPhoto
       ) {
-        return "Your mentor profile is not approved yet.";
+        setDeleteModalOpen(
+          false,
+        );
       }
+    }
 
-      if (
-        form.acceptingRequests &&
-        availableSpaces > 0
-      ) {
-        return `Mentees can currently find you. You have ${availableSpaces} ${
-          availableSpaces === 1
-            ? "space"
-            : "spaces"
-        } available.`;
-      }
+    document.addEventListener(
+      "keydown",
+      handleEscape,
+    );
 
-      if (availableSpaces <= 0) {
-        return "Your active mentee capacity is currently full.";
-      }
+    return () => {
+      document.removeEventListener(
+        "keydown",
+        handleEscape,
+      );
+    };
+  }, [
+    deleteModalOpen,
+    deletingPhoto,
+  ]);
 
-      return "Your profile remains active, but new mentees cannot request you while availability is off.";
-    }, [
-      availableSpaces,
-      form.acceptingRequests,
-      mentorProfile?.approval_status,
-    ]);
-
-  function updateField(
-    field,
-    value,
+  function updateForm(
+    event,
   ) {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
+    const {
+      name,
+      value,
+      type,
+      checked,
+    } = event.target;
+
+    setForm(
+      (current) => ({
+        ...current,
+        [name]:
+          type ===
+          "checkbox"
+            ? checked
+            : value,
+      }),
+    );
 
     setError("");
     setSuccess("");
   }
 
-  async function handleSubmit(
+  async function saveProfile(
     event,
   ) {
     event.preventDefault();
 
-    if (!user?.id) {
+    setError("");
+    setSuccess("");
+
+    const expertise =
+      convertTextToArray(
+        form.expertise,
+      );
+
+    const categories =
+      convertTextToArray(
+        form.mentorshipCategories,
+      );
+
+    const languages =
+      convertTextToArray(
+        form.languages,
+      );
+
+    if (!form.jobTitle.trim()) {
+      setError(
+        "Please enter your current role or occupation.",
+      );
       return;
     }
 
-    setError("");
-    setSuccess("");
+    if (
+      form.biography.trim()
+        .length < 40
+    ) {
+      setError(
+        "Please write at least 40 characters in your biography.",
+      );
+      return;
+    }
+
+    if (
+      form.yearsOfExperience ===
+      ""
+    ) {
+      setError(
+        "Please enter your years of experience.",
+      );
+      return;
+    }
+
+    if (
+      expertise.length === 0
+    ) {
+      setError(
+        "Please provide at least one area of expertise.",
+      );
+      return;
+    }
+
+    if (
+      categories.length ===
+      0
+    ) {
+      setError(
+        "Please provide at least one mentorship category.",
+      );
+      return;
+    }
+
+    if (
+      languages.length === 0
+    ) {
+      setError(
+        "Please provide at least one language.",
+      );
+      return;
+    }
+
+    const maximumActiveMentees =
+      Number(
+        form.maximumActiveMentees,
+      );
 
     if (
       maximumActiveMentees <
       currentActiveMentees
     ) {
       setError(
-        `Maximum active mentees cannot be lower than your current active mentees (${currentActiveMentees}).`,
-      );
-      return;
-    }
-
-    if (
-      maximumActiveMentees < 1
-    ) {
-      setError(
-        "Maximum active mentees must be at least 1.",
-      );
-      return;
-    }
-
-    const sessionLengths =
-      textToNumberList(
-        form.sessionLengths,
-      );
-
-    if (
-      form.sessionLengths.trim() &&
-      sessionLengths.length === 0
-    ) {
-      setError(
-        "Session length must contain numbers such as 30, 45 or 60.",
+        `Your maximum active mentees cannot be lower than your current ${currentActiveMentees} active mentees.`,
       );
       return;
     }
 
     setSaving(true);
 
-    const shouldAcceptRequests =
-      canAcceptRequests &&
-      form.acceptingRequests;
-
     const {
-      data,
-      error: saveError,
-    } = await supabase
-      .from("mentor_profiles")
-      .update({
-        biography:
+      error:
+        saveError,
+    } = await supabase.rpc(
+      "save_my_mentor_profile",
+      {
+        p_biography:
           form.biography.trim(),
-        job_title:
+        p_job_title:
           form.jobTitle.trim(),
-        organisation:
-          form.organisation.trim(),
-        expertise:
-          textToList(
-            form.expertise,
-          ),
-        mentorship_categories:
-          textToList(
-            form.mentorshipCategories,
-          ),
-        languages:
-          textToList(
-            form.languages,
-          ),
-        meeting_formats:
-          textToList(
-            form.meetingFormats,
-          ),
-        session_lengths:
-          sessionLengths.length > 0
-            ? sessionLengths
-            : [45],
-        maximum_active_mentees:
-          maximumActiveMentees,
-        years_of_experience:
+        p_organisation:
+          form.organisation.trim() ||
+          null,
+        p_expertise:
+          expertise,
+        p_mentorship_categories:
+          categories,
+        p_languages:
+          languages,
+        p_meeting_formats: [
+          form.meetingFormat,
+        ],
+        p_session_lengths: [
           Number(
-            form.yearsOfExperience ||
-              0,
+            form.sessionLength,
           ),
-        accepting_requests:
-          shouldAcceptRequests,
-      })
-      .eq(
-        "mentor_id",
-        user.id,
-      )
-      .select(`
-        mentor_id,
-        biography,
-        job_title,
-        organisation,
-        expertise,
-        mentorship_categories,
-        languages,
-        meeting_formats,
-        session_lengths,
-        maximum_active_mentees,
-        current_active_mentees,
-        years_of_experience,
-        accepting_requests,
-        approval_status
-      `)
-      .single();
+        ],
+        p_maximum_active_mentees:
+          maximumActiveMentees,
+        p_years_of_experience:
+          Number(
+            form.yearsOfExperience,
+          ),
+        p_accepting_requests:
+          form.acceptingRequests,
+      },
+    );
+
+    setSaving(false);
 
     if (saveError) {
       console.error(
@@ -365,42 +518,319 @@ function MentorMyProfile() {
         saveError.message ||
           "We could not save your mentor profile.",
       );
-
-      setSaving(false);
       return;
     }
-
-    setMentorProfile(data);
-
-    setForm((current) => ({
-      ...current,
-      acceptingRequests:
-        data.accepting_requests ===
-        true,
-    }));
 
     setSuccess(
       "Your mentor profile has been updated.",
     );
-
-    setSaving(false);
   }
+
+  async function uploadPhoto(
+    event,
+  ) {
+    const file =
+      event.target.files?.[0];
+
+    event.target.value =
+      "";
+
+    if (!file) {
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (
+      !allowedTypes.includes(
+        file.type,
+      )
+    ) {
+      setError(
+        "Please choose a JPG, PNG or WebP image.",
+      );
+      return;
+    }
+
+    if (
+      file.size >
+      5 * 1024 * 1024
+    ) {
+      setError(
+        "Please choose an image smaller than 5 MB.",
+      );
+      return;
+    }
+
+    if (!user?.id) {
+      setError(
+        "We could not identify your account. Please sign in again.",
+      );
+      return;
+    }
+
+    setUploadingPhoto(true);
+
+    const extension =
+      (
+        file.name
+          .split(".")
+          .pop() ||
+        "jpg"
+      )
+        .toLowerCase()
+        .replace(
+          /[^a-z0-9]/g,
+          "",
+        ) ||
+      "jpg";
+
+    const filePath =
+      `${user.id}/profile-${Date.now()}.${extension}`;
+
+    const {
+      error:
+        uploadError,
+    } = await supabase.storage
+      .from(
+        PHOTO_BUCKET,
+      )
+      .upload(
+        filePath,
+        file,
+        {
+          upsert: false,
+          cacheControl:
+            "3600",
+        },
+      );
+
+    if (uploadError) {
+      console.error(
+        "Unable to upload mentor photo:",
+        uploadError.message,
+      );
+
+      setError(
+        uploadError.message ||
+          "We could not upload your image.",
+      );
+
+      setUploadingPhoto(false);
+      return;
+    }
+
+    const {
+      data:
+        publicUrlData,
+    } = supabase.storage
+      .from(
+        PHOTO_BUCKET,
+      )
+      .getPublicUrl(
+        filePath,
+      );
+
+    const newPhotoUrl =
+      publicUrlData
+        ?.publicUrl;
+
+    if (!newPhotoUrl) {
+      setError(
+        "The image uploaded, but we could not prepare its link.",
+      );
+
+      setUploadingPhoto(false);
+      return;
+    }
+
+    const oldPhotoUrl =
+      photoUrl;
+
+    const {
+      error:
+        profilePhotoError,
+    } = await supabase.rpc(
+      "set_my_profile_photo_url",
+      {
+        p_profile_photo_url:
+          newPhotoUrl,
+      },
+    );
+
+    if (
+      profilePhotoError
+    ) {
+      console.error(
+        "Unable to save mentor image:",
+        profilePhotoError.message,
+      );
+
+      await supabase.storage
+        .from(
+          PHOTO_BUCKET,
+        )
+        .remove([
+          filePath,
+        ]);
+
+      setError(
+        profilePhotoError.message ||
+          "We could not save your image to your profile.",
+      );
+
+      setUploadingPhoto(false);
+      return;
+    }
+
+    setPhotoUrl(
+      newPhotoUrl,
+    );
+
+    await refreshProfile?.();
+
+    const oldPath =
+      getStoragePathFromPublicUrl(
+        oldPhotoUrl,
+      );
+
+    if (
+      oldPath &&
+      oldPath !==
+        filePath
+    ) {
+      await supabase.storage
+        .from(
+          PHOTO_BUCKET,
+        )
+        .remove([
+          oldPath,
+        ]);
+    }
+
+    setSuccess(
+      oldPhotoUrl
+        ? "Your profile image has been replaced."
+        : "Your profile image has been uploaded.",
+    );
+
+    setUploadingPhoto(false);
+  }
+
+  async function deletePhoto() {
+    if (
+      !photoUrl ||
+      deletingPhoto
+    ) {
+      return;
+    }
+
+    setDeletingPhoto(true);
+    setError("");
+    setSuccess("");
+
+    const oldPhotoUrl =
+      photoUrl;
+
+    const {
+      error:
+        clearError,
+    } = await supabase.rpc(
+      "clear_my_profile_photo_url",
+    );
+
+    if (clearError) {
+      console.error(
+        "Unable to remove profile image:",
+        clearError.message,
+      );
+
+      setError(
+        clearError.message ||
+          "We could not remove your profile image.",
+      );
+
+      setDeletingPhoto(false);
+      return;
+    }
+
+    setPhotoUrl("");
+
+    await refreshProfile?.();
+
+    const oldPath =
+      getStoragePathFromPublicUrl(
+        oldPhotoUrl,
+      );
+
+    if (oldPath) {
+      const {
+        error:
+          storageDeleteError,
+      } = await supabase.storage
+        .from(
+          PHOTO_BUCKET,
+        )
+        .remove([
+          oldPath,
+        ]);
+
+      if (
+        storageDeleteError
+      ) {
+        console.warn(
+          "Profile image reference was removed, but the old storage file could not be deleted:",
+          storageDeleteError.message,
+        );
+      }
+    }
+
+    setDeleteModalOpen(
+      false,
+    );
+
+    setSuccess(
+      "Your profile image has been removed.",
+    );
+
+    setDeletingPhoto(false);
+  }
+
+  const initials =
+    fullName
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) =>
+        part
+          .charAt(0)
+          .toUpperCase(),
+      )
+      .join("") ||
+    "MC";
 
   if (loading) {
     return (
       <DashboardLayout
         title="My profile"
-        description="Manage the information mentees see about you."
+        description="Manage how your mentor profile appears to mentees."
       >
         <section className="dashboard-empty-state">
           <div className="loader" />
 
           <h2>
-            Loading your mentor profile
+            Loading your profile
           </h2>
 
           <p>
-            Please wait while we prepare your information.
+            Please wait while we prepare your mentor profile.
           </p>
         </section>
       </DashboardLayout>
@@ -410,15 +840,134 @@ function MentorMyProfile() {
   return (
     <DashboardLayout
       title="My profile"
-      description="Manage the information mentees see about you."
+      description="Manage how your mentor profile appears to mentees."
     >
-      <form
-        className="mentor-my-profile-page"
-        onSubmit={handleSubmit}
-      >
+      <div className="mentor-my-profile-page">
+        <section className="mentor-my-profile-intro">
+          <div>
+            <span className="mentor-my-profile-eyebrow">
+              MENTOR PROFILE
+            </span>
+
+            <h2>
+              Keep your mentor information current.
+            </h2>
+
+            <p>
+              Your image and profile information can appear in the public mentor showcase and the Find a Mentor directory.
+            </p>
+          </div>
+        </section>
+
+        <section className="mentor-profile-photo-section">
+          <div className="mentor-profile-photo-column">
+            <input
+              ref={
+                photoInputRef
+              }
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              onChange={
+                uploadPhoto
+              }
+            />
+
+            <button
+              type="button"
+              className="mentor-profile-photo-clickable"
+              aria-label={
+                photoUrl
+                  ? "Replace profile image"
+                  : "Upload profile image"
+              }
+              disabled={
+                uploadingPhoto
+              }
+              onClick={() =>
+                photoInputRef.current?.click()
+              }
+            >
+              {photoUrl ? (
+                <img
+                  src={
+                    photoUrl
+                  }
+                  alt=""
+                />
+              ) : (
+                <span>
+                  {initials}
+                </span>
+              )}
+
+              <i>
+                <Camera
+                  size={18}
+                />
+              </i>
+            </button>
+
+            <div className="mentor-profile-photo-controls">
+              <button
+                type="button"
+                className="mentor-profile-photo-tertiary"
+                disabled={
+                  uploadingPhoto
+                }
+                onClick={() =>
+                  photoInputRef.current?.click()
+                }
+              >
+                {uploadingPhoto
+                  ? "Uploading..."
+                  : photoUrl
+                    ? "Replace image"
+                    : "Upload image"}
+              </button>
+
+              {photoUrl && (
+                <button
+                  type="button"
+                  className="mentor-profile-photo-delete"
+                  aria-label="Delete profile image"
+                  title="Delete profile image"
+                  onClick={() =>
+                    setDeleteModalOpen(
+                      true,
+                    )
+                  }
+                >
+                  <Trash2
+                    size={17}
+                  />
+                </button>
+              )}
+            </div>
+
+            <small>
+              JPG, PNG or WebP. Maximum 5 MB.
+            </small>
+          </div>
+
+          <div className="mentor-profile-photo-copy">
+            <span className="mentor-my-profile-eyebrow">
+              PROFILE IMAGE
+            </span>
+
+            <h3>
+              Help mentees recognise you.
+            </h3>
+
+            <p>
+              Use a clear and recent image of yourself. Select the image itself or use the link below it to upload or replace your image.
+            </p>
+          </div>
+        </section>
+
         {error && (
           <p
-            className="form-error"
+            className="mentor-my-profile-message mentor-my-profile-message--error"
             role="alert"
           >
             {error}
@@ -426,414 +975,414 @@ function MentorMyProfile() {
         )}
 
         {success && (
-          <p className="mentor-profile-success">
-            <Check size={16} />
+          <p className="mentor-my-profile-message mentor-my-profile-message--success">
             {success}
           </p>
         )}
 
-        <section className="mentor-profile-availability-section">
-          <div className="mentor-profile-section-copy">
-            <span>
-              AVAILABILITY
-            </span>
-
-            <h2>
-              Control when mentees can find you
-            </h2>
-
-            <p>
-              Turn availability on when you are ready to receive new mentorship requests.
-            </p>
-          </div>
-
-          <div className="mentor-profile-availability-control">
-            <label className="mentor-profile-switch-row">
-              <span>
-                <strong>
-                  Accepting mentorship requests
-                </strong>
-
-                <small>
-                  {availabilityText}
-                </small>
+        <form
+          className="mentor-my-profile-form"
+          onSubmit={
+            saveProfile
+          }
+        >
+          <section className="mentor-my-profile-card">
+            <div className="mentor-my-profile-card-heading">
+              <span className="mentor-my-profile-eyebrow">
+                PROFESSIONAL INFORMATION
               </span>
 
+              <h3>
+                Tell mentees about your experience.
+              </h3>
+            </div>
+
+            <div className="mentor-my-profile-field-grid">
+              <label>
+                Current role or occupation
+
+                <input
+                  type="text"
+                  name="jobTitle"
+                  value={
+                    form.jobTitle
+                  }
+                  onChange={
+                    updateForm
+                  }
+                  required
+                />
+              </label>
+
+              <label>
+                Organisation
+                <span className="mentor-my-profile-optional">
+                  Optional
+                </span>
+
+                <input
+                  type="text"
+                  name="organisation"
+                  value={
+                    form.organisation
+                  }
+                  onChange={
+                    updateForm
+                  }
+                />
+              </label>
+
+              <label>
+                Years of experience
+
+                <input
+                  type="number"
+                  name="yearsOfExperience"
+                  value={
+                    form.yearsOfExperience
+                  }
+                  min="0"
+                  max="60"
+                  onChange={
+                    updateForm
+                  }
+                  required
+                />
+              </label>
+            </div>
+
+            <label>
+              Biography
+
+              <textarea
+                name="biography"
+                value={
+                  form.biography
+                }
+                rows="5"
+                minLength="40"
+                onChange={
+                  updateForm
+                }
+                required
+              />
+
+              <small>
+                Write at least 40 characters.
+              </small>
+            </label>
+
+            <label>
+              Areas of expertise
+
+              <input
+                type="text"
+                name="expertise"
+                value={
+                  form.expertise
+                }
+                onChange={
+                  updateForm
+                }
+                placeholder="Product design, leadership, career development"
+                required
+              />
+
+              <small>
+                Separate each area with a comma.
+              </small>
+            </label>
+
+            <label>
+              Mentorship categories
+
+              <input
+                type="text"
+                name="mentorshipCategories"
+                value={
+                  form.mentorshipCategories
+                }
+                onChange={
+                  updateForm
+                }
+                placeholder="Career development, leadership, technology"
+                required
+              />
+
+              <small>
+                Separate each category with a comma.
+              </small>
+            </label>
+
+            <label>
+              Languages
+
+              <input
+                type="text"
+                name="languages"
+                value={
+                  form.languages
+                }
+                onChange={
+                  updateForm
+                }
+                placeholder="English, Yoruba"
+                required
+              />
+
+              <small>
+                Separate multiple languages with a comma.
+              </small>
+            </label>
+          </section>
+
+          <section className="mentor-my-profile-card">
+            <div className="mentor-my-profile-card-heading">
+              <span className="mentor-my-profile-eyebrow">
+                MENTORING PREFERENCES
+              </span>
+
+              <h3>
+                Manage your mentoring availability.
+              </h3>
+            </div>
+
+            <div className="mentor-my-profile-field-grid">
+              <label>
+                Preferred meeting format
+
+                <select
+                  name="meetingFormat"
+                  value={
+                    form.meetingFormat
+                  }
+                  onChange={
+                    updateForm
+                  }
+                >
+                  <option value="Virtual">
+                    Virtual
+                  </option>
+
+                  <option value="In person">
+                    In person
+                  </option>
+
+                  <option value="Either">
+                    Either
+                  </option>
+                </select>
+              </label>
+
+              <label>
+                Preferred session length
+
+                <select
+                  name="sessionLength"
+                  value={
+                    form.sessionLength
+                  }
+                  onChange={
+                    updateForm
+                  }
+                >
+                  <option value="15">
+                    15 minutes
+                  </option>
+
+                  <option value="30">
+                    30 minutes
+                  </option>
+
+                  <option value="45">
+                    45 minutes
+                  </option>
+
+                  <option value="60">
+                    60 minutes
+                  </option>
+                </select>
+              </label>
+
+              <label>
+                Maximum active mentees
+
+                <select
+                  name="maximumActiveMentees"
+                  value={
+                    form.maximumActiveMentees
+                  }
+                  onChange={
+                    updateForm
+                  }
+                >
+                  {[
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    8,
+                    10,
+                  ].map(
+                    (number) => (
+                      <option
+                        key={
+                          number
+                        }
+                        value={
+                          number
+                        }
+                      >
+                        {number}{" "}
+                        {number ===
+                        1
+                          ? "mentee"
+                          : "mentees"}
+                      </option>
+                    ),
+                  )}
+                </select>
+
+                <small>
+                  You currently have {currentActiveMentees} active {currentActiveMentees === 1 ? "mentee" : "mentees"}.
+                </small>
+              </label>
+            </div>
+
+            <label className="mentor-my-profile-availability">
               <input
                 type="checkbox"
+                name="acceptingRequests"
                 checked={
                   form.acceptingRequests
                 }
-                disabled={
-                  !canAcceptRequests ||
-                  saving
-                }
-                onChange={(
-                  event,
-                ) =>
-                  updateField(
-                    "acceptingRequests",
-                    event.target.checked,
-                  )
+                onChange={
+                  updateForm
                 }
               />
+
+              <span>
+                <strong>
+                  Accepting new mentorship requests
+                </strong>
+
+                <small>
+                  Turn this off when you do not want to receive new requests.
+                </small>
+              </span>
             </label>
+          </section>
 
-            <div className="mentor-profile-capacity-grid">
-              <ProfileMetric
-                icon={
-                  <Users
-                    size={18}
-                  />
-                }
-                label="Current active mentees"
-                value={
-                  currentActiveMentees
-                }
-              />
-
-              <ProfileMetric
-                icon={
-                  <BriefcaseBusiness
-                    size={18}
-                  />
-                }
-                label="Available spaces"
-                value={
-                  availableSpaces
-                }
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="mentor-profile-form-section">
-          <div className="mentor-profile-section-heading">
-            <span>
-              PROFILE INFORMATION
-            </span>
-
-            <h2>
-              About you
-            </h2>
-
-            <p>
-              This information helps mentees understand your background and mentoring experience.
-            </p>
-          </div>
-
-          <div className="mentor-profile-form-grid">
-            <Field
-              label="Job title"
-              value={
-                form.jobTitle
+          <div className="mentor-my-profile-save-row">
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={
+                saving
               }
-              placeholder="Product Designer"
-              onChange={(
-                value,
-              ) =>
-                updateField(
-                  "jobTitle",
-                  value,
-                )
-              }
-            />
-
-            <Field
-              label="Organisation"
-              value={
-                form.organisation
-              }
-              placeholder="Organisation name"
-              onChange={(
-                value,
-              ) =>
-                updateField(
-                  "organisation",
-                  value,
-                )
-              }
-            />
-
-            <Field
-              label="Years of experience"
-              type="number"
-              min="0"
-              value={
-                form.yearsOfExperience
-              }
-              placeholder="5"
-              onChange={(
-                value,
-              ) =>
-                updateField(
-                  "yearsOfExperience",
-                  value,
-                )
-              }
-            />
-
-            <Field
-              label="Maximum active mentees"
-              type="number"
-              min="1"
-              value={
-                form.maximumActiveMentees
-              }
-              onChange={(
-                value,
-              ) =>
-                updateField(
-                  "maximumActiveMentees",
-                  value,
-                )
-              }
-            />
-          </div>
-
-          <label className="mentor-profile-field mentor-profile-field-full">
-            <span>
-              Biography
-            </span>
-
-            <textarea
-              value={
-                form.biography
-              }
-              rows="6"
-              placeholder="Tell mentees about your background, experience and mentoring approach."
-              onChange={(
-                event,
-              ) =>
-                updateField(
-                  "biography",
-                  event.target.value,
-                )
-              }
-            />
-          </label>
-        </section>
-
-        <section className="mentor-profile-form-section">
-          <div className="mentor-profile-section-heading">
-            <span>
-              MENTORING DETAILS
-            </span>
-
-            <h2>
-              How you can support mentees
-            </h2>
-
-            <p>
-              Separate multiple items with commas.
-            </p>
-          </div>
-
-          <div className="mentor-profile-form-grid">
-            <Field
-              label="Areas of expertise"
-              value={
-                form.expertise
-              }
-              placeholder="Product Design, Career Development"
-              onChange={(
-                value,
-              ) =>
-                updateField(
-                  "expertise",
-                  value,
-                )
-              }
-            />
-
-            <Field
-              label="Mentorship categories"
-              value={
-                form.mentorshipCategories
-              }
-              placeholder="Technology, Leadership"
-              onChange={(
-                value,
-              ) =>
-                updateField(
-                  "mentorshipCategories",
-                  value,
-                )
-              }
-            />
-
-            <Field
-              label="Languages"
-              icon={
-                <Languages
-                  size={15}
-                />
-              }
-              value={
-                form.languages
-              }
-              placeholder="English"
-              onChange={(
-                value,
-              ) =>
-                updateField(
-                  "languages",
-                  value,
-                )
-              }
-            />
-
-            <Field
-              label="Meeting formats"
-              value={
-                form.meetingFormats
-              }
-              placeholder="Virtual, In person"
-              onChange={(
-                value,
-              ) =>
-                updateField(
-                  "meetingFormats",
-                  value,
-                )
-              }
-            />
-
-            <Field
-              label="Session lengths in minutes"
-              value={
-                form.sessionLengths
-              }
-              placeholder="30, 45, 60"
-              onChange={(
-                value,
-              ) =>
-                updateField(
-                  "sessionLengths",
-                  value,
-                )
-              }
-            />
-          </div>
-        </section>
-
-        <div className="mentor-profile-save-row">
-          <button
-            type="submit"
-            className="primary-button mentor-profile-save-button"
-            disabled={saving}
-          >
-            <Save
-              size={16}
-            />
-
-            <span>
+            >
               {saving
                 ? "Saving..."
                 : "Save changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {deleteModalOpen && (
+        <div
+          className="mentor-photo-modal-backdrop"
+          role="presentation"
+          onMouseDown={(
+            event,
+          ) => {
+            if (
+              event.target ===
+                event.currentTarget &&
+              !deletingPhoto
+            ) {
+              setDeleteModalOpen(
+                false,
+              );
+            }
+          }}
+        >
+          <div
+            className="mentor-photo-delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mentor-photo-delete-title"
+          >
+            <button
+              type="button"
+              className="mentor-photo-modal-close"
+              aria-label="Close"
+              disabled={
+                deletingPhoto
+              }
+              onClick={() =>
+                setDeleteModalOpen(
+                  false,
+                )
+              }
+            >
+              <X
+                size={18}
+              />
+            </button>
+
+            <span className="mentor-photo-modal-icon">
+              <Trash2
+                size={22}
+              />
             </span>
-          </button>
+
+            <h2 id="mentor-photo-delete-title">
+              Delete profile image?
+            </h2>
+
+            <p>
+              This will remove your image from your mentor profile, Find a Mentor and the public website. You can upload a new image at any time.
+            </p>
+
+            <div className="mentor-photo-modal-actions">
+              <button
+                type="button"
+                className="secondary-button"
+                disabled={
+                  deletingPhoto
+                }
+                onClick={() =>
+                  setDeleteModalOpen(
+                    false,
+                  )
+                }
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="mentor-photo-confirm-delete"
+                disabled={
+                  deletingPhoto
+                }
+                onClick={
+                  deletePhoto
+                }
+              >
+                {deletingPhoto
+                  ? "Deleting..."
+                  : "Delete image"}
+              </button>
+            </div>
+          </div>
         </div>
-      </form>
+      )}
     </DashboardLayout>
   );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  placeholder = "",
-  type = "text",
-  min,
-  icon,
-}) {
-  return (
-    <label className="mentor-profile-field">
-      <span>
-        {icon}
-        {label}
-      </span>
-
-      <input
-        type={type}
-        min={min}
-        value={value}
-        placeholder={
-          placeholder
-        }
-        onChange={(
-          event,
-        ) =>
-          onChange(
-            event.target.value,
-          )
-        }
-      />
-    </label>
-  );
-}
-
-function ProfileMetric({
-  icon,
-  label,
-  value,
-}) {
-  return (
-    <div className="mentor-profile-metric">
-      <span>
-        {icon}
-      </span>
-
-      <div>
-        <small>
-          {label}
-        </small>
-
-        <strong>
-          {value}
-        </strong>
-      </div>
-    </div>
-  );
-}
-
-function listToText(
-  values,
-) {
-  if (!Array.isArray(values)) {
-    return "";
-  }
-
-  return values.join(", ");
-}
-
-function textToList(
-  value,
-) {
-  return String(value || "")
-    .split(",")
-    .map((item) =>
-      item.trim(),
-    )
-    .filter(Boolean);
-}
-
-function textToNumberList(
-  value,
-) {
-  return String(value || "")
-    .split(",")
-    .map((item) =>
-      Number(
-        item.trim(),
-      ),
-    )
-    .filter(
-      (item) =>
-        Number.isFinite(item) &&
-        item > 0,
-    );
 }
 
 export default MentorMyProfile;

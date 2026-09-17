@@ -30,137 +30,101 @@ import "./MentorRequests.css";
 
 const ACTIONS = {
   accept: {
-    eyebrow:
-      "ACCEPT REQUEST",
-    title:
-      "Accept this mentorship request?",
+    eyebrow: "ACCEPT REQUEST",
+    title: "Accept this mentorship request?",
     description:
       "The mentee will become one of your active mentees. Messaging and session planning can begin after acceptance.",
-    button:
-      "Accept request",
-    requiresMessage:
-      false,
-    danger:
-      false,
+    button: "Accept request",
+    requiresMessage: false,
+    danger: false,
   },
-
   clarification: {
-    eyebrow:
-      "REQUEST CLARIFICATION",
-    title:
-      "What would you like the mentee to clarify?",
+    eyebrow: "REQUEST CLARIFICATION",
+    title: "What would you like the mentee to clarify?",
     description:
       "The request will pause until the mentee responds. Your question will be shown to the mentee.",
-    button:
-      "Send clarification request",
-    requiresMessage:
-      true,
-    messageLabel:
-      "Clarification question *",
+    button: "Send clarification request",
+    requiresMessage: true,
+    messageLabel: "Clarification question *",
     messagePlaceholder:
       "What additional information do you need from the mentee?",
     validationMessage:
       "Please write the clarification you need from the mentee.",
-    danger:
-      false,
+    danger: false,
   },
-
   decline: {
-    eyebrow:
-      "DECLINE REQUEST",
-    title:
-      "Decline this mentorship request?",
+    eyebrow: "DECLINE REQUEST",
+    title: "Decline this mentorship request?",
     description:
       "This closes the request. A reason is required and will be shown to the mentee.",
-    button:
-      "Decline request",
-    requiresMessage:
-      true,
-    messageLabel:
-      "Reason for declining *",
+    button: "Decline request",
+    requiresMessage: true,
+    messageLabel: "Reason for declining *",
     messagePlaceholder:
       "Explain why you are unable to accept this mentorship request.",
     validationMessage:
       "Please state why you are declining this mentorship request.",
-    danger:
-      true,
+    danger: true,
   },
-
   refer: {
-    eyebrow:
-      "REFER REQUEST",
-    title:
-      "Refer this mentee for another match?",
+    eyebrow: "REFER REQUEST",
+    title: "Refer this mentee for another match?",
     description:
-      "This closes the request as referred. A reason is required and will be shown to the mentee.",
-    button:
-      "Refer for matching",
-    requiresMessage:
-      true,
-    messageLabel:
-      "Reason for referral *",
+      "This sends the request to the mentoring team for another match. A reason is required and will be kept in the request history.",
+    button: "Refer for matching",
+    requiresMessage: true,
+    messageLabel: "Reason for referral *",
     messagePlaceholder:
       "Explain why another mentor may be a better match.",
     validationMessage:
       "Please state why you are referring this mentee for another match.",
-    danger:
-      false,
+    danger: false,
   },
 };
 
 function MentorRequestDetails() {
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
+  const { requestId } = useParams();
+  const { user } = useAuth();
 
-  const {
-    requestId,
-  } = useParams();
+  const [request, setRequest] = useState(null);
+  const [menteeProfile, setMenteeProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [selectedAction, setSelectedAction] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
 
-  const { user } =
-    useAuth();
+  async function fetchRequest() {
+    const { data, error: requestError } = await withTimeout(
+      supabase.rpc("get_mentor_request_details", {
+        p_request_id: requestId,
+      }),
+      15000,
+    );
 
-  const [
-    request,
-    setRequest,
-  ] = useState(null);
+    if (requestError) {
+      throw requestError;
+    }
 
-  const [
-    menteeProfile,
-    setMenteeProfile,
-  ] = useState(null);
+    if (!data) {
+      throw new Error("This mentorship request could not be found.");
+    }
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+    const {
+      mentee_profile: loadedMenteeProfile,
+      ...loadedRequest
+    } = data;
 
-  const [
-    processing,
-    setProcessing,
-  ] = useState(false);
-
-  const [
-    error,
-    setError,
-  ] = useState("");
-
-  const [
-    success,
-    setSuccess,
-  ] = useState("");
-
-  const [
-    selectedAction,
-    setSelectedAction,
-  ] = useState("");
-
-  const [
-    actionMessage,
-    setActionMessage,
-  ] = useState("");
+    return {
+      request: loadedRequest,
+      menteeProfile: loadedMenteeProfile ?? null,
+    };
+  }
 
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
 
     async function loadPage() {
       if (!user?.id) {
@@ -168,9 +132,7 @@ function MentorRequestDetails() {
       }
 
       if (!requestId) {
-        setError(
-          "This mentorship request link is incomplete.",
-        );
+        setError("This mentorship request link is incomplete.");
         setLoading(false);
         return;
       }
@@ -179,83 +141,28 @@ function MentorRequestDetails() {
       setError("");
 
       try {
-        const {
-          data,
-          error:
-            requestError,
-        } = await withTimeout(
-          supabase.rpc(
-            "get_mentor_request_details",
-            {
-              p_request_id:
-                requestId,
-            },
-          ),
-          15000,
-        );
+        const result = await fetchRequest();
 
-        if (!isMounted) {
+        if (!mounted) {
           return;
         }
 
-        if (requestError) {
-          console.error(
-            "Unable to load mentor request:",
-            requestError.message,
-          );
-
-          setError(
-            requestError.message ||
-              "We could not load this mentorship request. Please try again.",
-          );
-
-          setRequest(null);
-          setMenteeProfile(null);
-          return;
-        }
-
-        if (!data) {
-          setError(
-            "This mentorship request could not be found.",
-          );
-
-          setRequest(null);
-          setMenteeProfile(null);
-          return;
-        }
-
-        const {
-          mentee_profile:
-            loadedMenteeProfile,
-          ...loadedRequest
-        } = data;
-
-        setRequest(
-          loadedRequest,
-        );
-
-        setMenteeProfile(
-          loadedMenteeProfile ??
-            null,
-        );
+        setRequest(result.request);
+        setMenteeProfile(result.menteeProfile);
       } catch (loadError) {
-        if (!isMounted) {
+        if (!mounted) {
           return;
         }
 
-        console.error(
-          "Mentor request details timed out or failed:",
-          loadError,
-        );
-
-        setError(
-          "This request is taking too long to load. Please try again.",
-        );
-
+        console.error("Unable to load mentor request:", loadError);
         setRequest(null);
         setMenteeProfile(null);
+        setError(
+          loadError?.message ||
+            "We could not load this mentorship request. Please try again.",
+        );
       } finally {
-        if (isMounted) {
+        if (mounted) {
           setLoading(false);
         }
       }
@@ -264,129 +171,52 @@ function MentorRequestDetails() {
     loadPage();
 
     return () => {
-      isMounted = false;
+      mounted = false;
     };
-  }, [
-    requestId,
-    user?.id,
-  ]);
+  }, [requestId, user?.id]);
 
   useEffect(() => {
-    if (
-      !selectedAction
-    ) {
+    if (!selectedAction) {
       return undefined;
     }
 
-    function handleEscape(
-      event,
-    ) {
-      if (
-        event.key ===
-          "Escape" &&
-        !processing
-      ) {
+    function handleEscape(event) {
+      if (event.key === "Escape" && !processing) {
         closeAction();
       }
     }
 
-    document.addEventListener(
-      "keydown",
-      handleEscape,
-    );
+    document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener(
-        "keydown",
-        handleEscape,
-      );
+      document.removeEventListener("keydown", handleEscape);
     };
-  }, [
-    processing,
-    selectedAction,
-  ]);
+  }, [processing, selectedAction]);
 
-  const statusKey =
-    useMemo(
-      () =>
-        String(
-          request?.status ||
-            "pending",
-        ),
-      [
-        request?.status,
-      ],
-    );
+  const statusKey = useMemo(
+    () => String(request?.status || "pending"),
+    [request?.status],
+  );
 
-  const menteeName =
-    request?.mentee
-      ?.full_name ||
-    "Mentee";
+  const menteeName = request?.mentee?.full_name || "Mentee";
 
   const initials =
     menteeName
       .split(" ")
       .filter(Boolean)
       .slice(0, 2)
-      .map((part) =>
-        part
-          .charAt(0)
-          .toUpperCase(),
-      )
-      .join("") ||
-    "MC";
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("") || "MC";
 
   async function refreshRequest() {
-    const {
-      data,
-      error:
-        refreshError,
-    } = await withTimeout(
-      supabase.rpc(
-        "get_mentor_request_details",
-        {
-          p_request_id:
-            requestId,
-        },
-      ),
-      15000,
-    );
-
-    if (refreshError) {
-      throw refreshError;
-    }
-
-    if (!data) {
-      throw new Error(
-        "The mentorship request could not be found.",
-      );
-    }
-
-    const {
-      mentee_profile:
-        loadedMenteeProfile,
-      ...loadedRequest
-    } = data;
-
-    setRequest(
-      loadedRequest,
-    );
-
-    setMenteeProfile(
-      loadedMenteeProfile ??
-        null,
-    );
+    const result = await fetchRequest();
+    setRequest(result.request);
+    setMenteeProfile(result.menteeProfile);
   }
 
-  function openAction(
-    action,
-  ) {
-    setSelectedAction(
-      action,
-    );
-
+  function openAction(action) {
+    setSelectedAction(action);
     setActionMessage("");
-
     setError("");
     setSuccess("");
   }
@@ -398,26 +228,17 @@ function MentorRequestDetails() {
 
     setSelectedAction("");
     setActionMessage("");
+    setError("");
   }
 
   async function submitAction() {
-    if (
-      !request?.id ||
-      !selectedAction
-    ) {
+    if (!request?.id || !selectedAction) {
       return;
     }
 
-    const information =
-      ACTIONS[
-        selectedAction
-      ];
+    const information = ACTIONS[selectedAction];
 
-    if (
-      information
-        ?.requiresMessage &&
-      !actionMessage.trim()
-    ) {
+    if (information?.requiresMessage && !actionMessage.trim()) {
       setError(
         information.validationMessage ||
           "Please provide the required reason.",
@@ -429,67 +250,43 @@ function MentorRequestDetails() {
     setError("");
     setSuccess("");
 
-    const {
-      error:
-        actionError,
-    } = await supabase.rpc(
+    const { error: actionError } = await supabase.rpc(
       "mentor_review_mentorship_request",
       {
-        p_request_id:
-          request.id,
-        p_action:
-          selectedAction,
-        p_message:
-          actionMessage
-            .trim() ||
-          null,
+        p_request_id: request.id,
+        p_action: selectedAction,
+        p_message: actionMessage.trim() || null,
       },
     );
 
     if (actionError) {
-      console.error(
-        "Unable to review mentorship request:",
-        actionError.message,
-      );
-
+      console.error("Unable to review mentorship request:", actionError);
       setError(
         actionError.message ||
           "We could not update this mentorship request.",
       );
-
       setProcessing(false);
       return;
     }
 
     try {
       await refreshRequest();
-    } catch (
-      refreshError
-    ) {
-      console.error(
-        refreshError,
-      );
-
+    } catch (refreshError) {
+      console.error(refreshError);
       window.location.reload();
       return;
     }
 
     const messages = {
-      accept:
-        "The mentorship request has been accepted.",
+      accept: "The mentorship request has been accepted.",
       clarification:
         "Your clarification request has been sent to the mentee.",
-      decline:
-        "The mentorship request has been declined.",
-      refer:
-        "The request has been referred for matching support.",
+      decline: "The mentorship request has been declined.",
+      refer: "The request has been referred for matching support.",
     };
 
     setSuccess(
-      messages[
-        selectedAction
-      ] ||
-        "The request has been updated.",
+      messages[selectedAction] || "The request has been updated.",
     );
 
     setSelectedAction("");
@@ -505,23 +302,14 @@ function MentorRequestDetails() {
       >
         <section className="dashboard-empty-state">
           <div className="loader" />
-
-          <h2>
-            Loading request details
-          </h2>
-
-          <p>
-            Please wait while we prepare this mentorship request.
-          </p>
+          <h2>Loading request details</h2>
+          <p>Please wait while we prepare this mentorship request.</p>
         </section>
       </DashboardLayout>
     );
   }
 
-  if (
-    error &&
-    !request
-  ) {
+  if (error && !request) {
     return (
       <DashboardLayout
         title="Request details"
@@ -529,27 +317,14 @@ function MentorRequestDetails() {
       >
         <section className="dashboard-empty-state">
           <span className="empty-state-icon">
-            <GitPullRequest
-              size={28}
-            />
+            <GitPullRequest size={28} />
           </span>
-
-          <h2>
-            Unable to load this request
-          </h2>
-
-          <p>
-            {error}
-          </p>
-
+          <h2>Unable to load this request</h2>
+          <p>{error}</p>
           <button
             type="button"
             className="secondary-button"
-            onClick={() =>
-              navigate(
-                "/mentor/requests",
-              )
-            }
+            onClick={() => navigate("/mentor/requests")}
           >
             Back to requests
           </button>
@@ -567,156 +342,75 @@ function MentorRequestDetails() {
         <button
           type="button"
           className="mentor-request-back"
-          onClick={() =>
-            navigate(
-              "/mentor/requests",
-            )
-          }
+          onClick={() => navigate("/mentor/requests")}
         >
-          <ArrowLeft
-            size={16}
-          />
+          <ArrowLeft size={16} />
           Back to requests
         </button>
 
         {success && (
           <p className="mentor-request-success">
-            <CheckCircle2
-              size={17}
-            />
+            <CheckCircle2 size={17} />
             {success}
           </p>
         )}
 
-        {error &&
-          request && (
-            <p
-              className="form-error"
-              role="alert"
-            >
-              {error}
-            </p>
-          )}
+        {error && request && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
 
         <section className="mentor-request-detail-hero">
           <div className="mentor-request-detail-person">
-            {request.mentee
-              ?.profile_photo_url ? (
-              <img
-                src={
-                  request
-                    .mentee
-                    .profile_photo_url
-                }
-                alt=""
-              />
+            {request.mentee?.profile_photo_url ? (
+              <img src={request.mentee.profile_photo_url} alt="" />
             ) : (
               <span className="mentor-request-detail-avatar">
-                {
-                  initials
-                }
+                {initials}
               </span>
             )}
 
             <div>
-              <span className="mentor-request-eyebrow">
-                MENTEE
-              </span>
-
-              <h2>
-                {
-                  menteeName
-                }
-              </h2>
-
-              {request
-                .mentee
-                ?.email && (
-                <p>
-                  {
-                    request
-                      .mentee
-                      .email
-                  }
-                </p>
-              )}
+              <span className="mentor-request-eyebrow">MENTEE</span>
+              <h2>{menteeName}</h2>
+              {request.mentee?.email && <p>{request.mentee.email}</p>}
             </div>
           </div>
 
-          <RequestStatus
-            value={
-              request.status
-            }
-          />
+          <RequestStatus value={request.status} />
         </section>
 
         <section className="mentor-request-summary-grid">
           <SummaryItem
-            icon={
-              <BriefcaseBusiness
-                size={18}
-              />
-            }
+            icon={<BriefcaseBusiness size={18} />}
             label="Mentoring area"
-            value={
-              request.mentoring_area ||
-              "Not provided"
-            }
+            value={request.mentoring_area || "Not provided"}
           />
-
           <SummaryItem
-            icon={
-              <CalendarDays
-                size={18}
-              />
-            }
+            icon={<CalendarDays size={18} />}
             label="Submitted"
-            value={
-              formatDateTime(
-                request.created_at,
-              )
-            }
+            value={formatDateTime(request.created_at)}
           />
-
           <SummaryItem
-            icon={
-              <Clock3
-                size={18}
-              />
-            }
+            icon={<Clock3 size={18} />}
             label="Preferred times"
-            value={
-              request.preferred_times ||
-              "No preference provided"
-            }
+            value={request.preferred_times || "No preference provided"}
           />
         </section>
 
         <section className="mentor-request-copy-grid">
           <article>
-            <span>
-              MENTORSHIP GOAL
-            </span>
-
-            <h3>
-              What the mentee wants to achieve
-            </h3>
-
+            <span>MENTORSHIP GOAL</span>
+            <h3>What the mentee wants to achieve</h3>
             <p>
-              {request.goal_statement ||
-                "No goal statement was provided."}
+              {request.goal_statement || "No goal statement was provided."}
             </p>
           </article>
 
           <article>
-            <span>
-              WHY THEY CHOSE YOU
-            </span>
-
-            <h3>
-              Reason for this request
-            </h3>
-
+            <span>WHY THEY CHOSE YOU</span>
+            <h3>Reason for this request</h3>
             <p>
               {request.reason_for_choosing_mentor ||
                 "No reason was provided."}
@@ -726,14 +420,8 @@ function MentorRequestDetails() {
 
         <section className="mentor-request-profile-section">
           <div className="mentor-request-section-heading">
-            <span>
-              MENTEE PROFILE
-            </span>
-
-            <h2>
-              Understand their mentoring needs
-            </h2>
-
+            <span>MENTEE PROFILE</span>
+            <h2>Understand their mentoring needs</h2>
             <p>
               Review the mentee's profile before deciding whether this is a suitable mentoring match.
             </p>
@@ -741,71 +429,35 @@ function MentorRequestDetails() {
 
           {menteeProfile ? (
             <div className="mentor-request-profile-grid">
-              <ProfileBlock
-                label="Biography"
-                value={
-                  menteeProfile.biography
-                }
-              />
-
+              <ProfileBlock label="Biography" value={menteeProfile.biography} />
               <ProfileBlock
                 label="Development goals"
-                value={
-                  menteeProfile.development_goals
-                }
+                value={menteeProfile.development_goals}
               />
-
               <ProfileBlock
                 label="What they hope to gain"
-                value={
-                  menteeProfile.hopes_to_gain
-                }
+                value={menteeProfile.hopes_to_gain}
               />
-
               <ProfileBlock
                 label="Preferred availability"
-                value={
-                  menteeProfile.preferred_availability ||
-                  "Not provided"
-                }
+                value={menteeProfile.preferred_availability || "Not provided"}
               />
-
               <ProfileBlock
                 label="Previous mentoring experience"
                 value={
-                  menteeProfile.previous_mentoring_history ||
-                  "Not provided"
+                  menteeProfile.previous_mentoring_history || "Not provided"
                 }
               />
 
               <div className="mentor-request-profile-block">
-                <small>
-                  MENTORSHIP AREAS
-                </small>
-
+                <small>MENTORSHIP AREAS</small>
                 <div className="mentor-request-tags">
-                  {(menteeProfile.mentorship_areas ??
-                    []).length >
-                  0 ? (
-                    menteeProfile.mentorship_areas.map(
-                      (
-                        area,
-                      ) => (
-                        <span
-                          key={
-                            area
-                          }
-                        >
-                          {
-                            area
-                          }
-                        </span>
-                      ),
-                    )
+                  {(menteeProfile.mentorship_areas ?? []).length > 0 ? (
+                    menteeProfile.mentorship_areas.map((area) => (
+                      <span key={area}>{area}</span>
+                    ))
                   ) : (
-                    <p>
-                      Not provided
-                    </p>
+                    <p>Not provided</p>
                   )}
                 </div>
               </div>
@@ -817,186 +469,112 @@ function MentorRequestDetails() {
           )}
         </section>
 
-        {statusKey ===
-          "clarification_requested" && (
+        {/*
+          Important fix:
+          Keep the clarification history visible after the mentee responds.
+          The response RPC changes the request status back to Pending, so this
+          section must be driven by the saved clarification question, not only
+          by the current status.
+        */}
+        {request.clarification_message && (
           <section className="mentor-request-clarification">
             <div>
-              <span className="mentor-request-eyebrow">
-                CLARIFICATION
-              </span>
-
+              <span className="mentor-request-eyebrow">CLARIFICATION</span>
               <h3>
-                Waiting for the mentee's response
+                {request.clarification_response
+                  ? "The mentee has responded"
+                  : "Waiting for the mentee's response"}
               </h3>
             </div>
 
             <div>
-              <small>
-                Your question
-              </small>
-
-              <p>
-                {request.clarification_message ||
-                  "Clarification requested."}
-              </p>
+              <small>Your question</small>
+              <p>{request.clarification_message}</p>
             </div>
 
             {request.clarification_response && (
               <div>
-                <small>
-                  Mentee response
-                </small>
-
-                <p>
-                  {
-                    request.clarification_response
-                  }
-                </p>
+                <small>Mentee response</small>
+                <p>{request.clarification_response}</p>
               </div>
             )}
           </section>
         )}
 
-        {getOutcomeReason(
-          request,
-          statusKey,
-        ) && (
+        {getOutcomeReason(request, statusKey) && (
           <section className="mentor-request-outcome-reason">
             <span className="mentor-request-eyebrow">
-              {getOutcomeReasonLabel(
-                statusKey,
-              )}
+              {getOutcomeReasonLabel(statusKey)}
             </span>
-
-            <h3>
-              {getOutcomeReasonTitle(
-                statusKey,
-              )}
-            </h3>
-
-            <p>
-              {getOutcomeReason(
-                request,
-                statusKey,
-              )}
-            </p>
+            <h3>{getOutcomeReasonTitle(statusKey)}</h3>
+            <p>{getOutcomeReason(request, statusKey)}</p>
           </section>
         )}
 
         <section className="mentor-request-decision-section">
           <div>
-            <span className="mentor-request-eyebrow">
-              REQUEST DECISION
-            </span>
-
-            <h2>
-              {getDecisionTitle(
-                statusKey,
-              )}
-            </h2>
-
-            <p>
-              {getDecisionDescription(
-                statusKey,
-              )}
-            </p>
+            <span className="mentor-request-eyebrow">REQUEST DECISION</span>
+            <h2>{getDecisionTitle(statusKey)}</h2>
+            <p>{getDecisionDescription(statusKey)}</p>
           </div>
 
-          {statusKey ===
-            "pending" && (
+          {statusKey === "pending" && (
             <div className="mentor-request-decision-actions">
               <button
                 type="button"
                 className="mentor-request-secondary-action"
-                onClick={() =>
-                  openAction(
-                    "clarification",
-                  )
-                }
+                onClick={() => openAction("clarification")}
               >
-                <MessageCircle
-                  size={16}
-                />
+                <MessageCircle size={16} />
                 Request clarification
               </button>
 
               <button
                 type="button"
                 className="mentor-request-secondary-action"
-                onClick={() =>
-                  openAction(
-                    "refer",
-                  )
-                }
+                onClick={() => openAction("refer")}
               >
-                <UserRound
-                  size={16}
-                />
+                <UserRound size={16} />
                 Refer for matching
               </button>
 
               <button
                 type="button"
                 className="mentor-request-decline-action"
-                onClick={() =>
-                  openAction(
-                    "decline",
-                  )
-                }
+                onClick={() => openAction("decline")}
               >
-                <XCircle
-                  size={16}
-                />
+                <XCircle size={16} />
                 Decline
               </button>
 
               <button
                 type="button"
                 className="mentor-request-accept-action"
-                onClick={() =>
-                  openAction(
-                    "accept",
-                  )
-                }
+                onClick={() => openAction("accept")}
               >
-                <CheckCircle2
-                  size={16}
-                />
+                <CheckCircle2 size={16} />
                 Accept request
               </button>
             </div>
           )}
 
-          {statusKey ===
-            "accepted" && (
+          {statusKey === "accepted" && (
             <div className="mentor-request-decision-actions">
               <button
                 type="button"
                 className="mentor-request-secondary-action"
-                onClick={() =>
-                  navigate(
-                    "/mentor/mentees",
-                  )
-                }
+                onClick={() => navigate("/mentor/mentees")}
               >
-                <UserRound
-                  size={16}
-                />
+                <UserRound size={16} />
                 View my mentees
               </button>
 
               <button
                 type="button"
                 className="mentor-request-secondary-action"
-                onClick={() =>
-                  navigate(
-                    "/mentor/sessions",
-                  )
-                }
+                onClick={() => navigate("/mentor/sessions")}
               >
-                <CalendarDays
-                  size={16}
-                />
+                <CalendarDays size={16} />
                 Go to sessions
               </button>
 
@@ -1004,39 +582,23 @@ function MentorRequestDetails() {
                 type="button"
                 className="mentor-request-accept-action"
                 onClick={() =>
-                  navigate(
-                    `/mentor/messages?request=${request.id}`,
-                    {
-                      state: {
-                        conversationRequest: {
-                          request_id:
-                            request.id,
-                          mentee_id:
-                            request.mentee_id,
-                          mentee_name:
-                            request.mentee
-                              ?.full_name ||
-                            "Mentee",
-                          mentee_email:
-                            request.mentee
-                              ?.email ||
-                            "",
-                          profile_photo_url:
-                            request.mentee
-                              ?.profile_photo_url ||
-                            null,
-                          mentoring_area:
-                            request.mentoring_area ||
-                            "Mentorship",
-                        },
+                  navigate(`/mentor/messages?request=${request.id}`, {
+                    state: {
+                      conversationRequest: {
+                        request_id: request.id,
+                        mentee_id: request.mentee_id,
+                        mentee_name: request.mentee?.full_name || "Mentee",
+                        mentee_email: request.mentee?.email || "",
+                        profile_photo_url:
+                          request.mentee?.profile_photo_url || null,
+                        mentoring_area:
+                          request.mentoring_area || "Mentorship",
                       },
                     },
-                  )
+                  })
                 }
               >
-                <MessageCircle
-                  size={16}
-                />
+                <MessageCircle size={16} />
                 Message mentee
               </button>
             </div>
@@ -1045,27 +607,13 @@ function MentorRequestDetails() {
 
         {selectedAction && (
           <ActionModal
-            action={
-              selectedAction
-            }
-            message={
-              actionMessage
-            }
-            setMessage={
-              setActionMessage
-            }
-            error={
-              error
-            }
-            processing={
-              processing
-            }
-            onClose={
-              closeAction
-            }
-            onConfirm={
-              submitAction
-            }
+            action={selectedAction}
+            message={actionMessage}
+            setMessage={setActionMessage}
+            error={error}
+            processing={processing}
+            onClose={closeAction}
+            onConfirm={submitAction}
           />
         )}
       </div>
@@ -1082,8 +630,7 @@ function ActionModal({
   onClose,
   onConfirm,
 }) {
-  const information =
-    ACTIONS[action];
+  const information = ACTIONS[action];
 
   if (!information) {
     return null;
@@ -1093,14 +640,8 @@ function ActionModal({
     <div
       className="mentor-request-modal-backdrop"
       role="presentation"
-      onMouseDown={(
-        event,
-      ) => {
-        if (
-          event.target ===
-            event.currentTarget &&
-          !processing
-        ) {
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !processing) {
           onClose();
         }
       }}
@@ -1113,69 +654,36 @@ function ActionModal({
       >
         <div className="mentor-request-modal-header">
           <div>
-            <span>
-              {
-                information.eyebrow
-              }
-            </span>
-
-            <h2 id="mentor-request-modal-title">
-              {
-                information.title
-              }
-            </h2>
+            <span>{information.eyebrow}</span>
+            <h2 id="mentor-request-modal-title">{information.title}</h2>
           </div>
 
           <button
             type="button"
             aria-label="Close"
-            onClick={
-              onClose
-            }
-            disabled={
-              processing
-            }
+            onClick={onClose}
+            disabled={processing}
           >
-            <X
-              size={18}
-            />
+            <X size={18} />
           </button>
         </div>
 
-        <p>
-          {
-            information.description
-          }
-        </p>
+        <p>{information.description}</p>
 
         {information.requiresMessage && (
           <label>
-            <span>
-              {information.messageLabel ||
-                "Reason *"}
-            </span>
-
+            <span>{information.messageLabel || "Reason *"}</span>
             <textarea
-              value={
-                message
-              }
+              value={message}
               rows={4}
               placeholder={
                 information.messagePlaceholder ||
                 "Add the required information..."
               }
-              onChange={(
-                event,
-              ) =>
-                setMessage(
-                  event.target
-                    .value,
-                )
-              }
+              onChange={(event) => setMessage(event.target.value)}
             />
 
-            {(action === "decline" ||
-              action === "refer") && (
+            {(action === "decline" || action === "refer") && (
               <small className="mentor-request-modal-helper">
                 This reason will be visible to the mentee and kept in the request history.
               </small>
@@ -1184,10 +692,7 @@ function ActionModal({
         )}
 
         {error && (
-          <p
-            className="form-error"
-            role="alert"
-          >
+          <p className="form-error" role="alert">
             {error}
           </p>
         )}
@@ -1196,12 +701,8 @@ function ActionModal({
           <button
             type="button"
             className="mentor-request-secondary-action"
-            onClick={
-              onClose
-            }
-            disabled={
-              processing
-            }
+            onClick={onClose}
+            disabled={processing}
           >
             Cancel
           </button>
@@ -1213,16 +714,10 @@ function ActionModal({
                 ? "mentor-request-decline-action"
                 : "mentor-request-accept-action"
             }
-            onClick={
-              onConfirm
-            }
-            disabled={
-              processing
-            }
+            onClick={onConfirm}
+            disabled={processing}
           >
-            {processing
-              ? "Please wait..."
-              : information.button}
+            {processing ? "Please wait..." : information.button}
           </button>
         </div>
       </section>
@@ -1230,76 +725,39 @@ function ActionModal({
   );
 }
 
-function SummaryItem({
-  icon,
-  label,
-  value,
-}) {
+function SummaryItem({ icon, label, value }) {
   return (
     <article className="mentor-request-summary-item">
-      <span>
-        {icon}
-      </span>
-
+      <span>{icon}</span>
       <div>
-        <small>
-          {label}
-        </small>
-
-        <strong>
-          {value}
-        </strong>
+        <small>{label}</small>
+        <strong>{value}</strong>
       </div>
     </article>
   );
 }
 
-function ProfileBlock({
-  label,
-  value,
-}) {
+function ProfileBlock({ label, value }) {
   return (
     <article className="mentor-request-profile-block">
-      <small>
-        {label}
-      </small>
-
-      <p>
-        {value ||
-          "Not provided"}
-      </p>
+      <small>{label}</small>
+      <p>{value || "Not provided"}</p>
     </article>
   );
 }
 
-function RequestStatus({
-  value,
-}) {
-  const status =
-    String(
-      value ||
-        "pending",
-    );
+function RequestStatus({ value }) {
+  const status = String(value || "pending");
 
   const label =
     {
-      pending:
-        "Pending",
-      accepted:
-        "Accepted",
-      clarification_requested:
-        "Clarification needed",
-      declined:
-        "Declined",
-      referred:
-        "Referred",
-      withdrawn:
-        "Withdrawn",
-    }[status] ||
-    status.replaceAll(
-      "_",
-      " ",
-    );
+      pending: "Pending",
+      accepted: "Accepted",
+      clarification_requested: "Clarification needed",
+      declined: "Declined",
+      referred: "Referred",
+      withdrawn: "Withdrawn",
+    }[status] || status.replaceAll("_", " ");
 
   return (
     <span
@@ -1308,172 +766,107 @@ function RequestStatus({
         "-",
       )}`}
     >
-      <i
-        aria-hidden="true"
-      />
-
+      <i aria-hidden="true" />
       {label}
     </span>
   );
 }
 
-function getDecisionTitle(
-  status,
-) {
+function getDecisionTitle(status) {
   switch (status) {
     case "accepted":
       return "This mentorship request has been accepted.";
-
     case "clarification_requested":
       return "Waiting for the mentee to clarify their request.";
-
     case "declined":
       return "This mentorship request was declined.";
-
     case "referred":
       return "This request has been referred for matching support.";
-
     case "withdrawn":
       return "The mentee withdrew this request.";
-
     default:
       return "Choose how you would like to respond.";
   }
 }
 
-function getDecisionDescription(
-  status,
-) {
+function getDecisionDescription(status) {
   switch (status) {
     case "accepted":
       return "The mentee is now part of your active mentoring relationships. You can continue to sessions and messaging.";
-
     case "clarification_requested":
       return "No further action is needed until the mentee responds. Their response will return the request to Pending.";
-
     case "declined":
       return "No further action is required for this request.";
-
     case "referred":
       return "The mentoring team can now support the mentee with finding another suitable match.";
-
     case "withdrawn":
       return "This request is closed and cannot be accepted.";
-
     default:
       return "Review the mentee's goal, reason for choosing you and profile before making a decision.";
   }
 }
 
-function getOutcomeReason(
-  request,
-  status,
-) {
+function getOutcomeReason(request, status) {
   switch (status) {
     case "declined":
-      return (
-        request?.decline_reason ||
-        null
-      );
-
+      return request?.decline_reason || null;
     case "referred":
-      return (
-        request?.referral_reason ||
-        null
-      );
-
+      return request?.referral_reason || null;
     case "withdrawn":
-      return (
-        request?.withdrawal_reason ||
-        null
-      );
-
+      return request?.withdrawal_reason || null;
     default:
       return null;
   }
 }
 
-function getOutcomeReasonLabel(
-  status,
-) {
+function getOutcomeReasonLabel(status) {
   switch (status) {
     case "declined":
       return "DECLINE REASON";
-
     case "referred":
       return "REFERRAL REASON";
-
     case "withdrawn":
       return "WITHDRAWAL REASON";
-
     default:
       return "REQUEST NOTE";
   }
 }
 
-function getOutcomeReasonTitle(
-  status,
-) {
+function getOutcomeReasonTitle(status) {
   switch (status) {
     case "declined":
       return "Reason shared with the mentee";
-
     case "referred":
       return "Why another match was recommended";
-
     case "withdrawn":
       return "Why the mentee withdrew the request";
-
     default:
       return "Request information";
   }
 }
 
-function formatDateTime(
-  value,
-) {
+function formatDateTime(value) {
   if (!value) {
     return "Not available";
   }
 
-  return new Intl.DateTimeFormat(
-    "en-NG",
-    {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    },
-  ).format(
-    new Date(value),
-  );
+  return new Intl.DateTimeFormat("en-NG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
-
-function withTimeout(
-  promise,
-  milliseconds,
-) {
+function withTimeout(promise, milliseconds) {
   return Promise.race([
     promise,
-    new Promise(
-      (
-        _resolve,
-        reject,
-      ) => {
-        window.setTimeout(
-          () => {
-            reject(
-              new Error(
-                "Request timed out.",
-              ),
-            );
-          },
-          milliseconds,
-        );
-      },
-    ),
+    new Promise((_resolve, reject) => {
+      window.setTimeout(() => {
+        reject(new Error("Request timed out."));
+      }, milliseconds);
+    }),
   ]);
 }
 

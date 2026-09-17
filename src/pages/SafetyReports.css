@@ -1,0 +1,373 @@
+.safety-reports-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  color: #17211b;
+}
+
+.safety-reports-intro,
+.safety-report-form-card,
+.safety-report-history-card,
+.safety-emergency-note {
+  background: #ffffff;
+  border: 1px solid #e6ebe7;
+  border-radius: 18px;
+}
+
+.safety-reports-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px;
+}
+
+.safety-reports-intro-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 12px;
+  background: #eef7f0;
+  color: #1f6b3b;
+}
+
+.safety-reports-intro h2,
+.safety-section-heading h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.safety-reports-intro p {
+  margin: 7px 0 5px;
+  line-height: 1.65;
+  color: #4f5d54;
+}
+
+.safety-reports-intro small {
+  color: #6c776f;
+  line-height: 1.55;
+}
+
+.safety-reports-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.safety-report-form-card,
+.safety-report-history-card {
+  padding: 22px;
+}
+
+.safety-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.safety-section-heading span {
+  display: block;
+  margin-bottom: 5px;
+  color: #52705e;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.safety-history-heading > small {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f3f6f4;
+  color: #4e5c53;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.safety-report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.safety-report-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.safety-report-form label > span {
+  font-size: 14px;
+  font-weight: 650;
+  color: #253129;
+}
+
+.safety-report-form input,
+.safety-report-form select,
+.safety-report-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cfd8d2;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #17211b;
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.safety-report-form input,
+.safety-report-form select {
+  min-height: 46px;
+  padding: 0 13px;
+}
+
+.safety-report-form textarea {
+  resize: vertical;
+  min-height: 145px;
+  padding: 12px 13px;
+  line-height: 1.55;
+}
+
+.safety-report-form input:focus,
+.safety-report-form select:focus,
+.safety-report-form textarea:focus {
+  border-color: #39784f;
+  box-shadow: 0 0 0 3px rgba(57, 120, 79, 0.1);
+}
+
+.safety-report-form label > small {
+  color: #6b766f;
+  line-height: 1.5;
+}
+
+.safety-report-form button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 44px;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 10px;
+  background: #24663d;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.safety-report-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.safety-form-error,
+.safety-form-success {
+  margin: 0 0 16px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.safety-form-error {
+  border: 1px solid #f0c6c6;
+  background: #fff8f8;
+  color: #8c2525;
+}
+
+.safety-form-success {
+  border: 1px solid #c9e5d1;
+  background: #f5fbf7;
+  color: #275f38;
+}
+
+.safety-report-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 190px;
+  justify-content: center;
+  padding: 12px 4px;
+  color: #59655d;
+}
+
+.safety-report-state strong {
+  color: #202b24;
+}
+
+.safety-report-state p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.safety-report-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.safety-report-history-item {
+  padding: 15px;
+  border: 1px solid #e1e7e3;
+  border-radius: 13px;
+  background: #ffffff;
+}
+
+.safety-report-history-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.safety-report-history-top > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.safety-report-history-top strong {
+  font-size: 14px;
+}
+
+.safety-report-history-top small {
+  color: #657168;
+}
+
+.safety-report-history-item dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 15px 0 0;
+}
+
+.safety-report-history-item dl > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.safety-report-history-item dt {
+  color: #788078;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.safety-report-history-item dd {
+  margin: 0;
+  color: #2a352e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.safety-report-history-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 13px 0 0;
+  color: #5a665e;
+  font-size: 12px;
+}
+
+.safety-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #f1f4f2;
+  color: #4c5951;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.safety-status-acknowledged,
+.safety-status-investigating {
+  background: #eef6ff;
+  color: #2c5f86;
+}
+
+.safety-status-escalated {
+  background: #fff1e8;
+  color: #8b4d22;
+}
+
+.safety-status-resolved,
+.safety-status-closed {
+  background: #eef7f0;
+  color: #28613b;
+}
+
+.safety-emergency-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+.safety-emergency-note > svg {
+  flex: 0 0 auto;
+  color: #9a5c22;
+  margin-top: 2px;
+}
+
+.safety-emergency-note strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.safety-emergency-note p {
+  margin: 0;
+  color: #5e675f;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .safety-reports-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .safety-reports-page {
+    gap: 16px;
+  }
+
+  .safety-reports-intro,
+  .safety-report-form-card,
+  .safety-report-history-card,
+  .safety-emergency-note {
+    border-radius: 14px;
+  }
+
+  .safety-reports-intro,
+  .safety-report-form-card,
+  .safety-report-history-card {
+    padding: 17px;
+  }
+
+  .safety-report-history-item dl {
+    grid-template-columns: 1fr;
+  }
+
+  .safety-report-form button {
+    width: 100%;
+  }
+}

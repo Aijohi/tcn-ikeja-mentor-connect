@@ -9,8 +9,9 @@ import {
   BriefcaseBusiness,
   ChevronLeft,
   ChevronRight,
-  Monitor,
+  Filter,
   Search,
+  Star,
   UsersRound,
 } from "lucide-react";
 
@@ -19,12 +20,16 @@ import {
 } from "react-router-dom";
 
 import DashboardLayout from "../layouts/DashboardLayout";
-import { supabase } from "../lib/supabase";
+import {
+  supabase,
+} from "../lib/supabase";
 
 import "./MenteeRequestFlow.css";
 import "./FindMentorSearch.css";
+import "./FindMentorGrid.css";
 
-const RESULTS_PER_PAGE = 6;
+const DESKTOP_PAGE_SIZE = 16;
+const MOBILE_PAGE_SIZE = 1;
 
 function formatLabel(value) {
   return String(value || "")
@@ -34,20 +39,9 @@ function formatLabel(value) {
     );
 }
 
-function getProfile(row) {
-  if (Array.isArray(row?.profiles)) {
-    return row.profiles[0] ?? null;
-  }
-
-  return row?.profiles ?? null;
-}
-
 function normaliseMentor(row) {
-  const profile =
-    getProfile(row);
-
   const name =
-    profile?.full_name ||
+    row.full_name ||
     "Approved mentor";
 
   const initials =
@@ -62,144 +56,58 @@ function normaliseMentor(row) {
       )
       .join("");
 
-  const maximumActive =
-    Number(
-      row.maximum_active_mentees ??
-        0,
-    );
-
-  const currentActive =
-    Number(
-      row.current_active_mentees ??
-        0,
-    );
-
-  const availableSpaces =
-    Math.max(
-      maximumActive -
-        currentActive,
-      0,
-    );
-
   const meetingFormats =
     row.meeting_formats ?? [];
 
   return {
     id: row.mentor_id,
-
     name,
     initials,
-
     profilePhotoUrl:
-      profile?.profile_photo_url ??
+      row.profile_photo_url ??
       null,
-
     role:
       row.job_title ||
       "Mentor",
-
     organisation:
-      row.organisation || "",
-
+      row.organisation ||
+      "",
     categories:
       row.mentorship_categories ??
       [],
-
     expertise:
       row.expertise ?? [],
-
     languages:
       row.languages ?? [],
-
     meetingFormat:
       meetingFormats.length > 0
         ? meetingFormats
-            .map(formatLabel)
+            .map(
+              formatLabel,
+            )
             .join(" / ")
         : "To be agreed",
-
     yearsOfExperience:
       row.years_of_experience ??
       null,
-
     spaces:
-      availableSpaces,
-
-    acceptingRequests:
-      row.accepting_requests ===
-      true,
+      Number(
+        row.available_spaces ??
+          0,
+      ),
+    rating:
+      row.average_rating ===
+      null
+        ? null
+        : Number(
+            row.average_rating,
+          ),
+    reviewCount:
+      Number(
+        row.review_count ??
+          0,
+      ),
   };
-}
-
-function Progress() {
-  const items = [
-    "Find mentor",
-    "View profile",
-    "Send request",
-  ];
-
-  return (
-    <div className="request-flow-progress">
-      {items.map(
-        (label, index) => {
-          const number =
-            index + 1;
-
-          const active =
-            number === 1;
-
-          return (
-            <div
-              key={label}
-              className={[
-                "request-flow-progress-item",
-                active
-                  ? "is-active"
-                  : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <span>
-                {number}
-              </span>
-
-              <small>
-                {label}
-              </small>
-            </div>
-          );
-        },
-      )}
-    </div>
-  );
-}
-
-function MentorAvatar({
-  mentor,
-}) {
-  return (
-    <span className="request-flow-avatar">
-      {mentor.profilePhotoUrl ? (
-        <img
-          src={
-            mentor.profilePhotoUrl
-          }
-          alt=""
-          style={{
-            width: "100%",
-            height: "100%",
-            borderRadius:
-              "inherit",
-            objectFit: "cover",
-          }}
-        />
-      ) : (
-        mentor.initials ||
-        "MC"
-      )}
-    </span>
-  );
 }
 
 function MentorCard({
@@ -207,16 +115,29 @@ function MentorCard({
   onView,
 }) {
   return (
-    <article className="request-flow-mentor-card">
-      <div className="request-flow-mentor-card-top">
-        <MentorAvatar
-          mentor={mentor}
-        />
+    <article className="find-mentor-card">
+      <div className="find-mentor-image-shell">
+        {mentor.profilePhotoUrl ? (
+          <img
+            src={
+              mentor.profilePhotoUrl
+            }
+            alt=""
+            className="find-mentor-image"
+          />
+        ) : (
+          <div className="find-mentor-image find-mentor-image-placeholder">
+            <span>
+              {mentor.initials ||
+                "MC"}
+            </span>
+          </div>
+        )}
 
-        <div>
-          <span className="request-flow-approved">
+        <div className="find-mentor-image-overlay">
+          <span className="find-mentor-approved">
             <BadgeCheck
-              size={14}
+              size={13}
             />
             TCN Ikeja approved mentor
           </span>
@@ -227,77 +148,113 @@ function MentorCard({
 
           <p>
             {mentor.role}
-
             {mentor.organisation
               ? ` · ${mentor.organisation}`
               : ""}
           </p>
+
+          <div className="find-mentor-rating">
+            <Star
+              size={14}
+              fill="currentColor"
+            />
+
+            <strong>
+              {mentor.rating !==
+              null
+                ? mentor.rating.toFixed(
+                    1,
+                  )
+                : "New"}
+            </strong>
+
+            <span>
+              {mentor.reviewCount >
+              0
+                ? `(${mentor.reviewCount} ${
+                    mentor.reviewCount ===
+                    1
+                      ? "review"
+                      : "reviews"
+                  })`
+                : "No ratings yet"}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="request-flow-tags">
-        {mentor.categories
-          .slice(0, 3)
-          .map(
-            (category) => (
-              <span
-                key={
-                  category
-                }
-              >
-                {category}
-              </span>
-            ),
-          )}
+      <div className="find-mentor-card-body">
+        <div className="find-mentor-tags">
+          {[
+            ...mentor.categories,
+            ...mentor.expertise,
+          ]
+            .filter(
+              (
+                item,
+                index,
+                array,
+              ) =>
+                array.indexOf(
+                  item,
+                ) ===
+                index,
+            )
+            .slice(
+              0,
+              3,
+            )
+            .map(
+              (item) => (
+                <span
+                  key={item}
+                >
+                  {item}
+                </span>
+              ),
+            )}
+        </div>
+
+        <div className="find-mentor-card-meta">
+          <span>
+            <BriefcaseBusiness
+              size={14}
+            />
+            {mentor.yearsOfExperience ===
+            null
+              ? "Experience not specified"
+              : `${mentor.yearsOfExperience} ${
+                  mentor.yearsOfExperience ===
+                  1
+                    ? "year"
+                    : "years"
+                } experience`}
+          </span>
+
+          <span>
+            <UsersRound
+              size={14}
+            />
+            {mentor.spaces}{" "}
+            {mentor.spaces === 1
+              ? "space"
+              : "spaces"}{" "}
+            available
+          </span>
+        </div>
+
+        <button
+          type="button"
+          className="find-mentor-view-button"
+          onClick={() =>
+            onView(
+              mentor,
+            )
+          }
+        >
+          View profile
+        </button>
       </div>
-
-      <div className="request-flow-mentor-meta">
-        <span>
-          <UsersRound
-            size={15}
-          />
-
-          {mentor.spaces}{" "}
-          {mentor.spaces === 1
-            ? "space"
-            : "spaces"}{" "}
-          available
-        </span>
-
-        <span>
-          <Monitor
-            size={15}
-          />
-
-          {mentor.meetingFormat}
-        </span>
-
-        <span>
-          <BriefcaseBusiness
-            size={15}
-          />
-
-          {mentor.yearsOfExperience ===
-          null
-            ? "Experience not specified"
-            : `${mentor.yearsOfExperience} ${
-                mentor.yearsOfExperience ===
-                1
-                  ? "year"
-                  : "years"
-              } experience`}
-        </span>
-      </div>
-
-      <button
-        type="button"
-        className="request-flow-primary-button request-flow-view-profile-primary"
-        onClick={() =>
-          onView(mentor)
-        }
-      >
-        View profile
-      </button>
     </article>
   );
 }
@@ -317,9 +274,19 @@ function FindMentor() {
   ] = useState("");
 
   const [
+    selectedArea,
+    setSelectedArea,
+  ] = useState("All areas");
+
+  const [
     currentPage,
     setCurrentPage,
   ] = useState(1);
+
+  const [
+    mobileView,
+    setMobileView,
+  ] = useState(false);
 
   const [
     loading,
@@ -337,6 +304,29 @@ function FindMentor() {
   ] = useState(0);
 
   useEffect(() => {
+    function updateView() {
+      setMobileView(
+        window.innerWidth <=
+          680,
+      );
+    }
+
+    updateView();
+
+    window.addEventListener(
+      "resize",
+      updateView,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "resize",
+        updateView,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
 
     async function loadMentors() {
@@ -346,43 +336,12 @@ function FindMentor() {
       const {
         data,
         error: mentorError,
-      } = await supabase
-        .from(
-          "mentor_profiles",
-        )
-        .select(`
-          mentor_id,
-          job_title,
-          organisation,
-          expertise,
-          mentorship_categories,
-          languages,
-          meeting_formats,
-          maximum_active_mentees,
-          current_active_mentees,
-          years_of_experience,
-          accepting_requests,
-          approval_status,
-          approved_at,
-          profiles!mentor_profiles_mentor_id_fkey (
-            full_name,
-            profile_photo_url
-          )
-        `)
-        .eq(
-          "approval_status",
-          "approved",
-        )
-        .eq(
-          "accepting_requests",
-          true,
-        )
-        .order(
-          "approved_at",
-          {
-            ascending: false,
-          },
-        );
+      } = await supabase.rpc(
+        "get_public_mentor_preview",
+        {
+          p_limit: 500,
+        },
+      );
 
       if (!isMounted) {
         return;
@@ -404,7 +363,7 @@ function FindMentor() {
         return;
       }
 
-      const availableMentors =
+      setMentors(
         (data ?? [])
           .map(
             normaliseMentor,
@@ -412,10 +371,7 @@ function FindMentor() {
           .filter(
             (mentor) =>
               mentor.spaces > 0,
-          );
-
-      setMentors(
-        availableMentors,
+          ),
       );
 
       setLoading(false);
@@ -428,23 +384,102 @@ function FindMentor() {
     };
   }, [reloadKey]);
 
+  const specialisations =
+    useMemo(() => {
+      const values =
+        new Set();
+
+      mentors.forEach(
+        (mentor) => {
+          [
+            ...mentor.categories,
+            ...mentor.expertise,
+          ].forEach(
+            (value) => {
+              if (
+                String(
+                  value || "",
+                ).trim()
+              ) {
+                values.add(
+                  value,
+                );
+              }
+            },
+          );
+        },
+      );
+
+      return [
+        "All areas",
+        ...Array.from(
+          values,
+        ).sort(
+          (
+            first,
+            second,
+          ) =>
+            String(
+              first,
+            ).localeCompare(
+              String(
+                second,
+              ),
+            ),
+        ),
+      ];
+    }, [mentors]);
+
+  useEffect(() => {
+    if (
+      !specialisations.includes(
+        selectedArea,
+      )
+    ) {
+      setSelectedArea(
+        "All areas",
+      );
+    }
+  }, [
+    selectedArea,
+    specialisations,
+  ]);
+
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
-
-  const query =
-    searchTerm
-      .trim()
-      .toLowerCase();
+  }, [
+    searchTerm,
+    selectedArea,
+    mobileView,
+  ]);
 
   const filteredMentors =
     useMemo(() => {
-      if (!query) {
-        return [];
-      }
+      const query =
+        searchTerm
+          .trim()
+          .toLowerCase();
 
       return mentors.filter(
         (mentor) => {
+          const matchesArea =
+            selectedArea ===
+              "All areas" ||
+            [
+              ...mentor.categories,
+              ...mentor.expertise,
+            ].includes(
+              selectedArea,
+            );
+
+          if (!matchesArea) {
+            return false;
+          }
+
+          if (!query) {
+            return true;
+          }
+
           const searchableValues = [
             mentor.name,
             mentor.role,
@@ -469,32 +504,44 @@ function FindMentor() {
       );
     }, [
       mentors,
-      query,
+      searchTerm,
+      selectedArea,
     ]);
+
+  const pageSize =
+    mobileView
+      ? MOBILE_PAGE_SIZE
+      : DESKTOP_PAGE_SIZE;
 
   const totalPages =
     Math.max(
       1,
       Math.ceil(
         filteredMentors.length /
-          RESULTS_PER_PAGE,
+          pageSize,
       ),
+    );
+
+  const safePage =
+    Math.min(
+      currentPage,
+      totalPages,
     );
 
   const paginatedMentors =
     useMemo(() => {
       const start =
-        (currentPage - 1) *
-        RESULTS_PER_PAGE;
+        (safePage - 1) *
+        pageSize;
 
       return filteredMentors.slice(
         start,
-        start +
-          RESULTS_PER_PAGE,
+        start + pageSize,
       );
     }, [
-      currentPage,
       filteredMentors,
+      pageSize,
+      safePage,
     ]);
 
   function viewMentor(
@@ -513,234 +560,227 @@ function FindMentor() {
   return (
     <DashboardLayout
       title="Find a mentor"
-      description="Search for an approved mentor whose experience fits your goals."
+      description="Explore approved mentors and choose someone whose experience fits your goals."
     >
-      <div className="mentee-request-flow">
-        <Progress />
+      <div className="find-mentor-page">
+        <section className="find-mentor-intro">
+          <span className="request-flow-eyebrow">
+            FIND A MENTOR
+          </span>
 
-        <div className="request-flow-screen">
-          <section className="request-flow-intro">
-            <span className="request-flow-eyebrow">
-              FIND A MENTOR
-            </span>
+          <h2>
+            Explore mentors who are
+            available to support your
+            growth.
+          </h2>
 
-            <h2>
-              Search for the right mentor when you are ready.
-            </h2>
+          <p>
+            Search by name, role or
+            expertise. You can also
+            filter by area of
+            specialisation.
+          </p>
+        </section>
 
-            <p>
-              Search by mentor name, expertise, role or
-              mentorship area. Only mentors who are currently
-              accepting new requests and have available space
-              will appear.
-            </p>
-          </section>
-
-          <div className="request-flow-search">
+        <section className="find-mentor-controls">
+          <label className="find-mentor-search">
             <Search
-              size={18}
+              size={17}
+              aria-hidden="true"
             />
 
             <input
-              type="text"
+              type="search"
               value={
                 searchTerm
               }
-              onChange={(
-                event,
-              ) =>
+              placeholder="Search by name, role or expertise"
+              aria-label="Search mentors"
+              onChange={(event) =>
                 setSearchTerm(
                   event.target.value,
                 )
               }
-              placeholder="Search by name, expertise or mentorship area"
-              aria-label="Search mentors"
             />
-          </div>
+          </label>
 
-          {loading ? (
-            <section className="request-flow-panel">
-              <span className="request-flow-eyebrow">
-                FIND A MENTOR
-              </span>
+          <label className="find-mentor-filter">
+            <Filter
+              size={16}
+              aria-hidden="true"
+            />
 
-              <h3>
-                Preparing mentor search
-              </h3>
-
-              <p>
-                We are loading mentors who are currently
-                available for new mentorship requests.
-              </p>
-            </section>
-          ) : error ? (
-            <section className="request-flow-panel">
-              <span className="request-flow-eyebrow">
-                SOMETHING WENT WRONG
-              </span>
-
-              <h3>
-                We could not load mentors
-              </h3>
-
-              <p>
-                {error}
-              </p>
-
-              <div
-                className="request-flow-bottom-action"
-                style={{
-                  justifyContent:
-                    "flex-start",
-                  marginTop:
-                    "18px",
-                }}
-              >
-                <button
-                  type="button"
-                  className="request-flow-primary-button"
-                  onClick={() =>
-                    setReloadKey(
-                      (
-                        current,
-                      ) =>
-                        current +
-                        1,
-                    )
-                  }
-                >
-                  Try again
-                </button>
-              </div>
-            </section>
-          ) : !query ? (
-            <section className="request-flow-search-empty">
-              <Search
-                size={24}
-              />
-
-              <div>
-                <h3>
-                  Start with a search
-                </h3>
-
-                <p>
-                  Enter a mentor name, profession, expertise
-                  or mentorship area. We will only show
-                  matching mentors who can currently receive
-                  a request.
-                </p>
-              </div>
-            </section>
-          ) : filteredMentors.length ===
-            0 ? (
-            <section className="request-flow-panel">
-              <span className="request-flow-eyebrow">
-                NO MATCH FOUND
-              </span>
-
-              <h3>
-                No available mentor found for “
-                {searchTerm.trim()}
-                ”
-              </h3>
-
-              <p>
-                Try another name, profession, area of
-                expertise or mentorship category.
-              </p>
-            </section>
-          ) : (
-            <>
-              <div className="request-flow-result-summary">
-                <span>
-                  {filteredMentors.length}{" "}
-                  {filteredMentors.length === 1
-                    ? "mentor"
-                    : "mentors"}{" "}
-                  found
-                </span>
-              </div>
-
-              <section className="request-flow-directory-grid">
-                {paginatedMentors.map(
-                  (mentor) => (
-                    <MentorCard
-                      key={
-                        mentor.id
-                      }
-                      mentor={
-                        mentor
-                      }
-                      onView={
-                        viewMentor
-                      }
-                    />
-                  ),
-                )}
-              </section>
-
-              {totalPages > 1 && (
-                <div className="request-flow-pagination">
-                  <button
-                    type="button"
-                    className="request-flow-secondary-button"
-                    disabled={
-                      currentPage === 1
+            <select
+              value={
+                selectedArea
+              }
+              aria-label="Filter by area of specialisation"
+              onChange={(event) =>
+                setSelectedArea(
+                  event.target.value,
+                )
+              }
+            >
+              {specialisations.map(
+                (area) => (
+                  <option
+                    value={
+                      area
                     }
-                    onClick={() =>
-                      setCurrentPage(
-                        (
-                          current,
-                        ) =>
-                          Math.max(
-                            1,
-                            current -
-                              1,
-                          ),
-                      )
+                    key={
+                      area
                     }
                   >
-                    <ChevronLeft
-                      size={15}
-                    />
-                    Previous
-                  </button>
-
-                  <span>
-                    Page {currentPage} of {totalPages}
-                  </span>
-
-                  <button
-                    type="button"
-                    className="request-flow-secondary-button"
-                    disabled={
-                      currentPage ===
-                      totalPages
-                    }
-                    onClick={() =>
-                      setCurrentPage(
-                        (
-                          current,
-                        ) =>
-                          Math.min(
-                            totalPages,
-                            current +
-                              1,
-                          ),
-                      )
-                    }
-                  >
-                    Next
-                    <ChevronRight
-                      size={15}
-                    />
-                  </button>
-                </div>
+                    {area}
+                  </option>
+                ),
               )}
-            </>
-          )}
-        </div>
+            </select>
+          </label>
+        </section>
+
+        {loading ? (
+          <section className="request-flow-panel">
+            <div className="loader" />
+            <h3>
+              Loading approved mentors
+            </h3>
+            <p>
+              Please wait while we
+              prepare the directory.
+            </p>
+          </section>
+        ) : error ? (
+          <section className="request-flow-panel">
+            <h3>
+              We could not load mentors
+            </h3>
+
+            <p>{error}</p>
+
+            <button
+              type="button"
+              className="request-flow-primary-button"
+              onClick={() =>
+                setReloadKey(
+                  (
+                    current,
+                  ) =>
+                    current +
+                    1,
+                )
+              }
+            >
+              Try again
+            </button>
+          </section>
+        ) : filteredMentors.length ===
+          0 ? (
+          <section className="request-flow-panel">
+            <h3>
+              No matching mentor found
+            </h3>
+
+            <p>
+              Try another search or
+              choose a different area
+              of specialisation.
+            </p>
+          </section>
+        ) : (
+          <>
+            <div className="find-mentor-results-heading">
+              <span>
+                {filteredMentors.length}{" "}
+                {filteredMentors.length ===
+                1
+                  ? "mentor"
+                  : "mentors"}{" "}
+                found
+              </span>
+
+              {!mobileView && (
+                <small>
+                  Up to 16 mentors are
+                  shown on each page.
+                </small>
+              )}
+            </div>
+
+            <section className="find-mentor-grid">
+              {paginatedMentors.map(
+                (mentor) => (
+                  <MentorCard
+                    key={
+                      mentor.id
+                    }
+                    mentor={
+                      mentor
+                    }
+                    onView={
+                      viewMentor
+                    }
+                  />
+                ),
+              )}
+            </section>
+
+            <div className="find-mentor-pagination">
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage(
+                    (
+                      page,
+                    ) =>
+                      Math.max(
+                        1,
+                        page - 1,
+                      ),
+                  )
+                }
+                disabled={
+                  safePage === 1
+                }
+              >
+                <ChevronLeft
+                  size={17}
+                />
+                Previous
+              </button>
+
+              <span>
+                {mobileView
+                  ? `${safePage} of ${totalPages}`
+                  : `Page ${safePage} of ${totalPages}`}
+              </span>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage(
+                    (
+                      page,
+                    ) =>
+                      Math.min(
+                        totalPages,
+                        page + 1,
+                      ),
+                  )
+                }
+                disabled={
+                  safePage ===
+                  totalPages
+                }
+              >
+                Next
+                <ChevronRight
+                  size={17}
+                />
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

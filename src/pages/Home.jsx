@@ -1,5 +1,7 @@
 import {
+  ArrowLeft,
   ArrowRight,
+  BriefcaseBusiness,
   CalendarDays,
   FileSearch,
   Fingerprint,
@@ -13,6 +15,7 @@ import {
   Star,
   Quote,
   UserPlus,
+  Users,
   X,
   Menu,
 } from "lucide-react";
@@ -20,6 +23,7 @@ import {
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -69,7 +73,7 @@ const howSteps = [
   },
 ];
 
-const PUBLIC_MENTOR_LIMIT = 6;
+const PUBLIC_MENTOR_LIMIT = 500;
 const PUBLIC_TESTIMONIAL_LIMIT = 6;
 
 function getInitials(name) {
@@ -90,6 +94,25 @@ function normalisePublicMentor(mentor) {
     )
       ? mentor.mentorship_categories
       : [];
+
+  const yearsValue =
+    Number(
+      mentor.years_of_experience,
+    );
+
+  const ratingValue =
+    Number(
+      mentor.average_rating ??
+        mentor.rating_average ??
+        mentor.rating,
+    );
+
+  const reviewCountValue =
+    Number(
+      mentor.review_count ??
+        mentor.rating_count ??
+        0,
+    );
 
   return {
     id: mentor.mentor_id,
@@ -116,6 +139,33 @@ function normalisePublicMentor(mentor) {
       ),
       0,
     ),
+    yearsOfExperience:
+      Number.isFinite(
+        yearsValue,
+      )
+        ? yearsValue
+        : null,
+    rating:
+      Number.isFinite(
+        ratingValue,
+      )
+        ? Math.min(
+            5,
+            Math.max(
+              0,
+              ratingValue,
+            ),
+          )
+        : null,
+    reviewCount:
+      Number.isFinite(
+        reviewCountValue,
+      )
+        ? Math.max(
+            0,
+            reviewCountValue,
+          )
+        : 0,
   };
 }
 
@@ -146,46 +196,24 @@ function normalisePublicTestimonial(
   };
 }
 
-function buildMentorShowcase(
-  mentors,
-) {
-  const realMentors =
-    mentors
-      .slice(
-        0,
-        PUBLIC_MENTOR_LIMIT,
-      )
-      .map((mentor) => ({
-        type: "mentor",
-        ...mentor,
-      }));
-
-  const placeholders =
-    Array.from(
-      {
-        length: Math.max(
-          0,
-          PUBLIC_MENTOR_LIMIT -
-            realMentors.length,
-        ),
-      },
-      (_, index) => ({
-        id: `placeholder-${index + 1}`,
-        type: "placeholder",
-      }),
-    );
-
-  return [
-    ...realMentors,
-    ...placeholders,
-  ];
-}
-
 function Home() {
   const [
     selectedArea,
     setSelectedArea,
   ] = useState("All areas");
+
+  const [
+    mentorPage,
+    setMentorPage,
+  ] = useState(1);
+
+  const [
+    mentorPageSize,
+    setMentorPageSize,
+  ] = useState(4);
+
+  const mentorViewportRef =
+    useRef(null);
 
   const [
     activeSection,
@@ -490,6 +518,39 @@ function Home() {
     };
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    function updateMentorPageSize() {
+      const width =
+        window.innerWidth;
+
+      if (width <= 680) {
+        setMentorPageSize(3);
+        return;
+      }
+
+      if (width <= 1000) {
+        setMentorPageSize(4);
+        return;
+      }
+
+      setMentorPageSize(8);
+    }
+
+    updateMentorPageSize();
+
+    window.addEventListener(
+      "resize",
+      updateMentorPageSize,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "resize",
+        updateMentorPageSize,
+      );
+    };
+  }, []);
+
   const mentorAreas =
     useMemo(() => {
       const uniqueAreas =
@@ -513,7 +574,7 @@ function Home() {
         "All areas",
         ...Array.from(
           uniqueAreas,
-        ).slice(0, 6),
+        ),
       ];
     }, [mentors]);
 
@@ -537,14 +598,84 @@ function Home() {
       selectedArea,
     ]);
 
-  const mentorShowcase =
-    useMemo(
-      () =>
-        buildMentorShowcase(
-          visibleMentors,
-        ),
-      [visibleMentors],
+  const mentorTotalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        visibleMentors.length /
+          mentorPageSize,
+      ),
     );
+
+  const safeMentorPage =
+    Math.min(
+      mentorPage,
+      mentorTotalPages,
+    );
+
+  const pagedMentors =
+    useMemo(() => {
+      const startIndex =
+        (safeMentorPage - 1) *
+        mentorPageSize;
+
+      return visibleMentors.slice(
+        startIndex,
+        startIndex +
+          mentorPageSize,
+      );
+    }, [
+      mentorPageSize,
+      safeMentorPage,
+      visibleMentors,
+    ]);
+
+  const mentorPaginationPages =
+    useMemo(() => {
+      if (
+        mentorTotalPages <= 5
+      ) {
+        return Array.from(
+          {
+            length:
+              mentorTotalPages,
+          },
+          (
+            _,
+            index,
+          ) => index + 1,
+        );
+      }
+
+      const pages =
+        new Set([
+          1,
+          mentorTotalPages,
+          safeMentorPage - 1,
+          safeMentorPage,
+          safeMentorPage + 1,
+        ]);
+
+      return Array.from(
+        pages,
+      )
+        .filter(
+          (page) =>
+            page >= 1 &&
+            page <=
+              mentorTotalPages,
+        )
+        .sort(
+          (
+            first,
+            second,
+          ) =>
+            first - second,
+        );
+    }, [
+      mentorTotalPages,
+      safeMentorPage,
+    ]);
 
   useEffect(() => {
     if (
@@ -558,6 +689,37 @@ function Home() {
     }
   }, [
     mentorAreas,
+    selectedArea,
+  ]);
+
+  useEffect(() => {
+    setMentorPage(1);
+  }, [
+    selectedArea,
+    mentorPageSize,
+  ]);
+
+  useEffect(() => {
+    if (
+      mentorPage >
+      mentorTotalPages
+    ) {
+      setMentorPage(
+        mentorTotalPages,
+      );
+    }
+  }, [
+    mentorPage,
+    mentorTotalPages,
+  ]);
+
+  useEffect(() => {
+    mentorViewportRef.current?.scrollTo({
+      left: 0,
+      behavior: "smooth",
+    });
+  }, [
+    safeMentorPage,
     selectedArea,
   ]);
 
@@ -1066,11 +1228,11 @@ function Home() {
         </section>
 
         <section
-          className="hmc-section"
+          className="hmc-section hmc-public-mentor-section"
           id="mentors"
         >
           <div className="hmc-shell hmc-reveal">
-            <div className="hmc-section-heading">
+            <div className="hmc-public-mentor-heading">
               <p>
                 FIND A MENTOR
               </p>
@@ -1081,15 +1243,15 @@ function Home() {
               </h2>
 
               <span>
-                Discover approved TCN Ikeja mentors
-                who are currently accepting
-                mentorship requests and have space
-                for a new mentee.
+                Discover approved TCN Ikeja
+                mentors who are currently
+                accepting mentorship requests
+                and have space for a new mentee.
               </span>
             </div>
 
             <div
-              className="hmc-tabs"
+              className="hmc-public-mentor-tabs"
               role="tablist"
               aria-label="Mentoring areas"
             >
@@ -1122,14 +1284,15 @@ function Home() {
             </div>
 
             {mentorsLoading ? (
-              <div className="hmc-public-loading">
+              <div className="hmc-public-loading hmc-public-mentor-state">
                 <div className="loader" />
+
                 <p>
                   Loading available mentors...
                 </p>
               </div>
             ) : mentorPreviewError ? (
-              <div className="hmc-public-empty">
+              <div className="hmc-public-empty hmc-public-mentor-state">
                 <Search
                   size={24}
                   aria-hidden="true"
@@ -1140,192 +1303,352 @@ function Home() {
                 </p>
               </div>
             ) : visibleMentors.length ===
-                0 &&
-              selectedArea !==
-                "All areas" ? (
-              <div className="hmc-public-empty">
+              0 ? (
+              <div className="hmc-public-empty hmc-public-mentor-state">
                 <Search
                   size={24}
                   aria-hidden="true"
                 />
 
                 <p>
-                  No approved mentors are
-                  visible in this area right
-                  now. Try another category.
+                  No mentors are available in
+                  this area right now.
                 </p>
               </div>
             ) : (
               <>
-                <div className="hmc-mentor-grid">
-                  {mentorShowcase.map(
-                    (item) =>
-                      item.type ===
-                      "mentor" ? (
-                        <article
-                          className="hmc-mentor-card"
-                          key={item.id}
-                        >
-                          <div className="hmc-mentor-card-top">
-                            {item.photo ? (
+                <div
+                  ref={
+                    mentorViewportRef
+                  }
+                  className="hmc-public-mentor-viewport"
+                >
+                  <div className="hmc-public-mentor-grid">
+                    {pagedMentors.map(
+                      (mentor) => {
+                        const filledStars =
+                          mentor.rating ===
+                          null
+                            ? 0
+                            : Math.round(
+                                mentor.rating,
+                              );
+
+                        return (
+                          <article
+                            className="hmc-public-mentor-card"
+                            key={
+                              mentor.id
+                            }
+                          >
+                            {mentor.photo ? (
                               <img
-                                src={item.photo}
+                                src={
+                                  mentor.photo
+                                }
                                 alt=""
-                                className="hmc-avatar hmc-avatar-image"
+                                className="hmc-public-mentor-photo"
                               />
                             ) : (
-                              <div className="hmc-avatar hmc-avatar--initials">
-                                {getInitials(
-                                  item.name,
-                                ) || "MC"}
+                              <div className="hmc-public-mentor-photo hmc-public-mentor-photo--placeholder">
+                                <span>
+                                  {getInitials(
+                                    mentor.name,
+                                  ) ||
+                                    "MC"}
+                                </span>
                               </div>
                             )}
 
-                            <div>
-                              <strong>
-                                {item.name}
-                              </strong>
+                            <div className="hmc-public-mentor-image-shade" />
 
-                              <small>
-                                {item.jobTitle}
-                                {item.organisation
-                                  ? ` · ${item.organisation}`
+                            <div className="hmc-public-mentor-content">
+                              {mentor.categories.length >
+                                0 && (
+                                <div className="hmc-public-mentor-card-tags">
+                                  {mentor.categories
+                                    .slice(
+                                      0,
+                                      2,
+                                    )
+                                    .map(
+                                      (
+                                        category,
+                                      ) => (
+                                        <span
+                                          key={
+                                            category
+                                          }
+                                        >
+                                          {
+                                            category
+                                          }
+                                        </span>
+                                      ),
+                                    )}
+                                </div>
+                              )}
+
+                              <h3>
+                                {
+                                  mentor.name
+                                }
+                              </h3>
+
+                              <p className="hmc-public-mentor-role">
+                                {
+                                  mentor.jobTitle
+                                }
+                                {mentor.organisation
+                                  ? ` · ${mentor.organisation}`
                                   : ""}
-                              </small>
+                              </p>
+
+                              <div className="hmc-public-mentor-rating">
+                                <div
+                                  className="hmc-public-mentor-stars"
+                                  aria-label={
+                                    mentor.rating ===
+                                    null
+                                      ? "No ratings yet"
+                                      : `${mentor.rating.toFixed(
+                                          1,
+                                        )} out of 5`
+                                  }
+                                >
+                                  {Array.from(
+                                    {
+                                      length: 5,
+                                    },
+                                    (
+                                      _,
+                                      index,
+                                    ) => (
+                                      <Star
+                                        key={
+                                          index
+                                        }
+                                        size={14}
+                                        fill={
+                                          index <
+                                          filledStars
+                                            ? "currentColor"
+                                            : "none"
+                                        }
+                                        aria-hidden="true"
+                                      />
+                                    ),
+                                  )}
+                                </div>
+
+                                <span>
+                                  {mentor.rating ===
+                                  null
+                                    ? "No ratings yet"
+                                    : `${mentor.rating.toFixed(
+                                        1,
+                                      )}${
+                                        mentor.reviewCount >
+                                        0
+                                          ? ` (${mentor.reviewCount})`
+                                          : ""
+                                      }`}
+                                </span>
+                              </div>
+
+                              <div className="hmc-public-mentor-meta">
+                                <span>
+                                  <BriefcaseBusiness
+                                    size={15}
+                                    aria-hidden="true"
+                                  />
+
+                                  {mentor.yearsOfExperience ===
+                                  null
+                                    ? "Experience not listed"
+                                    : `${mentor.yearsOfExperience} ${
+                                        mentor.yearsOfExperience ===
+                                        1
+                                          ? "year"
+                                          : "years"
+                                      } experience`}
+                                </span>
+
+                                <span>
+                                  <Users
+                                    size={15}
+                                    aria-hidden="true"
+                                  />
+
+                                  {
+                                    mentor.spaces
+                                  }{" "}
+                                  {mentor.spaces ===
+                                  1
+                                    ? "space"
+                                    : "spaces"}{" "}
+                                  available
+                                </span>
+                              </div>
+
+                              <Link
+                                to="/register"
+                                className="hmc-public-mentor-view"
+                              >
+                                <span>
+                                  View mentor
+                                </span>
+
+                                <ArrowRight
+                                  size={16}
+                                  aria-hidden="true"
+                                />
+                              </Link>
                             </div>
-                          </div>
-
-                          <p className="hmc-mentor-description">
-                            {
-                              item.description
-                            }
-                          </p>
-
-                          {item.categories
-                            .length > 0 && (
-                            <div className="hmc-public-mentor-tags">
-                              {item.categories
-                                .slice(
-                                  0,
-                                  2,
-                                )
-                                .map(
-                                  (
-                                    category,
-                                  ) => (
-                                    <span
-                                      key={
-                                        category
-                                      }
-                                    >
-                                      {
-                                        category
-                                      }
-                                    </span>
-                                  ),
-                                )}
-                            </div>
-                          )}
-
-                          <div className="hmc-mentor-card-bottom">
-                            <span className="hmc-sample-badge">
-                              {
-                                item.spaces
-                              }{" "}
-                              {item.spaces ===
-                              1
-                                ? "space"
-                                : "spaces"}{" "}
-                              available
-                            </span>
-
-                            <Link
-                              to="/register"
-                              className="hmc-mentor-connect-link"
-                            >
-                              View profile
-                              <ArrowRight
-                                size={14}
-                                aria-hidden="true"
-                              />
-                            </Link>
-                          </div>
-                        </article>
-                      ) : (
-                        <article
-                          className="hmc-mentor-card hmc-mentor-card--placeholder"
-                          key={item.id}
-                        >
-                          <div className="hmc-mentor-card-top">
-                            <div className="hmc-avatar hmc-avatar--placeholder">
-                              ?
-                            </div>
-
-                            <div>
-                              <strong>
-                                Mentor profile
-                              </strong>
-
-                              <small>
-                                More approved
-                                mentors will
-                                appear here.
-                              </small>
-                            </div>
-                          </div>
-
-                          <p className="hmc-mentor-description hmc-mentor-placeholder-copy">
-                            Mentor onboarding is
-                            in progress. This
-                            spot will become a
-                            full profile as new
-                            mentors are reviewed
-                            and approved.
-                          </p>
-
-                          <div className="hmc-public-mentor-tags">
-                            <span>
-                              Onboarding
-                            </span>
-                            <span>
-                              Coming soon
-                            </span>
-                          </div>
-
-                          <div className="hmc-mentor-card-bottom">
-                            <span className="hmc-sample-badge hmc-sample-badge--placeholder">
-                              Reserved spot
-                            </span>
-
-                            <span className="hmc-mentor-placeholder-link">
-                              Profile coming
-                              soon
-                            </span>
-                          </div>
-                        </article>
-                      ),
-                  )}
+                          </article>
+                        );
+                      },
+                    )}
+                  </div>
                 </div>
 
-                <div className="hmc-mentor-section-footer">
-                  <Link
-                    to="/register"
-                    className="hmc-pill hmc-pill--primary"
+                <div
+                  className="hmc-public-mentor-pagination"
+                  aria-label="Mentor pages"
+                >
+                  <button
+                    type="button"
+                    className="hmc-public-mentor-page-arrow"
+                    onClick={() =>
+                      setMentorPage(
+                        (
+                          current,
+                        ) =>
+                          Math.max(
+                            1,
+                            current - 1,
+                          ),
+                      )
+                    }
+                    disabled={
+                      safeMentorPage ===
+                      1
+                    }
+                    aria-label="Previous mentor page"
+                  >
+                    <ArrowLeft
+                      size={16}
+                    />
+
+                    <span>
+                      Previous
+                    </span>
+                  </button>
+
+                  <div className="hmc-public-mentor-page-numbers">
+                    {mentorPaginationPages.map(
+                      (
+                        page,
+                        index,
+                      ) => {
+                        const previousPage =
+                          mentorPaginationPages[
+                            index -
+                              1
+                          ];
+
+                        const showGap =
+                          previousPage &&
+                          page -
+                            previousPage >
+                            1;
+
+                        return (
+                          <span
+                            className="hmc-public-mentor-page-item"
+                            key={
+                              page
+                            }
+                          >
+                            {showGap && (
+                              <i
+                                aria-hidden="true"
+                              >
+                                …
+                              </i>
+                            )}
+
+                            <button
+                              type="button"
+                              className={
+                                page ===
+                                safeMentorPage
+                                  ? "is-current"
+                                  : ""
+                              }
+                              aria-current={
+                                page ===
+                                safeMentorPage
+                                  ? "page"
+                                  : undefined
+                              }
+                              onClick={() =>
+                                setMentorPage(
+                                  page,
+                                )
+                              }
+                            >
+                              {
+                                page
+                              }
+                            </button>
+                          </span>
+                        );
+                      },
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="hmc-public-mentor-page-arrow"
+                    onClick={() =>
+                      setMentorPage(
+                        (
+                          current,
+                        ) =>
+                          Math.min(
+                            mentorTotalPages,
+                            current + 1,
+                          ),
+                      )
+                    }
+                    disabled={
+                      safeMentorPage ===
+                      mentorTotalPages
+                    }
+                    aria-label="Next mentor page"
                   >
                     <span>
-                      Find a mentor
+                      Next
                     </span>
 
-                    <i>
-                      <ArrowRight
-                        size={18}
-                      />
-                    </i>
-                  </Link>
+                    <ArrowRight
+                      size={16}
+                    />
+                  </button>
                 </div>
+
+                {mentorPageSize ===
+                  3 &&
+                  pagedMentors.length >
+                    1 && (
+                  <p className="hmc-public-mentor-mobile-hint">
+                    Swipe to see the other
+                    mentors on this page.
+                  </p>
+                )}
               </>
             )}
-
           </div>
         </section>
 
@@ -1717,6 +2040,10 @@ function Home() {
 
               <Link to="/login">
                 Member sign in
+              </Link>
+
+              <Link to="/admin/login">
+                TCN Administrator
               </Link>
             </div>
           </div>

@@ -1,35 +1,29 @@
 import {
-  AlertCircle,
-  LoaderCircle,
-} from "lucide-react";
-
-import {
   useEffect,
   useState,
 } from "react";
 
 import {
-  Link,
   useNavigate,
 } from "react-router-dom";
 
-import { useAuth } from "../context/AuthContext";
-import { supabase } from "../lib/supabase";
+import {
+  useAuth,
+} from "../context/AuthContext";
 
-import "./AuthCallback.css";
-
-const administratorRoles = [
-  "admin",
-  "safeguarding_lead",
-];
+import {
+  supabase,
+} from "../lib/supabase";
 
 function AuthCallback() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
   const {
     user,
     profile,
     loading,
+    refreshProfile,
     getGoogleAccountIntent,
     clearGoogleAccountIntent,
   } = useAuth();
@@ -40,6 +34,9 @@ function AuthCallback() {
   ] = useState("");
 
   useEffect(() => {
+    let cancelled =
+      false;
+
     async function completeGoogleAuthentication() {
       if (loading) {
         return;
@@ -47,9 +44,8 @@ function AuthCallback() {
 
       if (!user) {
         setError(
-          "Google sign-in could not be completed. Please return to the sign-in page and try again.",
+          "Google sign in could not be completed. Please return to the sign in page and try again.",
         );
-
         return;
       }
 
@@ -57,23 +53,29 @@ function AuthCallback() {
         setError(
           "Your account was created, but we could not load your profile. Please try signing in again.",
         );
-
         return;
       }
 
       const accountIntent =
         getGoogleAccountIntent();
 
-      if (accountIntent) {
+      let currentProfile =
+        profile;
+
+      if (
+        accountIntent
+      ) {
         const {
-          error: intentError,
-        } = await supabase.rpc(
-          "set_signup_intent",
-          {
-            p_signup_intent:
-              accountIntent,
-          },
-        );
+          error:
+            intentError,
+        } =
+          await supabase.rpc(
+            "set_signup_intent",
+            {
+              p_signup_intent:
+                accountIntent,
+            },
+          );
 
         if (intentError) {
           console.error(
@@ -87,10 +89,25 @@ function AuthCallback() {
 
           return;
         }
+
+        const refreshedProfile =
+          await refreshProfile();
+
+        if (
+          refreshedProfile
+        ) {
+          currentProfile =
+            refreshedProfile;
+        }
+      }
+
+      if (cancelled) {
+        return;
       }
 
       if (
-        profile.account_status ===
+        currentProfile
+          .account_status ===
         "suspended"
       ) {
         clearGoogleAccountIntent();
@@ -106,8 +123,12 @@ function AuthCallback() {
       }
 
       if (
-        administratorRoles.includes(
-          profile.role,
+        [
+          "admin",
+          "super_admin",
+          "safeguarding_lead",
+        ].includes(
+          currentProfile.role,
         )
       ) {
         clearGoogleAccountIntent();
@@ -122,8 +143,17 @@ function AuthCallback() {
         return;
       }
 
+      const isMentorSignup =
+        currentProfile
+          .signup_intent ===
+          "mentor" ||
+        accountIntent ===
+          "mentor";
+
       if (
-        !profile.onboarding_completed
+        isMentorSignup &&
+        !currentProfile
+          .onboarding_completed
       ) {
         navigate(
           "/complete-profile",
@@ -138,10 +168,15 @@ function AuthCallback() {
       clearGoogleAccountIntent();
 
       if (
-        profile.account_status ===
-          "pending" ||
-        profile.account_status ===
-          "rejected"
+        isMentorSignup &&
+        (
+          currentProfile
+            .account_status ===
+            "pending" ||
+          currentProfile
+            .account_status ===
+            "rejected"
+        )
       ) {
         navigate(
           "/membership-pending",
@@ -153,32 +188,9 @@ function AuthCallback() {
         return;
       }
 
-      /*
-        Ordinary public registration
-        can still record "mentor" as
-        the signup intent.
-
-        That user remains a mentee
-        account and must submit a
-        mentor application before
-        separate mentor access is
-        created.
-      */
       if (
-        accountIntent === "mentor"
-      ) {
-        navigate(
-          "/mentor/apply",
-          {
-            replace: true,
-          },
-        );
-
-        return;
-      }
-
-      if (
-        profile.role === "mentor"
+        currentProfile.role ===
+        "mentor"
       ) {
         navigate(
           "/mentor/dashboard",
@@ -199,124 +211,60 @@ function AuthCallback() {
     }
 
     completeGoogleAuthentication();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     loading,
     user,
     profile,
     navigate,
+    refreshProfile,
     getGoogleAccountIntent,
     clearGoogleAccountIntent,
   ]);
 
   if (error) {
     return (
-      <main className="auth-callback-page">
-        <section className="auth-callback-card">
-          <Link
-            to="/"
-            className="auth-callback-brand"
-            aria-label="Return to Mentor Connect homepage"
-          >
-            <img
-              src="/images/hothub-logo.png"
-              alt="HOTHUB"
-            />
+      <main className="page-message">
+        <h1>
+          Google sign in was not completed
+        </h1>
 
-            <span>
-              <strong>
-                Mentor Connect
-              </strong>
+        <p>
+          {error}
+        </p>
 
-              <small>
-                TCN IKEJA
-              </small>
-            </span>
-          </Link>
-
-          <div className="auth-callback-icon auth-callback-icon--error">
-            <AlertCircle
-              size={28}
-              strokeWidth={1.8}
-            />
-          </div>
-
-          <span className="auth-callback-eyebrow">
-            SIGN-IN ISSUE
-          </span>
-
-          <h1>
-            Google sign-in was not
-            completed
-          </h1>
-
-          <p>
-            {error}
-          </p>
-
-          <button
-            type="button"
-            className="auth-callback-primary-button"
-            onClick={() =>
-              navigate(
-                "/login",
-                {
-                  replace: true,
-                },
-              )
-            }
-          >
-            Return to sign in
-          </button>
-        </section>
+        <button
+          type="button"
+          className="primary-button"
+          onClick={() =>
+            navigate(
+              "/login",
+              {
+                replace: true,
+              },
+            )
+          }
+        >
+          Return to sign in
+        </button>
       </main>
     );
   }
 
   return (
-    <main className="auth-callback-page">
-      <section className="auth-callback-card">
-        <Link
-          to="/"
-          className="auth-callback-brand"
-          aria-label="Return to Mentor Connect homepage"
-        >
-          <img
-            src="/images/hothub-logo.png"
-            alt="HOTHUB"
-          />
+    <main className="page-message">
+      <div className="loader" />
 
-          <span>
-            <strong>
-              Mentor Connect
-            </strong>
+      <h1>
+        Completing your sign in
+      </h1>
 
-            <small>
-              TCN IKEJA
-            </small>
-          </span>
-        </Link>
-
-        <div className="auth-callback-icon">
-          <LoaderCircle
-            size={28}
-            strokeWidth={1.8}
-            className="auth-callback-spinner"
-          />
-        </div>
-
-        <span className="auth-callback-eyebrow">
-          PREPARING YOUR ACCOUNT
-        </span>
-
-        <h1>
-          Completing your sign-in
-        </h1>
-
-        <p>
-          Please wait while we prepare
-          your Mentor Connect account.
-        </p>
-      </section>
+      <p>
+        Please wait while we prepare your account.
+      </p>
     </main>
   );
 }
