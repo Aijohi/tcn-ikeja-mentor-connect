@@ -3,12 +3,14 @@ import {
   CalendarDays,
   ClipboardCheck,
   GitPullRequest,
+  History,
   LayoutDashboard,
   LogOut,
   Menu,
   MessageCircle,
   Search,
   Sparkles,
+  Star,
   UserRound,
   Users,
   X,
@@ -104,26 +106,49 @@ const menus = {
       label: "Overview",
       icon: LayoutDashboard,
       path: "/admin/dashboard",
+      permission: "overview.view",
     },
     {
       label: "People",
       icon: UserRound,
       path: "/admin/dashboard/people",
+      permission: "people.view",
     },
     {
       label: "Mentor applications",
       icon: ClipboardCheck,
       path: "/admin/dashboard/mentor-applications",
+      permission: "applications.view",
     },
     {
       label: "Mentorship requests",
       icon: GitPullRequest,
       path: "/admin/dashboard/mentorship-requests",
+      permission: "requests.view",
     },
     {
       label: "Sessions",
       icon: CalendarDays,
       path: "/admin/dashboard/sessions",
+      permission: "sessions.view",
+    },
+    {
+      label: "Messages",
+      icon: MessageCircle,
+      path: "/admin/dashboard/messages",
+      permission: "messages.view",
+    },
+    {
+      label: "Feedback & testimonials",
+      icon: Star,
+      path: "/admin/dashboard/reviews",
+      permission: "feedback.view",
+    },
+    {
+      label: "Activity log",
+      icon: History,
+      path: "/admin/dashboard/activity",
+      permission: "activity.view",
     },
   ],
 };
@@ -149,6 +174,7 @@ function DashboardLayout({
   title,
   description,
   children,
+  adminPermissions = null,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -214,7 +240,10 @@ function DashboardLayout({
       }
 
       if (signOutOpen) {
-        setSignOutOpen(false);
+        if (!signingOut) {
+          setSignOutOpen(false);
+        }
+
         return;
       }
 
@@ -232,7 +261,10 @@ function DashboardLayout({
         handleEscape,
       );
     };
-  }, [signOutOpen]);
+  }, [
+    signOutOpen,
+    signingOut,
+  ]);
 
   /*
     Lock the page behind the responsive drawer.
@@ -286,10 +318,6 @@ function DashboardLayout({
         body.style.getPropertyValue("overflow"),
       bodyOverflowPriority:
         body.style.getPropertyPriority("overflow"),
-      bodyTouchAction:
-        body.style.getPropertyValue("touch-action"),
-      bodyTouchActionPriority:
-        body.style.getPropertyPriority("touch-action"),
       bodyOverscroll:
         body.style.getPropertyValue("overscroll-behavior"),
       bodyOverscrollPriority:
@@ -349,12 +377,6 @@ function DashboardLayout({
     body.style.setProperty(
       "overflow",
       "hidden",
-      "important",
-    );
-
-    body.style.setProperty(
-      "touch-action",
-      "none",
       "important",
     );
 
@@ -456,13 +478,6 @@ function DashboardLayout({
 
       restoreStyle(
         body,
-        "touch-action",
-        previous.bodyTouchAction,
-        previous.bodyTouchActionPriority,
-      );
-
-      restoreStyle(
-        body,
         "overscroll-behavior",
         previous.bodyOverscroll,
         previous.bodyOverscrollPriority,
@@ -553,8 +568,40 @@ function DashboardLayout({
         ? "mentorOnboarding"
         : role;
 
+  const hasAdminPermission = (
+    permission,
+  ) => {
+    if (!permission) {
+      return true;
+    }
+
+    if (
+      !Array.isArray(
+        adminPermissions,
+      )
+    ) {
+      return false;
+    }
+
+    return (
+      adminPermissions.includes(
+        "*",
+      ) ||
+      adminPermissions.includes(
+        permission,
+      )
+    );
+  };
+
   const navigationItems =
-    menus[menuRole] ?? [];
+    menuRole === "admin"
+      ? (menus.admin ?? []).filter(
+          (item) =>
+            hasAdminPermission(
+              item.permission,
+            ),
+        )
+      : menus[menuRole] ?? [];
 
   const accountTypeLabel =
     administratorRoles.includes(role)

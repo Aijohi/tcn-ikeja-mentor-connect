@@ -1,34 +1,61 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
 import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext(null);
 
-const GOOGLE_ACCOUNT_INTENT_KEY = "mentorConnectGoogleAccountIntent";
+const GOOGLE_ACCOUNT_INTENT_KEY =
+  "mentorConnectGoogleAccountIntent";
 
-export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({
+  children,
+}) {
+  const [session, setSession] =
+    useState(null);
 
-  async function loadProfile(userId) {
+  const [profile, setProfile] =
+    useState(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [signingOut, setSigningOut] =
+    useState(false);
+
+  async function loadProfile(
+    userId,
+  ) {
     if (!userId) {
       setProfile(null);
       return null;
     }
 
-    const { data, error } = await supabase
+    const {
+      data,
+      error,
+    } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .maybeSingle();
 
     if (error) {
-      console.error("Unable to load user profile:", error.message);
+      console.error(
+        "Unable to load user profile:",
+        error.message,
+      );
+
       setProfile(null);
       return null;
     }
 
     setProfile(data ?? null);
+
     return data ?? null;
   }
 
@@ -37,9 +64,13 @@ export function AuthProvider({ children }) {
 
     async function initialiseAuthentication() {
       const {
-        data: { session: currentSession },
+        data: {
+          session:
+            currentSession,
+        },
         error,
-      } = await supabase.auth.getSession();
+      } =
+        await supabase.auth.getSession();
 
       if (!isMounted) {
         return;
@@ -52,10 +83,16 @@ export function AuthProvider({ children }) {
         );
       }
 
-      setSession(currentSession ?? null);
+      setSession(
+        currentSession ?? null,
+      );
 
-      if (currentSession?.user) {
-        await loadProfile(currentSession.user.id);
+      if (
+        currentSession?.user
+      ) {
+        await loadProfile(
+          currentSession.user.id,
+        );
       } else {
         setProfile(null);
       }
@@ -68,29 +105,53 @@ export function AuthProvider({ children }) {
     initialiseAuthentication();
 
     const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, currentSession) => {
-        setSession(currentSession ?? null);
-
-        if (!currentSession?.user) {
-          setProfile(null);
-          setLoading(false);
-          return;
-        }
-
-        window.setTimeout(async () => {
-          await loadProfile(currentSession.user.id);
-
-          if (isMounted) {
-            setLoading(false);
-          }
-        }, 0);
+      data: {
+        subscription,
       },
-    );
+    } =
+      supabase.auth.onAuthStateChange(
+        (
+          _event,
+          currentSession,
+        ) => {
+          if (!isMounted) {
+            return;
+          }
+
+          setSession(
+            currentSession ?? null,
+          );
+
+          if (
+            !currentSession?.user
+          ) {
+            setProfile(null);
+            setLoading(false);
+            return;
+          }
+
+          window.setTimeout(
+            async () => {
+              if (!isMounted) {
+                return;
+              }
+
+              await loadProfile(
+                currentSession.user.id,
+              );
+
+              if (isMounted) {
+                setLoading(false);
+              }
+            },
+            0,
+          );
+        },
+      );
 
     return () => {
       isMounted = false;
+
       subscription.unsubscribe();
     };
   }, []);
@@ -107,8 +168,10 @@ export function AuthProvider({ children }) {
       password,
       options: {
         data: {
-          full_name: fullName,
-          phone_number: phoneNumber,
+          full_name:
+            fullName,
+          phone_number:
+            phoneNumber,
           role: "mentee",
           signup_intent: role,
         },
@@ -142,16 +205,19 @@ export function AuthProvider({ children }) {
     }
 
     const result =
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo:
-            `${window.location.origin}/auth/callback`,
-          queryParams: {
-            prompt: "select_account",
+      await supabase.auth.signInWithOAuth(
+        {
+          provider: "google",
+          options: {
+            redirectTo:
+              `${window.location.origin}/auth/callback`,
+            queryParams: {
+              prompt:
+                "select_account",
+            },
           },
         },
-      });
+      );
 
     if (result.error) {
       sessionStorage.removeItem(
@@ -187,12 +253,16 @@ export function AuthProvider({ children }) {
     password,
   ) {
     const result =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      await supabase.auth.signInWithPassword(
+        {
+          email,
+          password,
+        },
+      );
 
-    if (result.data.user) {
+    if (
+      result.data.user
+    ) {
       await loadProfile(
         result.data.user.id,
       );
@@ -201,44 +271,61 @@ export function AuthProvider({ children }) {
     return result;
   }
 
-  /*
-    signOut now accepts the destination selected by DashboardLayout.
-
-    Mentee -> /login
-    Mentor -> /mentor/login
-    Admin -> /admin/login
-
-    Redirect only after Supabase confirms the local sign-out.
-  */
   async function signOut({
     redirectTo = "/login",
   } = {}) {
-    const result =
-      await supabase.auth.signOut({
-        scope: "local",
-      });
-
-    if (result.error) {
-      return result;
+    if (signingOut) {
+      return {
+        data: null,
+        error: null,
+      };
     }
 
-    sessionStorage.removeItem(
-      GOOGLE_ACCOUNT_INTENT_KEY,
-    );
+    setSigningOut(true);
 
-    /*
-      Use a full location replacement so the previous authenticated
-      dashboard is not left in browser history and cannot briefly
-      win a routing race while the auth state is clearing.
-    */
-    window.location.replace(
-      redirectTo,
-    );
+    try {
+      const result =
+        await supabase.auth.signOut(
+          {
+            scope: "local",
+          },
+        );
 
-    return result;
+      if (result.error) {
+        setSigningOut(false);
+        return result;
+      }
+
+      sessionStorage.removeItem(
+        GOOGLE_ACCOUNT_INTENT_KEY,
+      );
+
+      setSession(null);
+      setProfile(null);
+
+      window.location.replace(
+        redirectTo,
+      );
+
+      return result;
+    } catch (error) {
+      console.error(
+        "Unable to sign out:",
+        error,
+      );
+
+      setSigningOut(false);
+
+      return {
+        data: null,
+        error,
+      };
+    }
   }
 
-  async function resetPassword(email) {
+  async function resetPassword(
+    email,
+  ) {
     return supabase.auth.resetPasswordForEmail(
       email,
       {
@@ -251,9 +338,11 @@ export function AuthProvider({ children }) {
   async function updatePassword(
     password,
   ) {
-    return supabase.auth.updateUser({
-      password,
-    });
+    return supabase.auth.updateUser(
+      {
+        password,
+      },
+    );
   }
 
   async function refreshProfile() {
@@ -272,9 +361,11 @@ export function AuthProvider({ children }) {
       value={{
         session,
         user:
-          session?.user ?? null,
+          session?.user ??
+          null,
         profile,
         loading,
+        signingOut,
         signUp,
         signIn,
         signInWithGoogle,
@@ -293,7 +384,9 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context =
-    useContext(AuthContext);
+    useContext(
+      AuthContext,
+    );
 
   if (!context) {
     throw new Error(

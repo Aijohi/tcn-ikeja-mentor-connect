@@ -142,12 +142,17 @@
   font-weight: 650;
 }
 
+/*
+  All three dashboard values use this exact same rule:
+  Active mentees, Sessions this month and Mentor rating.
+*/
 .mentor-overview-stat-card > strong {
   display: block;
+  min-height: 27px;
   margin-top: 8px;
   color: #101419;
-  font-size: 20px;
-  font-weight: 650;
+  font-size: 22px;
+  font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.03em;
 }
@@ -277,8 +282,10 @@
   }
 
   .mentor-overview-stat-card > strong {
+    min-height: 24px;
     margin-top: 4px;
-    font-size: 18px;
+    font-size: 20px;
+    font-weight: 700;
   }
 
   .mentor-overview-stat-card > p {

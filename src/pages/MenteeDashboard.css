@@ -925,3 +925,110 @@ body:has(.mentee-overview-page)
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================================================
+   PRODUCTION CLOSEOUT — READABILITY + SAFE SPACING
+   ========================================================= */
+
+/* Keep the bottom of the dashboard clear on smaller devices
+   and devices with a safe-area inset. */
+.mentee-overview-page {
+  padding-bottom:
+    max(
+      72px,
+      calc(
+        52px +
+        env(safe-area-inset-bottom)
+      )
+    ) !important;
+}
+
+/* Improve stat-card readability without changing the design. */
+body:has(.mentee-overview-page)
+.mentee-overview-stat-copy small {
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+}
+
+body:has(.mentee-overview-page)
+.mentee-overview-stat-copy strong {
+  font-size: 18px !important;
+  line-height: 1.2 !important;
+}
+
+body:has(.mentee-overview-page)
+.mentee-overview-stat-copy > span {
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+}
+
+/* Give key dashboard actions a comfortable touch target. */
+body:has(.mentee-overview-page)
+.mentee-overview-page .mentee-button--medium {
+  min-height: 44px !important;
+}
+
+/* Keep recommendation actions easy to tap. */
+body:has(.mentee-overview-page)
+.mentee-overview-mentor-footer button,
+body:has(.mentee-overview-page)
+.mentee-overview-text-button {
+  min-height: 36px;
+}
+
+/* Tablet: keep cards readable without becoming oversized. */
+@media (max-width: 820px) {
+  body:has(.mentee-overview-page)
+  .mentee-overview-stat-copy strong {
+    font-size: 19px !important;
+  }
+
+  body:has(.mentee-overview-page)
+  .mentee-overview-stat-copy small,
+  body:has(.mentee-overview-page)
+  .mentee-overview-stat-copy > span {
+    font-size: 11px !important;
+  }
+}
+
+/* Mobile: increase the main value slightly so values such as
+   "Available", "Locked", dates and percentages remain easy to scan. */
+@media (max-width: 620px) {
+  body:has(.mentee-overview-page)
+  .mentee-overview-stat-copy strong {
+    font-size: 20px !important;
+  }
+
+  body:has(.mentee-overview-page)
+  .mentee-overview-stat-copy small,
+  body:has(.mentee-overview-page)
+  .mentee-overview-stat-copy > span {
+    font-size: 12px !important;
+  }
+
+  body:has(.mentee-overview-page)
+  .mentee-overview-stat-copy > span {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  body:has(.mentee-overview-page)
+  .mentee-overview-stat-copy strong {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .mentee-overview-page {
+    padding-bottom:
+      max(
+        84px,
+        calc(
+          64px +
+          env(safe-area-inset-bottom)
+        )
+      ) !important;
+  }
+}

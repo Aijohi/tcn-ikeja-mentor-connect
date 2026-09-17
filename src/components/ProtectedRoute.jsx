@@ -10,7 +10,31 @@ const administratorRoles = [
   "safeguarding_lead",
 ];
 
-function getAvailablePage(profile) {
+function getSignInPath(
+  pathname,
+) {
+  if (
+    pathname.startsWith(
+      "/admin",
+    )
+  ) {
+    return "/admin/login";
+  }
+
+  if (
+    pathname.startsWith(
+      "/mentor",
+    )
+  ) {
+    return "/mentor/login";
+  }
+
+  return "/login";
+}
+
+function getAvailablePage(
+  profile,
+) {
   if (
     administratorRoles.includes(
       profile.role,
@@ -42,13 +66,15 @@ function getAvailablePage(profile) {
   }
 
   if (
-    profile.role === "mentor"
+    profile.role ===
+    "mentor"
   ) {
     return "/mentor/dashboard";
   }
 
   if (
-    profile.role === "mentee" &&
+    profile.role ===
+      "mentee" &&
     profile.signup_intent ===
       "mentor"
   ) {
@@ -78,8 +104,10 @@ function ProtectedRoute({
       <main
         aria-hidden="true"
         style={{
-          minHeight: "100vh",
-          background: "#ffffff",
+          minHeight:
+            "100vh",
+          background:
+            "#ffffff",
         }}
       />
     );
@@ -98,16 +126,11 @@ function ProtectedRoute({
   }
 
   if (!user) {
-    const signInPath =
-      location.pathname.startsWith(
-        "/admin",
-      )
-        ? "/admin/login"
-        : "/login";
-
     return (
       <Navigate
-        to={signInPath}
+        to={getSignInPath(
+          location.pathname,
+        )}
         replace
         state={{
           from:
@@ -120,7 +143,9 @@ function ProtectedRoute({
   if (!profile) {
     return (
       <Navigate
-        to="/login"
+        to={getSignInPath(
+          location.pathname,
+        )}
         replace
       />
     );
@@ -139,13 +164,11 @@ function ProtectedRoute({
     location.pathname ===
     "/membership-pending";
 
-  const isAccountSuspendedPage =
-    location.pathname ===
-    "/account-suspended";
-
   const isMentorOnboardingAccount =
-    profile.role === "mentee" &&
-    profile.signup_intent === "mentor";
+    profile.role ===
+      "mentee" &&
+    profile.signup_intent ===
+      "mentor";
 
   const isMenteePlatformRoute =
     location.pathname ===
@@ -168,21 +191,8 @@ function ProtectedRoute({
       "/mentee/messages";
 
   if (
-    isMentorOnboardingAccount &&
-    isMenteePlatformRoute
-  ) {
-    return (
-      <Navigate
-        to="/mentor/apply"
-        replace
-      />
-    );
-  }
-
-  if (
     profile.account_status ===
-      "suspended" &&
-    !isAccountSuspendedPage
+    "suspended"
   ) {
     return (
       <Navigate
@@ -200,6 +210,20 @@ function ProtectedRoute({
     return (
       <Navigate
         to="/complete-profile"
+        replace
+      />
+    );
+  }
+
+  if (
+    isCompleteProfilePage &&
+    profile.onboarding_completed
+  ) {
+    return (
+      <Navigate
+        to={getAvailablePage(
+          profile,
+        )}
         replace
       />
     );
@@ -228,6 +252,18 @@ function ProtectedRoute({
         to={getAvailablePage(
           profile,
         )}
+        replace
+      />
+    );
+  }
+
+  if (
+    isMentorOnboardingAccount &&
+    isMenteePlatformRoute
+  ) {
+    return (
+      <Navigate
+        to="/mentor/apply"
         replace
       />
     );

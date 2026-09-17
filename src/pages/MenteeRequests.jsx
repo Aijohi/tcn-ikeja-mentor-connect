@@ -179,11 +179,15 @@ function MenteeRequests() {
     ) {
       if (
         event.key ===
-        "Escape"
+          "Escape" &&
+        !withdrawing
       ) {
         setWithdrawRequest(
           null,
         );
+
+        setWithdrawalReason("");
+        setError("");
       }
     }
 
@@ -198,7 +202,10 @@ function MenteeRequests() {
         handleEscape,
       );
     };
-  }, [withdrawRequest]);
+  }, [
+    withdrawRequest,
+    withdrawing,
+  ]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -287,10 +294,16 @@ function MenteeRequests() {
       ),
     );
 
+  const safeCurrentPage =
+    Math.min(
+      currentPage,
+      totalPages,
+    );
+
   const paginatedRequests =
     useMemo(() => {
       const start =
-        (currentPage - 1) *
+        (safeCurrentPage - 1) *
         REQUESTS_PER_PAGE;
 
       return displayedRequests.slice(
@@ -299,9 +312,27 @@ function MenteeRequests() {
           REQUESTS_PER_PAGE,
       );
     }, [
-      currentPage,
+      safeCurrentPage,
       displayedRequests,
     ]);
+
+  function openWithdrawModal(
+    request,
+  ) {
+    setError("");
+    setWithdrawalReason("");
+    setWithdrawRequest(request);
+  }
+
+  function closeWithdrawModal() {
+    if (withdrawing) {
+      return;
+    }
+
+    setWithdrawRequest(null);
+    setWithdrawalReason("");
+    setError("");
+  }
 
   async function confirmWithdraw() {
     if (!withdrawRequest) {
@@ -607,12 +638,11 @@ function MenteeRequests() {
                                 "/mentee/sessions",
                               )
                             }
-                            onWithdraw={() => {
-                              setWithdrawalReason("");
-                              setWithdrawRequest(
+                            onWithdraw={() =>
+                              openWithdrawModal(
                                 request,
-                              );
-                            }}
+                              )
+                            }
                           />
                         ),
                       )}
@@ -650,12 +680,11 @@ function MenteeRequests() {
                             "/mentee/sessions",
                           )
                         }
-                        onWithdraw={() => {
-                          setWithdrawalReason("");
-                          setWithdrawRequest(
+                        onWithdraw={() =>
+                          openWithdrawModal(
                             request,
-                          );
-                        }}
+                          )
+                        }
                       />
                     ),
                   )}
@@ -667,18 +696,15 @@ function MenteeRequests() {
                       type="button"
                       className="mentee-request-button mentee-request-button--secondary"
                       disabled={
-                        currentPage === 1
+                        safeCurrentPage === 1
                       }
                       onClick={() =>
                         setCurrentPage(
-                          (
-                            current,
-                          ) =>
-                            Math.max(
+                          Math.max(
+                            1,
+                            safeCurrentPage -
                               1,
-                              current -
-                                1,
-                            ),
+                          ),
                         )
                       }
                     >
@@ -689,26 +715,23 @@ function MenteeRequests() {
                     </button>
 
                     <span>
-                      Page {currentPage} of {totalPages}
+                      Page {safeCurrentPage} of {totalPages}
                     </span>
 
                     <button
                       type="button"
                       className="mentee-request-button mentee-request-button--secondary"
                       disabled={
-                        currentPage ===
+                        safeCurrentPage ===
                         totalPages
                       }
                       onClick={() =>
                         setCurrentPage(
-                          (
-                            current,
-                          ) =>
-                            Math.min(
-                              totalPages,
-                              current +
-                                1,
-                            ),
+                          Math.min(
+                            totalPages,
+                            safeCurrentPage +
+                              1,
+                          ),
                         )
                       }
                     >
@@ -733,12 +756,10 @@ function MenteeRequests() {
             ) => {
               if (
                 event.target ===
-                event.currentTarget
+                  event.currentTarget &&
+                !withdrawing
               ) {
-                setWithdrawRequest(
-                  null,
-                );
-                setWithdrawalReason("");
+                closeWithdrawModal();
               }
             }}
           >
@@ -756,12 +777,12 @@ function MenteeRequests() {
                 <button
                   type="button"
                   aria-label="Close withdraw request dialog"
-                  onClick={() => {
-                    setWithdrawRequest(
-                      null,
-                    );
-                    setWithdrawalReason("");
-                  }}
+                  onClick={
+                    closeWithdrawModal
+                  }
+                  disabled={
+                    withdrawing
+                  }
                 >
                   <X size={17} />
                 </button>
@@ -815,12 +836,9 @@ function MenteeRequests() {
                 <button
                   type="button"
                   className="mentee-request-button mentee-request-button--secondary"
-                  onClick={() => {
-                    setWithdrawRequest(
-                      null,
-                    );
-                    setWithdrawalReason("");
-                  }}
+                  onClick={
+                    closeWithdrawModal
+                  }
                   disabled={
                     withdrawing
                   }

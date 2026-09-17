@@ -68,6 +68,14 @@ function MenteeMessages() {
     [location.search],
   );
 
+  const requestedAdminThread = useMemo(
+    () =>
+      new URLSearchParams(
+        location.search,
+      ).get("admin") === "1",
+    [location.search],
+  );
+
   useEffect(() => {
     let isMounted = true;
 
@@ -79,85 +87,97 @@ function MenteeMessages() {
       setLoading(true);
       setError("");
 
-      const {
-        data: acceptedRows,
-        error: requestError,
-      } = await supabase.rpc(
-        "get_my_accepted_mentors_for_messaging",
-      );
+      const [
+        acceptedMentorsResult,
+        adminConversationsResult,
+      ] = await Promise.all([
+        supabase.rpc(
+          "get_my_accepted_mentors_for_messaging",
+        ),
 
-      const acceptedRequests =
-        (acceptedRows ?? []).map(
-          (row) => ({
-            id:
-              row.request_id,
-            mentor_id:
-              row.mentor_id,
-            mentoring_area:
-              row.mentoring_area,
-            goal_statement:
-              row.goal_statement,
-            status:
-              row.status,
-            created_at:
-              row.created_at,
-            mentor: {
-              full_name:
-                row.mentor_name,
-              profile_photo_url:
-                row.profile_photo_url,
-            },
+        supabase
+          .from("admin_conversations")
+          .select(
+            `
+              id,
+              member_id,
+              created_by_admin_id,
+              assigned_admin_id,
+              subject,
+              status,
+              created_at,
+              updated_at
+            `,
+          )
+          .eq("member_id", user.id)
+          .order("updated_at", {
+            ascending: false,
           }),
-        );
+      ]);
 
       if (!isMounted) {
         return;
       }
 
-      if (requestError) {
+      if (
+        acceptedMentorsResult.error
+      ) {
         console.error(
           "Unable to load accepted mentorships:",
-          requestError.message,
+          acceptedMentorsResult.error.message,
         );
-
-        setError(
-          "We could not load your mentorship conversations. Please try again.",
-        );
-
-        setEligibleMentors([]);
-        setThreads([]);
-        setLoading(false);
-        return;
       }
 
-      const accepted = acceptedRequests ?? [];
-
-      if (accepted.length === 0) {
-        setEligibleMentors([]);
-        setThreads([]);
-        setSelectedThreadId(null);
-
-        if (requestedMentorId) {
-          setError(
-            "We could not find an accepted mentorship with this mentor. Refresh My requests and confirm the request is still accepted.",
-          );
-        }
-
-        setLoading(false);
-        return;
+      if (
+        adminConversationsResult.error
+      ) {
+        console.error(
+          "Unable to load administrative conversations:",
+          adminConversationsResult.error.message,
+        );
       }
+
+      const acceptedRequests =
+        (
+          acceptedMentorsResult.data ??
+          []
+        ).map((row) => ({
+          id:
+            row.request_id,
+          mentor_id:
+            row.mentor_id,
+          mentoring_area:
+            row.mentoring_area,
+          goal_statement:
+            row.goal_statement,
+          status:
+            row.status,
+          created_at:
+            row.created_at,
+          mentor: {
+            full_name:
+              row.mentor_name,
+            profile_photo_url:
+              row.profile_photo_url,
+          },
+        }));
 
       const preparedMentors = [];
       let firstConversationError = "";
 
-      for (const request of accepted) {
+      for (
+        const request of
+        acceptedRequests
+      ) {
         const {
           data: conversation,
-          error: conversationError,
+          error:
+            conversationError,
         } = await supabase.rpc(
           "ensure_mentorship_conversation",
           {
-            p_request_id: request.id,
+            p_request_id:
+              request.id,
           },
         );
 
@@ -167,7 +187,9 @@ function MenteeMessages() {
             conversationError.message,
           );
 
-          if (!firstConversationError) {
+          if (
+            !firstConversationError
+          ) {
             firstConversationError =
               conversationError.message ||
               "We could not prepare this conversation.";
@@ -177,7 +199,9 @@ function MenteeMessages() {
         }
 
         const conversationId =
-          getConversationId(conversation);
+          getConversationId(
+            conversation,
+          );
 
         if (!conversationId) {
           console.error(
@@ -189,6 +213,10 @@ function MenteeMessages() {
 
         preparedMentors.push({
           ...request,
+          threadType:
+            "mentor",
+          threadId:
+            `mentor:${conversationId}`,
           conversationId,
         });
       }
@@ -197,36 +225,35 @@ function MenteeMessages() {
         return;
       }
 
-      setEligibleMentors(preparedMentors);
+      setEligibleMentors(
+        preparedMentors,
+      );
 
-      if (preparedMentors.length === 0) {
-        setThreads([]);
-        setSelectedThreadId(null);
-        setError(
-          firstConversationError ||
-            "Your mentorship is accepted, but the conversation could not be prepared.",
-        );
-        setLoading(false);
-        return;
-      }
-
-      const conversationIds =
+      const mentorConversationIds =
         preparedMentors.map(
-          (item) => item.conversationId,
+          (item) =>
+            item.conversationId,
         );
 
-      let existingConversationIds =
+      let mentorExistingConversationIds =
         new Set();
 
-      let messageSummaryByConversation =
+      let mentorSummaryByConversation =
         new Map();
 
-      if (conversationIds.length > 0) {
+      if (
+        mentorConversationIds.length >
+        0
+      ) {
         const {
-          data: existingMessages,
-          error: existingMessageError,
+          data:
+            existingMentorMessages,
+          error:
+            existingMentorMessageError,
         } = await supabase
-          .from("mentorship_messages")
+          .from(
+            "mentorship_messages",
+          )
           .select(`
             conversation_id,
             sender_id,
@@ -237,26 +264,103 @@ function MenteeMessages() {
           `)
           .in(
             "conversation_id",
-            conversationIds,
+            mentorConversationIds,
           );
 
-        if (existingMessageError) {
+        if (
+          existingMentorMessageError
+        ) {
           console.error(
-            "Unable to determine existing message threads:",
-            existingMessageError.message,
+            "Unable to determine existing mentor message threads:",
+            existingMentorMessageError.message,
           );
         } else {
-          existingConversationIds = new Set(
-            (existingMessages ?? []).map(
-              (message) =>
-                message.conversation_id,
-            ),
+          mentorExistingConversationIds =
+            new Set(
+              (
+                existingMentorMessages ??
+                []
+              ).map(
+                (message) =>
+                  message.conversation_id,
+              ),
+            );
+        }
+
+        mentorSummaryByConversation =
+          buildMessageSummaryByConversation(
+            existingMentorMessages ??
+              [],
+            user.id,
+          );
+      }
+
+      const adminConversations =
+        (
+          adminConversationsResult.data ??
+          []
+        ).map(
+          (conversation) => ({
+            ...conversation,
+            threadType:
+              "admin",
+            threadId:
+              `admin:${conversation.id}`,
+            conversationId:
+              conversation.id,
+            admin: {
+              full_name:
+                "Mentor Connect administration",
+            },
+          }),
+        );
+
+      const adminConversationIds =
+        adminConversations.map(
+          (conversation) =>
+            conversation.id,
+        );
+
+      let adminSummaryByConversation =
+        new Map();
+
+      if (
+        adminConversationIds.length >
+        0
+      ) {
+        const {
+          data:
+            existingAdminMessages,
+          error:
+            existingAdminMessageError,
+        } = await supabase
+          .from("admin_messages")
+          .select(`
+            conversation_id,
+            sender_id,
+            recipient_id,
+            body,
+            read_at,
+            created_at
+          `)
+          .in(
+            "conversation_id",
+            adminConversationIds,
+          );
+
+        if (
+          existingAdminMessageError
+        ) {
+          console.error(
+            "Unable to load administrative message summaries:",
+            existingAdminMessageError.message,
           );
         }
 
-        messageSummaryByConversation =
+        adminSummaryByConversation =
           buildMessageSummaryByConversation(
-            existingMessages ?? [],
+            existingAdminMessages ??
+              [],
             user.id,
           );
       }
@@ -265,23 +369,31 @@ function MenteeMessages() {
         return;
       }
 
-      let preparedThreads =
+      let preparedMentorThreads =
         preparedMentors
-          .filter(
-            (item) =>
-              existingConversationIds.has(
-                item.conversationId,
-              ),
+          .filter((item) =>
+            mentorExistingConversationIds.has(
+              item.conversationId,
+            ),
           )
-          .map(
-            (item) => ({
-              ...item,
-              ...getConversationSummary(
-                messageSummaryByConversation,
-                item.conversationId,
-              ),
-            }),
-          );
+          .map((item) => ({
+            ...item,
+            ...getConversationSummary(
+              mentorSummaryByConversation,
+              item.conversationId,
+            ),
+          }));
+
+      const preparedAdminThreads =
+        adminConversations.map(
+          (conversation) => ({
+            ...conversation,
+            ...getConversationSummary(
+              adminSummaryByConversation,
+              conversation.id,
+            ),
+          }),
+        );
 
       const requestedMentor =
         requestedMentorId
@@ -294,51 +406,128 @@ function MenteeMessages() {
 
       if (requestedMentor) {
         const alreadyInThreads =
-          preparedThreads.some(
+          preparedMentorThreads.some(
             (item) =>
               item.conversationId ===
               requestedMentor.conversationId,
           );
 
         if (!alreadyInThreads) {
-          preparedThreads = [
+          preparedMentorThreads = [
             {
               ...requestedMentor,
               ...getConversationSummary(
-                messageSummaryByConversation,
+                mentorSummaryByConversation,
                 requestedMentor.conversationId,
               ),
             },
-            ...preparedThreads,
+            ...preparedMentorThreads,
           ];
         }
+      }
 
-        setSelectedThreadId(
-          requestedMentor.conversationId,
+      const allThreads = [
+        ...preparedAdminThreads,
+        ...preparedMentorThreads,
+      ].sort((first, second) => {
+        const firstDate =
+          first.lastMessageAt ||
+          first.updated_at ||
+          first.created_at ||
+          0;
+
+        const secondDate =
+          second.lastMessageAt ||
+          second.updated_at ||
+          second.created_at ||
+          0;
+
+        return (
+          new Date(
+            secondDate,
+          ).getTime() -
+          new Date(
+            firstDate,
+          ).getTime()
         );
-      } else {
-        setSelectedThreadId(
-          (current) => {
-            if (
-              current &&
-              preparedThreads.some(
-                (thread) =>
-                  thread.conversationId ===
-                  current,
-              )
-            ) {
-              return current;
-            }
+      });
 
+      setThreads(allThreads);
+
+      const requestedAdminConversation =
+        requestedAdminThread
+          ? preparedAdminThreads[0] ??
+            null
+          : null;
+
+      const requestedMentorThread =
+        requestedMentor
+          ? allThreads.find(
+              (thread) =>
+                thread.threadType ===
+                  "mentor" &&
+                thread.conversationId ===
+                  requestedMentor.conversationId,
+            )
+          : null;
+
+      setSelectedThreadId(
+        (current) => {
+          if (
+            requestedAdminConversation
+          ) {
             return (
-              preparedThreads[0]
-                ?.conversationId ?? null
+              requestedAdminConversation.threadId
             );
-          },
+          }
+
+          if (
+            requestedMentorThread
+          ) {
+            return (
+              requestedMentorThread.threadId
+            );
+          }
+
+          if (
+            current &&
+            allThreads.some(
+              (thread) =>
+                thread.threadId ===
+                current,
+            )
+          ) {
+            return current;
+          }
+
+          return (
+            allThreads[0]
+              ?.threadId ??
+            null
+          );
+        },
+      );
+
+      if (
+        acceptedMentorsResult.error &&
+        adminConversationsResult.error &&
+        allThreads.length === 0
+      ) {
+        setError(
+          "We could not load your conversations. Please try again.",
+        );
+      } else if (
+        preparedMentors.length ===
+          0 &&
+        adminConversations.length ===
+          0 &&
+        firstConversationError
+      ) {
+        setError(
+          firstConversationError,
         );
       }
 
-      setThreads(preparedThreads);
       setLoading(false);
     }
 
@@ -350,11 +539,25 @@ function MenteeMessages() {
   }, [
     user?.id,
     requestedMentorId,
+    requestedAdminThread,
   ]);
+
+  const selectedThread = useMemo(
+    () =>
+      threads.find(
+        (thread) =>
+          thread.threadId ===
+          selectedThreadId,
+      ) ?? null,
+    [
+      threads,
+      selectedThreadId,
+    ],
+  );
 
   useEffect(() => {
     if (
-      !selectedThreadId ||
+      !selectedThread ||
       !user?.id
     ) {
       setMessages([]);
@@ -367,11 +570,20 @@ function MenteeMessages() {
       setLoadingMessages(true);
       setError("");
 
+      const isAdminThread =
+        selectedThread.threadType ===
+        "admin";
+
+      const messageTable =
+        isAdminThread
+          ? "admin_messages"
+          : "mentorship_messages";
+
       const {
         data,
         error: messageError,
       } = await supabase
-        .from("mentorship_messages")
+        .from(messageTable)
         .select(`
           id,
           conversation_id,
@@ -383,7 +595,7 @@ function MenteeMessages() {
         `)
         .eq(
           "conversation_id",
-          selectedThreadId,
+          selectedThread.conversationId,
         )
         .order("created_at", {
           ascending: true,
@@ -411,13 +623,18 @@ function MenteeMessages() {
       setMessages(data ?? []);
       setLoadingMessages(false);
 
+      const readRpc =
+        isAdminThread
+          ? "mark_admin_messages_read"
+          : "mark_mentorship_messages_read";
+
       const {
         error: readError,
       } = await supabase.rpc(
-        "mark_mentorship_messages_read",
+        readRpc,
         {
           p_conversation_id:
-            selectedThreadId,
+            selectedThread.conversationId,
         },
       );
 
@@ -431,8 +648,8 @@ function MenteeMessages() {
           (current) =>
             current.map(
               (thread) =>
-                thread.conversationId ===
-                selectedThreadId
+                thread.threadId ===
+                selectedThread.threadId
                   ? {
                       ...thread,
                       unreadCount: 0,
@@ -443,7 +660,9 @@ function MenteeMessages() {
 
         window.dispatchEvent(
           new CustomEvent(
-            "mentorship:messages-read",
+            isAdminThread
+              ? "admin:messages-read"
+              : "mentorship:messages-read",
           ),
         );
       }
@@ -451,26 +670,204 @@ function MenteeMessages() {
 
     loadMessages();
 
+    const table =
+      selectedThread.threadType ===
+      "admin"
+        ? "admin_messages"
+        : "mentorship_messages";
+
+    const channel =
+      supabase
+        .channel(
+          `mentee-${selectedThread.threadType}-message-live-${selectedThread.conversationId}`,
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table,
+            filter:
+              `conversation_id=eq.${selectedThread.conversationId}`,
+          },
+          async (payload) => {
+            const incoming =
+              payload.new;
+
+            setMessages(
+              (current) => {
+                const exists =
+                  current.some(
+                    (message) =>
+                      message.id ===
+                      incoming.id,
+                  );
+
+                if (exists) {
+                  return current;
+                }
+
+                return [
+                  ...current,
+                  incoming,
+                ];
+              },
+            );
+
+            setThreads(
+              (current) =>
+                current.map(
+                  (thread) =>
+                    thread.threadId ===
+                    selectedThread.threadId
+                      ? {
+                          ...thread,
+                          lastMessage:
+                            incoming.body,
+                          lastMessageAt:
+                            incoming.created_at,
+                          unreadCount: 0,
+                        }
+                      : thread,
+                ),
+            );
+
+            if (
+              incoming.recipient_id ===
+              user.id
+            ) {
+              const readRpc =
+                selectedThread.threadType ===
+                "admin"
+                  ? "mark_admin_messages_read"
+                  : "mark_mentorship_messages_read";
+
+              await supabase.rpc(
+                readRpc,
+                {
+                  p_conversation_id:
+                    selectedThread.conversationId,
+                },
+              );
+
+              window.dispatchEvent(
+                new CustomEvent(
+                  selectedThread.threadType ===
+                    "admin"
+                    ? "admin:messages-read"
+                    : "mentorship:messages-read",
+                ),
+              );
+            }
+          },
+        )
+        .subscribe();
+
     return () => {
       isMounted = false;
+
+      supabase.removeChannel(
+        channel,
+      );
     };
   }, [
-    selectedThreadId,
+    selectedThread?.threadType,
+    selectedThread?.threadId,
+    selectedThread?.conversationId,
     user?.id,
   ]);
 
   useEffect(() => {
     if (
       !user?.id ||
-      eligibleMentors.length === 0
+      threads.length === 0
     ) {
       return undefined;
+    }
+
+    const adminConversationIds =
+      new Set(
+        threads
+          .filter(
+            (thread) =>
+              thread.threadType ===
+              "admin",
+          )
+          .map(
+            (thread) =>
+              thread.conversationId,
+          ),
+      );
+
+    const mentorConversationIds =
+      new Set(
+        threads
+          .filter(
+            (thread) =>
+              thread.threadType ===
+              "mentor",
+          )
+          .map(
+            (thread) =>
+              thread.conversationId,
+          ),
+      );
+
+    function updateBackgroundThread(
+      incoming,
+      threadType,
+    ) {
+      const threadId =
+        `${threadType}:${incoming.conversation_id}`;
+
+      if (
+        threadId ===
+        selectedThreadId
+      ) {
+        return;
+      }
+
+      setThreads(
+        (current) =>
+          current.map(
+            (thread) => {
+              if (
+                thread.threadId !==
+                threadId
+              ) {
+                return thread;
+              }
+
+              const isIncoming =
+                incoming.recipient_id ===
+                user.id;
+
+              return {
+                ...thread,
+                lastMessage:
+                  incoming.body,
+                lastMessageAt:
+                  incoming.created_at,
+                unreadCount:
+                  isIncoming
+                    ? Number(
+                        thread.unreadCount ??
+                          0,
+                      ) + 1
+                    : Number(
+                        thread.unreadCount ??
+                          0,
+                      ),
+              };
+            },
+          ),
+      );
     }
 
     const channel =
       supabase
         .channel(
-          `mentee-message-thread-live-${user.id}`,
+          `mentee-all-message-notifications-${user.id}`,
         )
         .on(
           "postgres_changes",
@@ -480,9 +877,7 @@ function MenteeMessages() {
             table:
               "mentorship_messages",
           },
-          async (
-            payload,
-          ) => {
+          (payload) => {
             const incoming =
               payload.new;
 
@@ -495,121 +890,53 @@ function MenteeMessages() {
               return;
             }
 
-            const connection =
-              eligibleMentors.find(
-                (item) =>
-                  item.conversationId ===
-                  incoming.conversation_id,
-              );
-
-            if (!connection) {
+            if (
+              !mentorConversationIds.has(
+                incoming.conversation_id,
+              )
+            ) {
               return;
             }
 
-            setThreads(
-              (current) => {
-                const exists =
-                  current.some(
-                    (thread) =>
-                      thread.conversationId ===
-                      incoming.conversation_id,
-                  );
-
-                const isIncoming =
-                  incoming.recipient_id ===
-                  user.id;
-
-                const isOpen =
-                  incoming.conversation_id ===
-                  selectedThreadId;
-
-                const updateThread =
-                  (thread) => ({
-                    ...thread,
-                    lastMessage:
-                      incoming.body,
-                    lastMessageAt:
-                      incoming.created_at,
-                    unreadCount:
-                      isIncoming &&
-                      !isOpen
-                        ? Number(
-                            thread.unreadCount ??
-                              0,
-                          ) + 1
-                        : isOpen
-                          ? 0
-                          : Number(
-                              thread.unreadCount ??
-                                0,
-                            ),
-                  });
-
-                if (exists) {
-                  return current.map(
-                    (thread) =>
-                      thread.conversationId ===
-                      incoming.conversation_id
-                        ? updateThread(
-                            thread,
-                          )
-                        : thread,
-                  );
-                }
-
-                return [
-                  updateThread({
-                    ...connection,
-                    unreadCount: 0,
-                  }),
-                  ...current,
-                ];
-              },
+            updateBackgroundThread(
+              incoming,
+              "mentor",
             );
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table:
+              "admin_messages",
+          },
+          (payload) => {
+            const incoming =
+              payload.new;
 
             if (
-              incoming.conversation_id ===
-              selectedThreadId
-            ) {
-              setMessages(
-                (current) => {
-                  const exists =
-                    current.some(
-                      (message) =>
-                        message.id ===
-                        incoming.id,
-                    );
-
-                  if (exists) {
-                    return current;
-                  }
-
-                  return [
-                    ...current,
-                    incoming,
-                  ];
-                },
-              );
-
-              if (
-                incoming.recipient_id ===
+              incoming.sender_id !==
+                user.id &&
+              incoming.recipient_id !==
                 user.id
-              ) {
-                await supabase.rpc(
-                  "mark_mentorship_messages_read",
-                  {
-                    p_conversation_id:
-                      selectedThreadId,
-                  },
-                );
-
-                window.dispatchEvent(
-                  new CustomEvent(
-                    "mentorship:messages-read",
-                  ),
-                );
-              }
+            ) {
+              return;
             }
+
+            if (
+              !adminConversationIds.has(
+                incoming.conversation_id,
+              )
+            ) {
+              return;
+            }
+
+            updateBackgroundThread(
+              incoming,
+              "admin",
+            );
           },
         )
         .subscribe();
@@ -621,7 +948,7 @@ function MenteeMessages() {
     };
   }, [
     user?.id,
-    eligibleMentors,
+    threads,
     selectedThreadId,
   ]);
 
@@ -671,19 +998,6 @@ function MenteeMessages() {
     };
   }, [startConversationOpen]);
 
-  const selectedThread = useMemo(
-    () =>
-      threads.find(
-        (thread) =>
-          thread.conversationId ===
-          selectedThreadId,
-      ) ?? null,
-    [
-      threads,
-      selectedThreadId,
-    ],
-  );
-
   function openConversation(
     mentorConnection,
   ) {
@@ -695,8 +1009,8 @@ function MenteeMessages() {
       const alreadyExists =
         current.some(
           (thread) =>
-            thread.conversationId ===
-            mentorConnection.conversationId,
+            thread.threadId ===
+            mentorConnection.threadId,
         );
 
       if (alreadyExists) {
@@ -710,12 +1024,52 @@ function MenteeMessages() {
     });
 
     setSelectedThreadId(
-      mentorConnection.conversationId,
+      mentorConnection.threadId,
     );
 
     setStartConversationOpen(false);
     setError("");
     setMessageBody("");
+
+    navigate(
+      `/mentee/messages?mentor=${mentorConnection.mentor_id}`,
+      {
+        replace: true,
+      },
+    );
+
+    if (composerRef.current) {
+      composerRef.current.style.height =
+        "44px";
+    }
+  }
+
+  function selectThread(
+    thread,
+  ) {
+    setSelectedThreadId(
+      thread.threadId,
+    );
+
+    setMessageBody("");
+
+    if (
+      thread.threadType === "admin"
+    ) {
+      navigate(
+        "/mentee/messages?admin=1",
+        {
+          replace: true,
+        },
+      );
+    } else {
+      navigate(
+        `/mentee/messages?mentor=${thread.mentor_id}`,
+        {
+          replace: true,
+        },
+      );
+    }
 
     if (composerRef.current) {
       composerRef.current.style.height =
@@ -758,7 +1112,7 @@ function MenteeMessages() {
       messageBody.trim();
 
     if (
-      !selectedThreadId ||
+      !selectedThread ||
       !trimmedMessage ||
       sending
     ) {
@@ -768,14 +1122,23 @@ function MenteeMessages() {
     setSending(true);
     setError("");
 
+    const isAdminThread =
+      selectedThread.threadType ===
+      "admin";
+
+    const sendRpc =
+      isAdminThread
+        ? "send_admin_message"
+        : "send_mentorship_message";
+
     const {
       data,
       error: sendError,
     } = await supabase.rpc(
-      "send_mentorship_message",
+      sendRpc,
       {
         p_conversation_id:
-          selectedThreadId,
+          selectedThread.conversationId,
         p_body: trimmedMessage,
       },
     );
@@ -796,12 +1159,18 @@ function MenteeMessages() {
       return;
     }
 
-    if (data) {
+    const sentMessage =
+      Array.isArray(data)
+        ? data[0]
+        : data;
+
+    if (sentMessage) {
       setMessages((current) => {
         const alreadyExists =
           current.some(
             (message) =>
-              message.id === data.id,
+              message.id ===
+              sentMessage.id,
           );
 
         if (alreadyExists) {
@@ -810,9 +1179,26 @@ function MenteeMessages() {
 
         return [
           ...current,
-          data,
+          sentMessage,
         ];
       });
+
+      setThreads(
+        (current) =>
+          current.map(
+            (thread) =>
+              thread.threadId ===
+              selectedThread.threadId
+                ? {
+                    ...thread,
+                    lastMessage:
+                      sentMessage.body,
+                    lastMessageAt:
+                      sentMessage.created_at,
+                  }
+                : thread,
+          ),
+      );
     }
 
     setMessageBody("");
@@ -835,11 +1221,29 @@ function MenteeMessages() {
     );
   }
 
+  function closeMobileConversation() {
+    setSelectedThreadId(null);
+    setMessageBody("");
+
+    navigate(
+      "/mentee/messages",
+      {
+        replace: true,
+      },
+    );
+  }
+
+  const hasAnyThread =
+    threads.length > 0;
+
+  const hasMentorMessaging =
+    eligibleMentors.length > 0;
+
   if (loading) {
     return (
       <DashboardLayout
         title="Messages"
-        description="Chat with mentors after your mentorship request has been accepted."
+        description="Chat with your mentors and receive messages from Mentor Connect administration."
       >
         <div className="mentee-messages-page">
           <section className="mentee-message-loading-page">
@@ -854,12 +1258,13 @@ function MenteeMessages() {
 
   if (
     error &&
-    eligibleMentors.length === 0
+    !hasAnyThread &&
+    !hasMentorMessaging
   ) {
     return (
       <DashboardLayout
         title="Messages"
-        description="Chat with mentors after your mentorship request has been accepted."
+        description="Chat with your mentors and receive messages from Mentor Connect administration."
       >
         <div className="mentee-messages-page">
           <section className="mentee-message-page-empty">
@@ -870,7 +1275,7 @@ function MenteeMessages() {
             </span>
 
             <h2>
-              Conversation could not open
+              Conversations could not load
             </h2>
 
             <p>{error}</p>
@@ -891,12 +1296,13 @@ function MenteeMessages() {
   }
 
   if (
-    eligibleMentors.length === 0
+    !hasAnyThread &&
+    !hasMentorMessaging
   ) {
     return (
       <DashboardLayout
         title="Messages"
-        description="Chat with mentors after your mentorship request has been accepted."
+        description="Chat with your mentors and receive messages from Mentor Connect administration."
       >
         <div className="mentee-messages-page">
           <section className="mentee-message-page-empty">
@@ -907,14 +1313,11 @@ function MenteeMessages() {
             </span>
 
             <h2>
-              Messaging unlocks after acceptance
+              No conversations yet
             </h2>
 
             <p>
-              Once a mentor accepts your
-              mentorship request, you can
-              start a conversation with that
-              mentor here.
+              Mentor conversations unlock after a mentor accepts your mentorship request. Messages from Mentor Connect administration will also appear here when they contact you.
             </p>
 
             <button
@@ -937,33 +1340,33 @@ function MenteeMessages() {
   return (
     <DashboardLayout
       title="Messages"
-      description="Chat with mentors after your mentorship request has been accepted."
+      description="Chat with your mentors and receive messages from Mentor Connect administration."
     >
       <div className="mentee-messages-page">
         <div className="mentee-message-page-toolbar">
           <div>
             <span className="mentee-message-toolbar-eyebrow">
-              MENTOR MESSAGES
+              MESSAGES
             </span>
 
             <p>
-              Continue a conversation or
-              start one with an eligible
-              mentor.
+              Continue your mentorship conversations and reply to administrative messages.
             </p>
           </div>
 
-          <button
-            type="button"
-            className="mentee-message-start-button"
-            onClick={() =>
-              setStartConversationOpen(
-                true,
-              )
-            }
-          >
-            Start conversation
-          </button>
+          {hasMentorMessaging && (
+            <button
+              type="button"
+              className="mentee-message-start-button"
+              onClick={() =>
+                setStartConversationOpen(
+                  true,
+                )
+              }
+            >
+              Start conversation
+            </button>
+          )}
         </div>
 
         <section className="mentee-messages-layout">
@@ -973,7 +1376,9 @@ function MenteeMessages() {
                 CONVERSATIONS
               </span>
 
-              <h2>Mentors</h2>
+              <h2>
+                Messages
+              </h2>
             </div>
 
             {threads.length === 0 ? (
@@ -987,21 +1392,21 @@ function MenteeMessages() {
                 </h3>
 
                 <p>
-                  Start a conversation with
-                  a mentor from an accepted
-                  mentorship.
+                  Start a conversation with a mentor from an accepted mentorship.
                 </p>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setStartConversationOpen(
-                      true,
-                    )
-                  }
-                >
-                  Start conversation
-                </button>
+                {hasMentorMessaging && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setStartConversationOpen(
+                        true,
+                      )
+                    }
+                  >
+                    Start conversation
+                  </button>
+                )}
               </div>
             ) : (
               <div className="mentee-message-thread-list">
@@ -1009,31 +1414,20 @@ function MenteeMessages() {
                   (thread) => (
                     <MessageThreadButton
                       key={
-                        thread.conversationId
+                        thread.threadId
                       }
                       thread={
                         thread
                       }
                       active={
-                        thread.conversationId ===
+                        thread.threadId ===
                         selectedThreadId
                       }
-                      onClick={() => {
-                        setSelectedThreadId(
-                          thread.conversationId,
-                        );
-
-                        setMessageBody(
-                          "",
-                        );
-
-                        if (
-                          composerRef.current
-                        ) {
-                          composerRef.current.style.height =
-                            "44px";
-                        }
-                      }}
+                      onClick={() =>
+                        selectThread(
+                          thread,
+                        )
+                      }
                     />
                   ),
                 )}
@@ -1048,10 +1442,8 @@ function MenteeMessages() {
                   <button
                     type="button"
                     className="mentee-message-mobile-back"
-                    onClick={() =>
-                      setSelectedThreadId(
-                        null,
-                      )
+                    onClick={
+                      closeMobileConversation
                     }
                     aria-label="Back to conversations"
                   >
@@ -1062,36 +1454,49 @@ function MenteeMessages() {
 
                   <div className="mentee-message-conversation-title">
                     <small>
-                      MENTORSHIP CONVERSATION
+                      {selectedThread.threadType ===
+                      "admin"
+                        ? "ADMINISTRATIVE CONVERSATION"
+                        : "MENTORSHIP CONVERSATION"}
                     </small>
 
                     <h2>
-                      {selectedThread.mentor
-                        ?.full_name ||
-                        "Mentor"}
+                      {selectedThread.threadType ===
+                      "admin"
+                        ? "Mentor Connect administration"
+                        : selectedThread.mentor
+                            ?.full_name ||
+                          "Mentor"}
                     </h2>
 
                     <p>
-                      {selectedThread.mentoring_area ||
-                        "Mentorship"}
+                      {selectedThread.threadType ===
+                      "admin"
+                        ? selectedThread.subject ||
+                          "Platform support"
+                        : selectedThread.mentoring_area ||
+                          "Mentorship"}
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    className="mentee-message-view-mentor"
-                    onClick={() =>
-                      viewMentor(
-                        selectedThread.mentor_id,
-                      )
-                    }
-                  >
-                    <UserRound
-                      size={15}
-                    />
+                  {selectedThread.threadType ===
+                    "mentor" && (
+                    <button
+                      type="button"
+                      className="mentee-message-view-mentor"
+                      onClick={() =>
+                        viewMentor(
+                          selectedThread.mentor_id,
+                        )
+                      }
+                    >
+                      <UserRound
+                        size={15}
+                      />
 
-                    View mentor
-                  </button>
+                      View mentor
+                    </button>
+                  )}
                 </header>
 
                 <div
@@ -1109,28 +1514,37 @@ function MenteeMessages() {
                   ) : messages.length ===
                     0 ? (
                     <div className="mentee-message-new-thread">
-                      <MentorAvatar
-                        connection={
-                          selectedThread
-                        }
-                        large
-                      />
+                      {selectedThread.threadType ===
+                      "admin" ? (
+                        <span className="mentee-message-thread-avatar mentee-message-thread-initials mentee-message-thread-avatar--large">
+                          MC
+                        </span>
+                      ) : (
+                        <MentorAvatar
+                          connection={
+                            selectedThread
+                          }
+                          large
+                        />
+                      )}
 
                       <h3>
-                        Start your
-                        conversation with{" "}
-                        {selectedThread
-                          .mentor
-                          ?.full_name ||
-                          "your mentor"}
+                        {selectedThread.threadType ===
+                        "admin"
+                          ? "Administrative conversation"
+                          : `Start your conversation with ${
+                              selectedThread
+                                .mentor
+                                ?.full_name ||
+                              "your mentor"
+                            }`}
                       </h3>
 
                       <p>
-                        Send a short message
-                        to begin. Keep mentoring
-                        conversations focused
-                        on your agreed goals
-                        and sessions.
+                        {selectedThread.threadType ===
+                        "admin"
+                          ? "Reply here to communicate privately with the Mentor Connect administration team."
+                          : "Send a short message to begin. Keep mentoring conversations focused on your agreed goals and sessions."}
                       </p>
                     </div>
                   ) : (
@@ -1192,12 +1606,17 @@ function MenteeMessages() {
                     onChange={
                       handleMessageChange
                     }
-                    placeholder={`Message ${
-                      selectedThread.mentor
-                        ?.full_name
-                        ?.split(" ")[0] ||
-                      "your mentor"
-                    }...`}
+                    placeholder={
+                      selectedThread.threadType ===
+                      "admin"
+                        ? "Reply to Mentor Connect administration..."
+                        : `Message ${
+                            selectedThread.mentor
+                              ?.full_name
+                              ?.split(" ")[0] ||
+                            "your mentor"
+                          }...`
+                    }
                     rows={1}
                     disabled={sending}
                   />
@@ -1232,21 +1651,21 @@ function MenteeMessages() {
                 </h3>
 
                 <p>
-                  Select a mentor from the
-                  list or start a new
-                  conversation.
+                  Select a conversation from the list.
                 </p>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setStartConversationOpen(
-                      true,
-                    )
-                  }
-                >
-                  Start conversation
-                </button>
+                {hasMentorMessaging && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setStartConversationOpen(
+                        true,
+                      )
+                    }
+                  >
+                    Start conversation
+                  </button>
+                )}
               </div>
             )}
           </section>
@@ -1286,9 +1705,7 @@ function MenteeMessages() {
                   </h2>
 
                   <p>
-                    You can message mentors
-                    connected to an accepted
-                    mentorship.
+                    You can message mentors connected to an accepted mentorship.
                   </p>
                 </div>
 
@@ -1311,8 +1728,10 @@ function MenteeMessages() {
                     const hasThread =
                       threads.some(
                         (thread) =>
+                          thread.threadType ===
+                            "mentor" &&
                           thread.conversationId ===
-                          connection.conversationId,
+                            connection.conversationId,
                       );
 
                     return (
@@ -1371,9 +1790,22 @@ function MessageThreadButton({
   active,
   onClick,
 }) {
-  const mentorName =
-    thread.mentor?.full_name ||
-    "Mentor";
+  const isAdmin =
+    thread.threadType ===
+    "admin";
+
+  const displayName =
+    isAdmin
+      ? "Mentor Connect administration"
+      : thread.mentor?.full_name ||
+        "Mentor";
+
+  const subtitle =
+    isAdmin
+      ? thread.subject ||
+        "Platform support"
+      : thread.mentoring_area ||
+        "Mentorship";
 
   return (
     <button
@@ -1389,18 +1821,23 @@ function MessageThreadButton({
       }`}
       onClick={onClick}
     >
-      <MentorAvatar
-        connection={thread}
-      />
+      {isAdmin ? (
+        <span className="mentee-message-thread-avatar mentee-message-thread-initials">
+          MC
+        </span>
+      ) : (
+        <MentorAvatar
+          connection={thread}
+        />
+      )}
 
       <span className="mentee-message-thread-copy">
         <strong>
-          {mentorName}
+          {displayName}
         </strong>
 
         <small>
-          {thread.mentoring_area ||
-            "Mentorship"}
+          {subtitle}
         </small>
       </span>
 

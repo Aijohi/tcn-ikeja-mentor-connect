@@ -38,6 +38,7 @@ function MenteeProfile() {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -50,6 +51,7 @@ function MenteeProfile() {
       }
 
       setLoading(true);
+      setLoadError("");
       setError("");
 
       const { data, error: profileError } = await supabase
@@ -77,7 +79,7 @@ function MenteeProfile() {
           profileError.message,
         );
 
-        setError(
+        setLoadError(
           "We could not load your mentee profile. Please try again.",
         );
 
@@ -143,6 +145,10 @@ function MenteeProfile() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (submitting) {
+      return;
+    }
 
     setError("");
     setSuccess("");
@@ -231,6 +237,33 @@ function MenteeProfile() {
             <p>
               Please wait while we prepare your mentee profile.
             </p>
+          </section>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <DashboardLayout
+        title="My profile"
+        description="Tell mentors a little about you and the support you are looking for."
+      >
+        <div className="mentee-profile-page">
+          <section className="dashboard-empty-state">
+            <BookOpenText size={28} />
+
+            <h2>Unable to load your profile</h2>
+
+            <p>{loadError}</p>
+
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => window.location.reload()}
+            >
+              Try again
+            </button>
           </section>
         </div>
       </DashboardLayout>

@@ -100,7 +100,7 @@ function MenteeDashboard() {
             "reschedule_requested",
           ])
           .gte(
-            "scheduled_start",
+            "scheduled_end",
             new Date().toISOString(),
           )
           .order("scheduled_start", {
@@ -182,7 +182,35 @@ function MenteeDashboard() {
         },
       );
 
-      const rankedMentors = [...mentors].sort(
+      const activeMentorIds =
+        new Set(
+          (requestsResult.data ?? [])
+            .filter((request) =>
+              [
+                "pending",
+                "accepted",
+                "clarification_requested",
+              ].includes(
+                String(request.status),
+              ),
+            )
+            .map(
+              (request) =>
+                request.mentor_id,
+            ),
+        );
+
+      const recommendableMentors =
+        mentors.filter(
+          (mentor) =>
+            !activeMentorIds.has(
+              mentor.mentor_id,
+            ),
+        );
+
+      const rankedMentors = [
+        ...recommendableMentors,
+      ].sort(
         (first, second) => {
           const firstScore =
             getMentorMatchScore(
@@ -234,7 +262,6 @@ function MenteeDashboard() {
         "pending",
         "accepted",
         "clarification_requested",
-        "referred",
       ].includes(
         String(request.status),
       ),

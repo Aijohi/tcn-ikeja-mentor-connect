@@ -17624,3 +17624,214 @@ body:has(.admin-state-card) .dashboard-user {
   }
 }
 
+
+/* =========================================================
+   PRODUCTION CLOSEOUT — SHARED DASHBOARD LAYOUT
+   Final rules for Mentee, Mentor and Admin dashboards.
+   Keep this block at the very bottom of index.css.
+   ========================================================= */
+
+/* The page should never slide horizontally.
+   Tables and intentional carousels keep their own internal scrolling. */
+html,
+body {
+  overflow-x: hidden !important;
+}
+
+#root {
+  max-width: 100%;
+  overflow-x: clip !important;
+}
+
+/* ---------- RESPONSIVE DASHBOARD ---------- */
+
+@media (max-width: 1180px) {
+  /*
+    The responsive header is fixed, so the dashboard needs an
+    equal offset. Include the device safe area so content never
+    sits underneath the top bar on iPhone/iPad.
+  */
+  .dashboard-mobile-header {
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+
+    min-height:
+      calc(
+        68px +
+        env(safe-area-inset-top)
+      ) !important;
+
+    padding-top:
+      env(safe-area-inset-top) !important;
+
+    padding-right:
+      max(
+        16px,
+        env(safe-area-inset-right)
+      ) !important;
+
+    padding-left:
+      max(
+        16px,
+        env(safe-area-inset-left)
+      ) !important;
+  }
+
+  .dashboard-layout {
+    padding-top:
+      calc(
+        68px +
+        env(safe-area-inset-top)
+      ) !important;
+  }
+
+  /*
+    The drawer itself remains the scrollable surface while open.
+    This keeps every navigation item, Become a mentor / Become a
+    mentee and Sign out reachable on shorter tablets and phones.
+  */
+  .dashboard-sidebar {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+
+    padding-top:
+      max(
+        18px,
+        calc(
+          10px +
+          env(safe-area-inset-top)
+        )
+      ) !important;
+
+    padding-bottom:
+      max(
+        24px,
+        calc(
+          14px +
+          env(safe-area-inset-bottom)
+        )
+      ) !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch;
+
+    touch-action: pan-y !important;
+  }
+
+  .dashboard-sidebar-footer {
+    margin-top: auto !important;
+  }
+
+  /*
+    The overlay always stays mounted in the JSX.
+    Closed state must therefore be completely non-interactive.
+  */
+  .dashboard-menu-overlay {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .dashboard-menu-overlay.is-open {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  /*
+    Main dashboard pages use normal document scrolling.
+    Do not create a second vertical scroll surface here.
+  */
+  .dashboard-content {
+    height: auto !important;
+    max-height: none !important;
+
+    overflow-y: visible !important;
+  }
+}
+
+/* ---------- TABLET ---------- */
+
+@media (min-width: 641px) and (max-width: 1180px) {
+  .dashboard-content {
+    padding-right:
+      max(
+        40px,
+        env(safe-area-inset-right)
+      ) !important;
+
+    padding-left:
+      max(
+        40px,
+        env(safe-area-inset-left)
+      ) !important;
+  }
+}
+
+/* ---------- PHONE ---------- */
+
+@media (max-width: 640px) {
+  .dashboard-mobile-header {
+    padding-right:
+      max(
+        14px,
+        env(safe-area-inset-right)
+      ) !important;
+
+    padding-left:
+      max(
+        14px,
+        env(safe-area-inset-left)
+      ) !important;
+  }
+
+  .dashboard-content {
+    padding-right:
+      max(
+        16px,
+        env(safe-area-inset-right)
+      ) !important;
+
+    padding-bottom:
+      max(
+        28px,
+        calc(
+          20px +
+          env(safe-area-inset-bottom)
+        )
+      ) !important;
+
+    padding-left:
+      max(
+        16px,
+        env(safe-area-inset-left)
+      ) !important;
+  }
+}
+
+/* ---------- DESKTOP ---------- */
+
+@media (min-width: 1181px) {
+  .dashboard-sidebar {
+    height: 100vh !important;
+    height: 100dvh !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .dashboard-sidebar-footer {
+    margin-top: auto !important;
+
+    padding-bottom:
+      max(
+        14px,
+        env(safe-area-inset-bottom)
+      ) !important;
+  }
+}

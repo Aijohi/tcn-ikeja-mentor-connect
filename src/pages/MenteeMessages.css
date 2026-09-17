@@ -2044,3 +2044,130 @@ body:has(.mentee-messages-page)
     height: 17px;
   }
 }
+
+
+/* =========================================================
+   PRODUCTION CLOSEOUT OVERRIDES
+   Readability + viewport-safe chat height
+   ========================================================= */
+
+/* Keep important supporting text readable. */
+.mentee-messages-page .mentee-message-toolbar-eyebrow,
+.mentee-messages-page .mentee-message-threads-heading .eyebrow,
+.mentee-messages-page .mentee-start-conversation-header span {
+  font-size: 10px !important;
+}
+
+.mentee-messages-page .mentee-message-page-toolbar p,
+.mentee-messages-page .mentee-message-new-thread p,
+.mentee-messages-page .mentee-message-no-selection p,
+.mentee-messages-page .mentee-start-conversation-header p {
+  font-size: 12px !important;
+}
+
+.mentee-messages-page .mentee-message-thread-copy strong,
+.mentee-messages-page .mentee-start-conversation-copy strong {
+  font-size: 13px !important;
+}
+
+.mentee-messages-page .mentee-message-thread-copy small,
+.mentee-messages-page .mentee-start-conversation-copy small,
+.mentee-messages-page .mentee-start-conversation-action {
+  font-size: 11px !important;
+}
+
+.mentee-messages-page .mentee-message-conversation-title small {
+  font-size: 10px !important;
+}
+
+.mentee-messages-page .mentee-message-conversation-title p {
+  font-size: 11px !important;
+}
+
+.mentee-messages-page .mentee-message-bubble p {
+  font-size: 13px !important;
+}
+
+.mentee-messages-page .mentee-message-bubble small,
+.mentee-messages-page .mentee-message-error {
+  font-size: 10px !important;
+}
+
+.mentee-messages-page .mentee-message-empty-list p {
+  font-size: 11px !important;
+}
+
+.mentee-messages-page .mentee-message-thread-unread {
+  font-size: 10px !important;
+}
+
+/* Let the chat fit shorter screens without forcing an oversized workspace. */
+.mentee-messages-page .mentee-messages-layout {
+  height:
+    clamp(
+      480px,
+      calc(100dvh - 250px),
+      600px
+    ) !important;
+
+  min-height: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .mentee-messages-page .mentee-messages-layout {
+    height:
+      clamp(
+        480px,
+        calc(100dvh - 220px),
+        620px
+      ) !important;
+
+    min-height: 0 !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .mentee-messages-page .mentee-messages-layout {
+    height:
+      clamp(
+        460px,
+        calc(100dvh - 220px),
+        610px
+      ) !important;
+
+    min-height: 0 !important;
+  }
+
+  .mentee-messages-page .mentee-message-thread-copy strong {
+    font-size: 12px !important;
+  }
+
+  .mentee-messages-page .mentee-message-thread-copy small {
+    font-size: 11px !important;
+  }
+
+  .mentee-messages-page .mentee-message-conversation-title small {
+    font-size: 9px !important;
+  }
+
+  .mentee-messages-page .mentee-message-conversation-title p {
+    font-size: 11px !important;
+  }
+
+  .mentee-messages-page .mentee-message-bubble p {
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .mentee-messages-page .mentee-messages-layout {
+    height:
+      clamp(
+        440px,
+        calc(100dvh - 205px),
+        580px
+      ) !important;
+
+    min-height: 0 !important;
+  }
+}

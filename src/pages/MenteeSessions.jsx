@@ -8,6 +8,7 @@ import {
   ExternalLink,
   MapPin,
   Monitor,
+  Star,
   UserRound,
   X,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import "./MenteeSessions.css";
+import "./MenteeSessionFeedback.css";
 
 function MenteeSessions() {
   const navigate = useNavigate();
@@ -58,6 +60,47 @@ function MenteeSessions() {
     setAttendanceError,
   ] = useState("");
 
+
+  const [
+    reviewsBySession,
+    setReviewsBySession,
+  ] = useState({});
+
+  const [
+    reviewSession,
+    setReviewSession,
+  ] = useState(null);
+
+  const [
+    reviewRating,
+    setReviewRating,
+  ] = useState(0);
+
+  const [
+    reviewText,
+    setReviewText,
+  ] = useState("");
+
+  const [
+    reviewPublicConsent,
+    setReviewPublicConsent,
+  ] = useState(false);
+
+  const [
+    reviewSubmitting,
+    setReviewSubmitting,
+  ] = useState(false);
+
+  const [
+    reviewError,
+    setReviewError,
+  ] = useState("");
+
+  const [
+    reviewSuccess,
+    setReviewSuccess,
+  ] = useState("");
+
   useEffect(() => {
     if (!calendarOpen) {
       return undefined;
@@ -83,6 +126,46 @@ function MenteeSessions() {
   }, [calendarOpen]);
 
   useEffect(() => {
+    if (!reviewSession) {
+      return undefined;
+    }
+
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow =
+      "hidden";
+
+    function handleEscape(event) {
+      if (
+        event.key === "Escape" &&
+        !reviewSubmitting
+      ) {
+        setReviewSession(null);
+        setReviewError("");
+      }
+    }
+
+    document.addEventListener(
+      "keydown",
+      handleEscape,
+    );
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+
+      document.removeEventListener(
+        "keydown",
+        handleEscape,
+      );
+    };
+  }, [
+    reviewSession,
+    reviewSubmitting,
+  ]);
+
+  useEffect(() => {
     let isMounted = true;
 
     async function loadSessions() {
@@ -96,6 +179,7 @@ function MenteeSessions() {
       const [
         sessionsResult,
         acceptedRequestsResult,
+        reviewsResult,
       ] = await Promise.all([
         supabase
           .from("mentorship_sessions")
@@ -144,6 +228,22 @@ function MenteeSessions() {
           .order("created_at", {
             ascending: false,
           }),
+
+        supabase
+          .from("mentorship_reviews")
+          .select(`
+            id,
+            session_id,
+            rating,
+            review_text,
+            public_consent,
+            public_approved,
+            created_at
+          `)
+          .eq("mentee_id", user.id)
+          .order("created_at", {
+            ascending: false,
+          }),
       ]);
 
       if (!isMounted) {
@@ -152,7 +252,8 @@ function MenteeSessions() {
 
       const firstError =
         sessionsResult.error ||
-        acceptedRequestsResult.error;
+        acceptedRequestsResult.error ||
+        reviewsResult.error;
 
       if (firstError) {
         console.error(
@@ -166,6 +267,7 @@ function MenteeSessions() {
 
         setSessions([]);
         setAcceptedRequests([]);
+        setReviewsBySession({});
         setLoading(false);
         return;
       }
@@ -173,6 +275,17 @@ function MenteeSessions() {
       setSessions(sessionsResult.data ?? []);
       setAcceptedRequests(
         acceptedRequestsResult.data ?? [],
+      );
+
+      setReviewsBySession(
+        Object.fromEntries(
+          (reviewsResult.data ?? []).map(
+            (review) => [
+              review.session_id,
+              review,
+            ],
+          ),
+        ),
       );
 
       setLoading(false);
@@ -423,6 +536,132 @@ function MenteeSessions() {
     setAttendanceSubmittingId("");
   }
 
+  function openReview(
+    session,
+  ) {
+    if (
+      reviewSubmitting ||
+      reviewsBySession[
+        session.id
+      ]
+    ) {
+      return;
+    }
+
+    setReviewSession(session);
+    setReviewRating(0);
+    setReviewText("");
+    setReviewPublicConsent(false);
+    setReviewError("");
+  }
+
+  function closeReview() {
+    if (reviewSubmitting) {
+      return;
+    }
+
+    setReviewSession(null);
+    setReviewRating(0);
+    setReviewText("");
+    setReviewPublicConsent(false);
+    setReviewError("");
+  }
+
+  async function submitReview(
+    event,
+  ) {
+    event.preventDefault();
+
+    if (
+      !reviewSession ||
+      reviewSubmitting
+    ) {
+      return;
+    }
+
+    const cleanReview =
+      reviewText.trim();
+
+    if (
+      reviewRating < 1 ||
+      reviewRating > 5
+    ) {
+      setReviewError(
+        "Please choose a rating from 1 to 5 stars.",
+      );
+      return;
+    }
+
+    if (
+      cleanReview.length < 10
+    ) {
+      setReviewError(
+        "Please write at least 10 characters of feedback.",
+      );
+      return;
+    }
+
+    setReviewSubmitting(true);
+    setReviewError("");
+
+    const {
+      data,
+      error:
+        reviewRequestError,
+    } = await supabase.rpc(
+      "submit_mentorship_review",
+      {
+        p_session_id:
+          reviewSession.id,
+        p_rating:
+          reviewRating,
+        p_review_text:
+          cleanReview,
+        p_public_consent:
+          reviewRating >= 4
+            ? reviewPublicConsent
+            : false,
+      },
+    );
+
+    if (reviewRequestError) {
+      console.error(
+        "Unable to submit mentorship review:",
+        reviewRequestError.message,
+      );
+
+      setReviewError(
+        reviewRequestError.message ||
+          "We could not submit your feedback. Please try again.",
+      );
+
+      setReviewSubmitting(false);
+      return;
+    }
+
+    const savedReview =
+      Array.isArray(data)
+        ? data[0]
+        : data;
+
+    if (savedReview) {
+      setReviewsBySession(
+        (current) => ({
+          ...current,
+          [reviewSession.id]:
+            savedReview,
+        }),
+      );
+    }
+
+    setReviewSuccess(
+      "Thank you. Your feedback has been submitted.",
+    );
+
+    setReviewSubmitting(false);
+    closeReview();
+  }
+
   if (loading) {
     return (
       <DashboardLayout
@@ -553,6 +792,16 @@ function MenteeSessions() {
           role="alert"
         >
           {attendanceError}
+        </div>
+      )}
+
+
+      {reviewSuccess && (
+        <div
+          className="mentee-session-review-success"
+          role="status"
+        >
+          {reviewSuccess}
         </div>
       )}
 
@@ -707,6 +956,14 @@ function MenteeSessions() {
                   attendanceSubmitting={
                     attendanceSubmittingId ===
                     currentSession.id
+                  }
+                  review={
+                    reviewsBySession[
+                      currentSession.id
+                    ] ?? null
+                  }
+                  onLeaveFeedback={
+                    openReview
                   }
                 />
               )}
@@ -1007,6 +1264,237 @@ function MenteeSessions() {
           )}
         </aside>
       </section>
+
+      {reviewSession && (
+        <div
+          className="mentee-review-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+                event.currentTarget &&
+              !reviewSubmitting
+            ) {
+              closeReview();
+            }
+          }}
+        >
+          <section
+            className="mentee-review-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mentee-review-title"
+            aria-describedby="mentee-review-description"
+          >
+            <div className="mentee-review-modal-header">
+              <div>
+                <span className="eyebrow">
+                  SESSION FEEDBACK
+                </span>
+
+                <h2
+                  id="mentee-review-title"
+                >
+                  Share your experience
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                className="mentee-review-close"
+                aria-label="Close feedback form"
+                disabled={
+                  reviewSubmitting
+                }
+                onClick={
+                  closeReview
+                }
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p
+              id="mentee-review-description"
+              className="mentee-review-intro"
+            >
+              Tell us about your session with{" "}
+              <strong>
+                {reviewSession.mentor
+                  ?.full_name ||
+                  "your mentor"}
+              </strong>
+              . Your mentor and the
+              administrator can see all
+              feedback you submit.
+            </p>
+
+            <form
+              className="mentee-review-form"
+              onSubmit={
+                submitReview
+              }
+            >
+              <fieldset>
+                <legend>
+                  Overall rating
+                </legend>
+
+                <div
+                  className="mentee-review-stars"
+                  aria-label="Choose a rating"
+                >
+                  {[1, 2, 3, 4, 5].map(
+                    (rating) => (
+                      <button
+                        key={rating}
+                        type="button"
+                        className={
+                          rating <=
+                          reviewRating
+                            ? "active"
+                            : ""
+                        }
+                        aria-label={`${rating} ${
+                          rating === 1
+                            ? "star"
+                            : "stars"
+                        }`}
+                        aria-pressed={
+                          reviewRating ===
+                          rating
+                        }
+                        disabled={
+                          reviewSubmitting
+                        }
+                        onClick={() => {
+                          setReviewRating(
+                            rating,
+                          );
+
+                          if (
+                            rating < 4
+                          ) {
+                            setReviewPublicConsent(
+                              false,
+                            );
+                          }
+
+                          setReviewError(
+                            "",
+                          );
+                        }}
+                      >
+                        <Star
+                          size={24}
+                          fill={
+                            rating <=
+                            reviewRating
+                              ? "currentColor"
+                              : "none"
+                          }
+                        />
+                      </button>
+                    ),
+                  )}
+                </div>
+              </fieldset>
+
+              <label className="mentee-review-field">
+                Your feedback
+
+                <textarea
+                  value={reviewText}
+                  onChange={(event) => {
+                    setReviewText(
+                      event.target.value,
+                    );
+                    setReviewError("");
+                  }}
+                  placeholder="What was helpful, and what could have made the session better?"
+                  maxLength={1200}
+                  disabled={
+                    reviewSubmitting
+                  }
+                  required
+                />
+
+                <small>
+                  Minimum 10 characters.
+                </small>
+              </label>
+
+              {reviewRating >= 4 && (
+                <label className="mentee-review-consent">
+                  <input
+                    type="checkbox"
+                    checked={
+                      reviewPublicConsent
+                    }
+                    onChange={(event) =>
+                      setReviewPublicConsent(
+                        event.target.checked,
+                      )
+                    }
+                    disabled={
+                      reviewSubmitting
+                    }
+                  />
+
+                  <span>
+                    I am happy for this
+                    positive feedback to be
+                    considered for the public
+                    Mentor Connect website.
+                    It will only appear after
+                    administrator approval.
+                  </span>
+                </label>
+              )}
+
+              {reviewError && (
+                <p
+                  className="form-error"
+                  role="alert"
+                >
+                  {reviewError}
+                </p>
+              )}
+
+              <div className="mentee-review-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  disabled={
+                    reviewSubmitting
+                  }
+                  onClick={
+                    closeReview
+                  }
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-button"
+                  disabled={
+                    reviewSubmitting ||
+                    reviewRating ===
+                      0 ||
+                    reviewText.trim()
+                      .length < 10
+                  }
+                >
+                  {reviewSubmitting
+                    ? "Submitting..."
+                    : "Submit feedback"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
@@ -1049,6 +1537,8 @@ function SessionCard({
   onViewMentor,
   onRecordAttendance,
   attendanceSubmitting = false,
+  review = null,
+  onLeaveFeedback,
   paginated = false,
 }) {
   const mentorName =
@@ -1096,6 +1586,28 @@ function SessionCard({
           "no_show"
         ? "You recorded that you did not attend this session."
         : "";
+
+
+  const canLeaveFeedback =
+    sessionStatus ===
+      "completed" &&
+    session.mentee_attendance ===
+      "attended" &&
+    !review;
+
+  const reviewStars =
+    review
+      ? Math.max(
+          1,
+          Math.min(
+            5,
+            Number(
+              review.rating ??
+                1,
+            ),
+          ),
+        )
+      : 0;
 
   return (
     <article
@@ -1292,6 +1804,76 @@ function SessionCard({
               I did not attend
             </button>
           </div>
+        </div>
+      )}
+
+      {review && (
+        <div className="mentee-session-review-summary">
+          <div>
+            <small>
+              YOUR FEEDBACK
+            </small>
+
+            <div
+              className="mentee-session-review-stars"
+              aria-label={`${reviewStars} out of 5 stars`}
+            >
+              {[1, 2, 3, 4, 5].map(
+                (rating) => (
+                  <Star
+                    key={rating}
+                    size={14}
+                    fill={
+                      rating <=
+                      reviewStars
+                        ? "currentColor"
+                        : "none"
+                    }
+                  />
+                ),
+              )}
+            </div>
+          </div>
+
+          <p>
+            {review.review_text}
+          </p>
+
+          {review.public_consent && (
+            <span>
+              {review.public_approved
+                ? "Approved for the public testimonials section."
+                : "You allowed this feedback to be considered for the public website."}
+            </span>
+          )}
+        </div>
+      )}
+
+      {canLeaveFeedback && (
+        <div className="mentee-session-feedback-action">
+          <div>
+            <small>
+              SESSION FEEDBACK
+            </small>
+
+            <p>
+              Share how the session went.
+              Your feedback helps improve
+              mentoring quality.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() =>
+              onLeaveFeedback(
+                session,
+              )
+            }
+          >
+            Leave feedback
+          </button>
         </div>
       )}
 

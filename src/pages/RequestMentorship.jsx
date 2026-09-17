@@ -578,6 +578,7 @@ function RequestMentorship() {
 
   const formDisabled =
     submitting ||
+    success ||
     !profileComplete ||
     mentorUnavailable ||
     Boolean(existingRequest);
@@ -610,6 +611,10 @@ function RequestMentorship() {
     event,
   ) {
     event.preventDefault();
+
+    if (success || submitting) {
+      return;
+    }
 
     setError("");
 

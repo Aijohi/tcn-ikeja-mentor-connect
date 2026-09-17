@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   CalendarDays,
+  Quote,
   Star,
   Users,
 } from "lucide-react";
@@ -11,6 +12,7 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
 import "./MentorDashboard.css";
+import "./MentorDashboardFeedback.css";
 
 function MentorDashboard() {
   const { user, profile } = useAuth();
@@ -18,6 +20,7 @@ function MentorDashboard() {
   const [mentorProfile, setMentorProfile] = useState(null);
   const [requests, setRequests] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -50,6 +53,7 @@ function MentorDashboard() {
         mentorProfileResult,
         requestsResult,
         sessionsResult,
+        reviewsResult,
       ] = await Promise.all([
         supabase
           .from("mentor_profiles")
@@ -96,6 +100,27 @@ function MentorDashboard() {
           .order("scheduled_start", {
             ascending: true,
           }),
+
+        supabase
+          .from("mentorship_reviews")
+          .select(`
+            id,
+            session_id,
+            mentee_id,
+            rating,
+            review_text,
+            public_consent,
+            public_approved,
+            created_at,
+            mentee:profiles!mentorship_reviews_mentee_id_fkey (
+              full_name,
+              profile_photo_url
+            )
+          `)
+          .eq("mentor_id", user.id)
+          .order("created_at", {
+            ascending: false,
+          }),
       ]);
 
       if (!isMounted) {
@@ -105,7 +130,8 @@ function MentorDashboard() {
       const firstError =
         mentorProfileResult.error ||
         requestsResult.error ||
-        sessionsResult.error;
+        sessionsResult.error ||
+        reviewsResult.error;
 
       if (firstError) {
         console.error(
@@ -131,6 +157,10 @@ function MentorDashboard() {
 
       setSessions(
         sessionsResult.data ?? [],
+      );
+
+      setReviews(
+        reviewsResult.data ?? [],
       );
 
       setLoading(false);
@@ -182,6 +212,26 @@ function MentorDashboard() {
         ).length,
       [sessions],
     );
+
+
+  const averageRating =
+    useMemo(() => {
+      if (reviews.length === 0) {
+        return null;
+      }
+
+      const total =
+        reviews.reduce(
+          (sum, review) =>
+            sum +
+            Number(
+              review.rating ?? 0,
+            ),
+          0,
+        );
+
+      return total / reviews.length;
+    }, [reviews]);
 
   const maximumActiveMentees =
     Number(
@@ -360,8 +410,22 @@ function MentorDashboard() {
           <SummaryCard
             icon={<Star size={19} />}
             label="Mentor rating"
-            value="Not rated yet"
-            helper="Ratings will appear after completed sessions"
+            value={
+              averageRating === null
+                ? "Not rated yet"
+                : `${averageRating.toFixed(
+                    1,
+                  )} / 5`
+            }
+            helper={
+              reviews.length === 0
+                ? "Ratings will appear after completed sessions"
+                : `${reviews.length} ${
+                    reviews.length === 1
+                      ? "review"
+                      : "reviews"
+                  } received`
+            }
           />
         </section>
 
@@ -397,8 +461,133 @@ function MentorDashboard() {
                 : "You are not currently accepting new mentorship requests. We will add the availability control to your mentor profile next."}
           </p>
         </section>
+
+        <section className="mentor-feedback-section">
+          <div className="mentor-feedback-heading">
+            <div>
+              <span className="mentor-overview-eyebrow">
+                MENTEE FEEDBACK
+              </span>
+
+              <h3>
+                Feedback from your mentoring sessions
+              </h3>
+
+              <p>
+                You can see every review submitted about your
+                completed sessions, including lower ratings and
+                constructive feedback.
+              </p>
+            </div>
+
+            <span className="mentor-feedback-count">
+              {reviews.length}{" "}
+              {reviews.length === 1
+                ? "review"
+                : "reviews"}
+            </span>
+          </div>
+
+          {reviews.length === 0 ? (
+            <div className="mentor-feedback-empty">
+              <Quote
+                size={24}
+                aria-hidden="true"
+              />
+
+              <div>
+                <h4>
+                  No feedback received yet
+                </h4>
+
+                <p>
+                  Reviews will appear here after mentees submit
+                  feedback for completed sessions.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="mentor-feedback-list">
+              {reviews.map(
+                (review) => (
+                  <MentorFeedbackCard
+                    key={review.id}
+                    review={review}
+                  />
+                ),
+              )}
+            </div>
+          )}
+        </section>
       </div>
     </DashboardLayout>
+  );
+}
+
+function MentorFeedbackCard({
+  review,
+}) {
+  const menteeName =
+    review.mentee?.full_name ||
+    "Mentee";
+
+  const rating =
+    Math.max(
+      1,
+      Math.min(
+        5,
+        Number(
+          review.rating ?? 1,
+        ),
+      ),
+    );
+
+  return (
+    <article className="mentor-feedback-card">
+      <div className="mentor-feedback-card-top">
+        <div>
+          <strong>
+            {menteeName}
+          </strong>
+
+          <small>
+            {formatReviewDate(
+              review.created_at,
+            )}
+          </small>
+        </div>
+
+        <div
+          className="mentor-feedback-stars"
+          aria-label={`${rating} out of 5 stars`}
+        >
+          {[1, 2, 3, 4, 5].map(
+            (star) => (
+              <Star
+                key={star}
+                size={14}
+                fill={
+                  star <= rating
+                    ? "currentColor"
+                    : "none"
+                }
+                aria-hidden="true"
+              />
+            ),
+          )}
+        </div>
+      </div>
+
+      <p>
+        {review.review_text}
+      </p>
+
+      {review.public_approved && (
+        <span className="mentor-feedback-public-badge">
+          Approved for public testimonial
+        </span>
+      )}
+    </article>
   );
 }
 
@@ -495,6 +684,18 @@ function getHeroDescription({
   }
 
   return "Your active mentee capacity is currently full.";
+}
+
+
+function formatReviewDate(value) {
+  return new Intl.DateTimeFormat(
+    "en-NG",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    },
+  ).format(new Date(value));
 }
 
 export default MentorDashboard;

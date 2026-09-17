@@ -27,8 +27,8 @@ const administratorRoles = [
 function GoogleIcon() {
   return (
     <svg
-      width="18"
-      height="18"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       aria-hidden="true"
     >
@@ -491,9 +491,11 @@ function Login() {
           >
             <GoogleIcon />
 
-            {googleSubmitting
-              ? "Connecting to Google..."
-              : "Continue with Google"}
+            <span className="login-google-text">
+              {googleSubmitting
+                ? "Connecting to Google..."
+                : "Continue with Google"}
+            </span>
           </button>
 
           <p className="login-account-copy">

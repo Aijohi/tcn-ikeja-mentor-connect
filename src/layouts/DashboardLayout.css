@@ -17,7 +17,11 @@
   align-items: center;
   justify-content: center;
 
-  padding: 20px;
+  padding:
+    max(20px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
 
   background:
     rgba(3, 4, 5, 0.48);
@@ -29,6 +33,16 @@
       100%,
       440px
     );
+
+  max-height:
+    calc(
+      100dvh -
+      40px -
+      env(safe-area-inset-top) -
+      env(safe-area-inset-bottom)
+    );
+
+  overflow-y: auto;
 
   padding: 24px;
 
@@ -84,7 +98,7 @@ span {
 
   color: #ff5303;
 
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -107,10 +121,10 @@ span {
   display: grid;
   place-items: center;
 
-  flex: 0 0 34px;
+  flex: 0 0 36px;
 
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
 
   padding: 0;
 
@@ -165,7 +179,7 @@ span {
 
   gap: 7px;
 
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 16px;
 
   border-radius: 9px;
@@ -253,11 +267,21 @@ span {
   .dashboard-signout-backdrop {
     align-items: flex-end;
 
-    padding: 12px;
+    padding:
+      12px
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
   }
 
   .dashboard-signout-modal {
     width: 100%;
+    max-height:
+      calc(
+        100dvh -
+        24px -
+        env(safe-area-inset-bottom)
+      );
 
     padding: 22px;
 
@@ -354,9 +378,9 @@ span {
 .dashboard-sidebar .dashboard-brand-text small {
   color: #97aac2;
 
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
 }
 
 /* =========================================================
@@ -376,13 +400,13 @@ span {
 
   width: auto !important;
   min-width: 0 !important;
-  min-height: 18px !important;
+  min-height: 20px !important;
 
   margin: 0 !important;
 
   padding:
-    2px
-    7px !important;
+    3px
+    8px !important;
 
   border:
     1px solid
@@ -398,10 +422,10 @@ span {
     #f8f9fb !important;
 
   font-size:
-    9px !important;
+    10px !important;
 
   font-weight:
-    400 !important;
+    500 !important;
 
   line-height:
     1.2 !important;
@@ -435,9 +459,14 @@ span {
     align-items: center;
     justify-content: space-between;
 
-    min-height: 68px;
+    min-height:
+      calc(
+        68px +
+        env(safe-area-inset-top)
+      );
 
-    padding-top: 0;
+    padding-top:
+      env(safe-area-inset-top);
     padding-bottom: 0;
   }
 
@@ -471,16 +500,16 @@ span {
   .dashboard-mobile-header .dashboard-brand-text strong {
     color: #101419;
 
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
   }
 
   .dashboard-mobile-header .dashboard-brand-text small {
     color: #8797ad;
 
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     white-space: nowrap;
   }
 }
@@ -513,22 +542,22 @@ span {
 
     min-height: 26px;
 
-    font-size: 9px;
+    font-size: 10px;
     line-height: 1;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
   }
 
   .dashboard-layout
   .dashboard-user
   > small {
-    min-height: 17px !important;
+    min-height: 20px !important;
 
     padding:
-      2px
-      6px !important;
+      3px
+      7px !important;
 
     font-size:
-      8px !important;
+      10px !important;
   }
 }
 
@@ -549,7 +578,7 @@ span {
   .dashboard-mobile-header .dashboard-brand-text small {
     min-height: 24px;
 
-    font-size: 8px;
-    letter-spacing: 0.12em;
+    font-size: 9px;
+    letter-spacing: 0.1em;
   }
 }

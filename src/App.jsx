@@ -20,6 +20,8 @@ import CheckEmail from "./pages/CheckEmail";
 import VerifyEmail from "./pages/VerifyEmail";
 import Unauthorized from "./pages/Unauthorized";
 import AccountSuspended from "./pages/AccountSuspended";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import MenteeDashboard from "./pages/MenteeDashboard";
 import MenteeProfile from "./pages/MenteeProfile";
@@ -41,7 +43,6 @@ import MentorMentees from "./pages/MentorMentees";
 import MentorSessions from "./pages/MentorSessions";
 import MentorScheduleSession from "./pages/MentorScheduleSession";
 import MentorMessages from "./pages/MentorMessages";
-import MentorComingSoon from "./pages/MentorComingSoon";
 import BecomeAMentee from "./pages/BecomeAMentee";
 
 import AdminDashboard from "./pages/AdminDashboard";
@@ -134,6 +135,16 @@ function App() {
           <Route
             path="/verify-email"
             element={<VerifyEmail />}
+          />
+
+          <Route
+            path="/forgot-password"
+            element={<ForgotPassword />}
+          />
+
+          <Route
+            path="/reset-password"
+            element={<ResetPassword />}
           />
 
           <Route

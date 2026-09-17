@@ -543,7 +543,7 @@ body:has(.login-page) #root {
   background:
     #ffffff;
 
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 
   cursor: pointer;
@@ -1111,9 +1111,12 @@ body:has(.login-page) #root {
     font-size: 16px;
   }
 
-  .login-submit,
-  .login-google {
+  .login-submit {
     font-size: 14px;
+  }
+
+  .login-google {
+    font-size: 13px;
   }
 
   .login-account-copy,
@@ -1384,8 +1387,14 @@ body:has(.login-page) #root {
     min-height: 48px;
 
     border-radius: 10px;
+  }
 
+  .login-submit {
     font-size: 14px;
+  }
+
+  .login-google {
+    font-size: 13px;
   }
 
   .login-divider {
@@ -1511,4 +1520,33 @@ body,
 .login-mobile-utility-footer,
 .login-visual-footer {
   display: none !important;
+}
+
+
+/* =====================================================
+   GOOGLE BUTTON TYPOGRAPHY
+   ===================================================== */
+
+.login-google {
+  font-size: 14px !important;
+}
+
+.login-google-text {
+  display: inline-block;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+}
+
+.login-google svg {
+  flex: 0 0 auto;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+@media (max-width: 1000px) {
+  .login-google,
+  .login-google-text {
+    font-size: 14px !important;
+  }
 }
