@@ -6,7 +6,13 @@ import {
 
 import {
   Camera,
+  Check,
+  ChevronDown,
+  Clock3,
+  MoreVertical,
   Trash2,
+  UsersRound,
+  Video,
   X,
 } from "lucide-react";
 
@@ -69,6 +75,194 @@ function getStoragePathFromPublicUrl(
   );
 }
 
+
+function MentorSelectField({
+  value,
+  options,
+  onChange,
+  icon: Icon,
+  ariaLabel,
+}) {
+  const [open, setOpen] =
+    useState(false);
+
+  const dropdownRef =
+    useRef(null);
+
+  const selected =
+    options.find(
+      (option) =>
+        String(option.value) ===
+        String(value),
+    ) ?? options[0];
+
+  useEffect(() => {
+    function handleOutsideClick(
+      event,
+    ) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(
+          event.target,
+        )
+      ) {
+        setOpen(false);
+      }
+    }
+
+    function handleEscape(
+      event,
+    ) {
+      if (
+        event.key ===
+        "Escape"
+      ) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener(
+      "click",
+      handleOutsideClick,
+    );
+
+    document.addEventListener(
+      "keydown",
+      handleEscape,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "click",
+        handleOutsideClick,
+      );
+
+      document.removeEventListener(
+        "keydown",
+        handleEscape,
+      );
+    };
+  }, []);
+
+  function toggleDropdown() {
+    setOpen(
+      (current) =>
+        !current,
+    );
+  }
+
+  function chooseOption(
+    optionValue,
+  ) {
+    onChange(optionValue);
+    setOpen(false);
+  }
+
+  return (
+    <div
+      ref={dropdownRef}
+      className={`mentor-profile-select${
+        open
+          ? " is-open"
+          : ""
+      }`}
+    >
+      <button
+        type="button"
+        className="mentor-profile-select-trigger"
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={
+          toggleDropdown
+        }
+      >
+        <span className="mentor-profile-select-icon">
+          <Icon
+            size={17}
+            aria-hidden="true"
+          />
+        </span>
+
+        <span className="mentor-profile-select-value">
+          {selected?.label}
+        </span>
+
+        <ChevronDown
+          className="mentor-profile-select-chevron"
+          size={16}
+          aria-hidden="true"
+        />
+      </button>
+
+      {open && (
+        <div
+          className="mentor-profile-select-menu"
+          role="listbox"
+          aria-label={ariaLabel}
+          onMouseDown={(
+            event,
+          ) =>
+            event.stopPropagation()
+          }
+          onClick={(
+            event,
+          ) =>
+            event.stopPropagation()
+          }
+          onWheel={(
+            event,
+          ) =>
+            event.stopPropagation()
+          }
+        >
+          {options.map(
+            (option) => {
+              const isSelected =
+                String(
+                  option.value,
+                ) ===
+                String(value);
+
+              return (
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={
+                    isSelected
+                  }
+                  className={`mentor-profile-select-option${
+                    isSelected
+                      ? " is-selected"
+                      : ""
+                  }`}
+                  key={option.value}
+                  onClick={() =>
+                    chooseOption(
+                      option.value,
+                    )
+                  }
+                >
+                  <span>
+                    {option.label}
+                  </span>
+
+                  {isSelected && (
+                    <Check
+                      size={16}
+                      aria-hidden="true"
+                    />
+                  )}
+                </button>
+              );
+            },
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MentorMyProfile() {
   const {
     user,
@@ -78,6 +272,14 @@ function MentorMyProfile() {
 
   const photoInputRef =
     useRef(null);
+
+  const photoMenuRef =
+    useRef(null);
+
+  const [
+    photoMenuOpen,
+    setPhotoMenuOpen,
+  ] = useState(false);
 
   const [
     form,
@@ -312,6 +514,55 @@ function MentorMyProfile() {
     profile?.full_name,
     profile?.profile_photo_url,
   ]);
+
+  useEffect(() => {
+    if (!photoMenuOpen) {
+      return undefined;
+    }
+
+    function handleMenuOutsideClick(
+      event,
+    ) {
+      if (
+        photoMenuRef.current &&
+        !photoMenuRef.current.contains(
+          event.target,
+        )
+      ) {
+        setPhotoMenuOpen(false);
+      }
+    }
+
+    function handleMenuEscape(
+      event,
+    ) {
+      if (event.key === "Escape") {
+        setPhotoMenuOpen(false);
+      }
+    }
+
+    document.addEventListener(
+      "mousedown",
+      handleMenuOutsideClick,
+    );
+
+    document.addEventListener(
+      "keydown",
+      handleMenuEscape,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleMenuOutsideClick,
+      );
+
+      document.removeEventListener(
+        "keydown",
+        handleMenuEscape,
+      );
+    };
+  }, [photoMenuOpen]);
 
   useEffect(() => {
     if (!deleteModalOpen) {
@@ -873,76 +1124,118 @@ function MentorMyProfile() {
               }
             />
 
-            <button
-              type="button"
-              className="mentor-profile-photo-clickable"
-              aria-label={
-                photoUrl
-                  ? "Replace profile image"
-                  : "Upload profile image"
-              }
-              disabled={
-                uploadingPhoto
-              }
-              onClick={() =>
-                photoInputRef.current?.click()
-              }
-            >
-              {photoUrl ? (
-                <img
-                  src={
-                    photoUrl
-                  }
-                  alt=""
-                />
-              ) : (
-                <span>
-                  {initials}
-                </span>
-              )}
+            <div className="mentor-profile-photo-preview">
+              <div className="mentor-profile-photo-media">
+                {photoUrl ? (
+                  <img
+                    src={
+                      photoUrl
+                    }
+                    alt=""
+                  />
+                ) : (
+                  <span>
+                    {initials}
+                  </span>
+                )}
+              </div>
 
-              <i>
-                <Camera
-                  size={18}
-                />
-              </i>
-            </button>
-
-            <div className="mentor-profile-photo-controls">
-              <button
-                type="button"
-                className="mentor-profile-photo-tertiary"
-                disabled={
-                  uploadingPhoto
+              <div
+                ref={
+                  photoMenuRef
                 }
-                onClick={() =>
-                  photoInputRef.current?.click()
-                }
+                className="mentor-profile-photo-menu"
               >
-                {uploadingPhoto
-                  ? "Uploading..."
-                  : photoUrl
-                    ? "Replace image"
-                    : "Upload image"}
-              </button>
-
-              {photoUrl && (
                 <button
                   type="button"
-                  className="mentor-profile-photo-delete"
-                  aria-label="Delete profile image"
-                  title="Delete profile image"
+                  className="mentor-profile-photo-menu-trigger"
+                  aria-label="Profile image actions"
+                  aria-haspopup="menu"
+                  aria-expanded={
+                    photoMenuOpen
+                  }
+                  disabled={
+                    uploadingPhoto ||
+                    deletingPhoto
+                  }
                   onClick={() =>
-                    setDeleteModalOpen(
-                      true,
+                    setPhotoMenuOpen(
+                      (current) =>
+                        !current,
                     )
                   }
                 >
-                  <Trash2
-                    size={17}
+                  <MoreVertical
+                    size={19}
+                    aria-hidden="true"
                   />
                 </button>
-              )}
+
+                {photoMenuOpen && (
+                  <div
+                    className="mentor-profile-photo-menu-popover"
+                    role="menu"
+                    aria-label="Profile image actions"
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      disabled={
+                        uploadingPhoto
+                      }
+                      onClick={() => {
+                        setPhotoMenuOpen(
+                          false,
+                        );
+
+                        photoInputRef.current?.click();
+                      }}
+                    >
+                      <Camera
+                        size={17}
+                        aria-hidden="true"
+                      />
+
+                      <span>
+                        {uploadingPhoto
+                          ? "Uploading..."
+                          : photoUrl
+                            ? "Replace image"
+                            : "Upload image"}
+                      </span>
+                    </button>
+
+                    {photoUrl && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="is-danger"
+                        disabled={
+                          deletingPhoto
+                        }
+                        onClick={() => {
+                          setPhotoMenuOpen(
+                            false,
+                          );
+
+                          setDeleteModalOpen(
+                            true,
+                          );
+                        }}
+                      >
+                        <Trash2
+                          size={17}
+                          aria-hidden="true"
+                        />
+
+                        <span>
+                          Delete image
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <small>
@@ -960,7 +1253,7 @@ function MentorMyProfile() {
             </h3>
 
             <p>
-              Use a clear and recent image of yourself. Select the image itself or use the link below it to upload or replace your image.
+              Use a clear and recent image of yourself. Open the menu on the image to upload, replace or remove your profile image.
             </p>
           </div>
         </section>
@@ -1151,72 +1444,91 @@ function MentorMyProfile() {
               <label>
                 Preferred meeting format
 
-                <select
-                  name="meetingFormat"
+                <MentorSelectField
+                  icon={Video}
+                  ariaLabel="Preferred meeting format"
                   value={
                     form.meetingFormat
                   }
-                  onChange={
-                    updateForm
+                  options={[
+                    {
+                      value: "Virtual",
+                      label: "Virtual",
+                    },
+                    {
+                      value: "In person",
+                      label: "In person",
+                    },
+                    {
+                      value: "Either",
+                      label: "Either",
+                    },
+                  ]}
+                  onChange={(
+                    value,
+                  ) =>
+                    setForm(
+                      (current) => ({
+                        ...current,
+                        meetingFormat:
+                          value,
+                      }),
+                    )
                   }
-                >
-                  <option value="Virtual">
-                    Virtual
-                  </option>
-
-                  <option value="In person">
-                    In person
-                  </option>
-
-                  <option value="Either">
-                    Either
-                  </option>
-                </select>
+                />
               </label>
 
               <label>
                 Preferred session length
 
-                <select
-                  name="sessionLength"
+                <MentorSelectField
+                  icon={Clock3}
+                  ariaLabel="Preferred session length"
                   value={
                     form.sessionLength
                   }
-                  onChange={
-                    updateForm
+                  options={[
+                    {
+                      value: "15",
+                      label: "15 minutes",
+                    },
+                    {
+                      value: "30",
+                      label: "30 minutes",
+                    },
+                    {
+                      value: "45",
+                      label: "45 minutes",
+                    },
+                    {
+                      value: "60",
+                      label: "60 minutes",
+                    },
+                  ]}
+                  onChange={(
+                    value,
+                  ) =>
+                    setForm(
+                      (current) => ({
+                        ...current,
+                        sessionLength:
+                          value,
+                      }),
+                    )
                   }
-                >
-                  <option value="15">
-                    15 minutes
-                  </option>
-
-                  <option value="30">
-                    30 minutes
-                  </option>
-
-                  <option value="45">
-                    45 minutes
-                  </option>
-
-                  <option value="60">
-                    60 minutes
-                  </option>
-                </select>
+                />
               </label>
 
               <label>
                 Maximum active mentees
 
-                <select
-                  name="maximumActiveMentees"
+                <MentorSelectField
+                  icon={UsersRound}
+                  ariaLabel="Maximum active mentees"
                   value={
                     form.maximumActiveMentees
                   }
-                  onChange={
-                    updateForm
-                  }
-                >
-                  {[
+                  options={[
                     1,
                     2,
                     3,
@@ -1226,28 +1538,28 @@ function MentorMyProfile() {
                     8,
                     10,
                   ].map(
-                    (number) => (
-                      <option
-                        key={
-                          number
-                        }
-                        value={
-                          number
-                        }
-                      >
-                        {number}{" "}
-                        {number ===
-                        1
+                    (number) => ({
+                      value:
+                        String(number),
+                      label: `${number} ${
+                        number === 1
                           ? "mentee"
-                          : "mentees"}
-                      </option>
-                    ),
+                          : "mentees"
+                      }`,
+                    }),
                   )}
-                </select>
-
-                <small>
-                  You currently have {currentActiveMentees} active {currentActiveMentees === 1 ? "mentee" : "mentees"}.
-                </small>
+                  onChange={(
+                    value,
+                  ) =>
+                    setForm(
+                      (current) => ({
+                        ...current,
+                        maximumActiveMentees:
+                          value,
+                      }),
+                    )
+                  }
+                />
               </label>
             </div>
 

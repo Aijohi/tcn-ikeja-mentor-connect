@@ -8,8 +8,8 @@
    1. DASHBOARD FORM FIELD BASELINE
    ========================================================= */
 
-.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
-.dashboard-layout select,
+.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.find-mentor-native-control),
+.dashboard-layout select:not(.find-mentor-native-control),
 .dashboard-layout textarea {
   border: 1px solid #c9d2df !important;
   outline: none !important;
@@ -25,16 +25,16 @@
     background-color 150ms ease;
 }
 
-.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):hover,
-.dashboard-layout select:hover,
+.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.find-mentor-native-control):hover,
+.dashboard-layout select:not(.find-mentor-native-control):hover,
 .dashboard-layout textarea:hover {
   border-color: #97aac2 !important;
 }
 
-.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
-.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus-visible,
-.dashboard-layout select:focus,
-.dashboard-layout select:focus-visible,
+.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.find-mentor-native-control):focus,
+.dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.find-mentor-native-control):focus-visible,
+.dashboard-layout select:not(.find-mentor-native-control):focus,
+.dashboard-layout select:not(.find-mentor-native-control):focus-visible,
 .dashboard-layout textarea:focus,
 .dashboard-layout textarea:focus-visible {
   border-color: #4c5867 !important;
@@ -280,8 +280,8 @@ img.mentor-profile-avatar {
    ========================================================= */
 
 @media (max-width: 760px) {
-  .dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
-  .dashboard-layout select,
+  .dashboard-layout input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.find-mentor-native-control),
+  .dashboard-layout select:not(.find-mentor-native-control),
   .dashboard-layout textarea {
     font-size: 16px !important;
   }
@@ -296,85 +296,6 @@ img.mentor-profile-avatar {
     font-size: 17px !important;
   }
 }
-
-
-/* =========================================================
-   FIND A MENTOR SEARCH - FINAL INNER LINE FIX
-   The wrapper is the only visible field border.
-   ========================================================= */
-
-body .dashboard-layout .dashboard-search-field
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
-body .dashboard-layout .dashboard-search-field
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):hover,
-body .dashboard-layout .dashboard-search-field
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
-body .dashboard-layout .dashboard-search-field
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus-visible,
-body .dashboard-layout .dashboard-search-field
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):active {
-  border: 0 !important;
-  border-left: 0 !important;
-  outline: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-body .dashboard-layout .dashboard-search-field {
-  overflow: hidden !important;
-}
-
-
-/* =========================================================
-   FIND A MENTOR / REQUEST FLOW SEARCH
-   The current FindMentor page uses .request-flow-search,
-   not .dashboard-search-field.
-   The wrapper owns the ONLY visible border.
-   ========================================================= */
-
-body .dashboard-layout .request-flow-search {
-  border: 1px solid #c9d2df !important;
-  outline: 0 !important;
-  box-shadow: none !important;
-  overflow: hidden !important;
-}
-
-body .dashboard-layout .request-flow-search:hover {
-  border-color: #97aac2 !important;
-}
-
-body .dashboard-layout .request-flow-search:focus-within {
-  border-color: #4c5867 !important;
-  outline: 0 !important;
-  box-shadow:
-    0 0 0 2px
-    rgba(76, 88, 103, 0.10) !important;
-}
-
-body .dashboard-layout .request-flow-search
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
-body .dashboard-layout .request-flow-search
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):hover,
-body .dashboard-layout .request-flow-search
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
-body .dashboard-layout .request-flow-search
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus-visible,
-body .dashboard-layout .request-flow-search
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):active {
-  border: 0 !important;
-  border-left: 0 !important;
-  border-right: 0 !important;
-  border-top: 0 !important;
-  border-bottom: 0 !important;
-  outline: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-body .dashboard-layout .request-flow-search:focus-within > svg {
-  color: #ff5303 !important;
-}
-
 
 /* =========================================================
    PENDING STATUS - TEXT ONLY
@@ -434,4 +355,158 @@ body .dashboard-layout
 body .dashboard-layout
 .mentor-request-status.status-accepted > i {
   background: #2f7d4a !important;
+}
+
+/* =========================================================
+   FIND A MENTOR - NATIVE CONTROL RESET
+   These controls sit inside their own bordered wrappers.
+   The input/select itself must never draw another rectangle.
+   ========================================================= */
+
+body .dashboard-layout .find-mentor-native-control,
+body .dashboard-layout .find-mentor-native-control:hover,
+body .dashboard-layout .find-mentor-native-control:focus,
+body .dashboard-layout .find-mentor-native-control:focus-visible,
+body .dashboard-layout .find-mentor-native-control:active {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+
+  outline: 0 !important;
+
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+
+  box-shadow: none !important;
+}
+
+body .dashboard-layout input.find-mentor-native-control {
+  padding: 0 !important;
+}
+
+body .dashboard-layout select.find-mentor-native-control {
+  padding-right: 30px !important;
+}
+
+/* The wrapper is the single visible control boundary. */
+body .dashboard-layout .find-mentor-search,
+body .dashboard-layout .find-mentor-filter,
+body .dashboard-layout .find-mentor-sort-control {
+  border: 1px solid #dce3e7 !important;
+  outline: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+body .dashboard-layout .find-mentor-search:focus-within,
+body .dashboard-layout .find-mentor-filter:focus-within,
+body .dashboard-layout .find-mentor-sort-control:focus-within {
+  border-color: #4c5867 !important;
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.10) !important;
+}
+
+@media (max-width: 760px) {
+  body .dashboard-layout .find-mentor-native-control {
+    font-size: 16px !important;
+  }
+}
+
+
+/* =========================================================
+   DASHBOARD HEADING SCALE
+   Reduce oversized page titles consistently across mentee,
+   mentor and admin dashboards while preserving hierarchy.
+   ========================================================= */
+
+body .dashboard-layout
+.dashboard-content > header h1 {
+  font-size: clamp(28px, 3vw, 38px) !important;
+  font-weight: 650 !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.035em !important;
+}
+
+/* Keep the supporting copy clearly secondary. */
+body .dashboard-layout
+.dashboard-content > header p {
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+/* Mentee completed-profile hero shown under My profile. */
+body .dashboard-layout
+.mentee-profile-complete-hero h2 {
+  font-size: clamp(24px, 2.8vw, 32px) !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.03em !important;
+}
+
+/* The editable mentee-profile intro should use the same scale. */
+body .dashboard-layout
+.mentee-profile-intro h2 {
+  font-size: clamp(24px, 2.8vw, 32px) !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.03em !important;
+}
+
+@media (max-width: 760px) {
+  body .dashboard-layout
+  .dashboard-content > header h1 {
+    font-size: 28px !important;
+  }
+
+  body .dashboard-layout
+  .mentee-profile-complete-hero h2,
+  body .dashboard-layout
+  .mentee-profile-intro h2 {
+    font-size: 24px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  body .dashboard-layout
+  .dashboard-content > header h1 {
+    font-size: 26px !important;
+  }
+
+  body .dashboard-layout
+  .mentee-profile-complete-hero h2,
+  body .dashboard-layout
+  .mentee-profile-intro h2 {
+    font-size: 22px !important;
+  }
+}
+
+
+/* =========================================================
+   MENTEE PROFILE READY HEADING — SMALLER
+   Keep it prominent, but less dominant than the page title.
+   ========================================================= */
+
+body .dashboard-layout
+.mentee-profile-complete-hero h2 {
+  font-size: clamp(22px, 2.4vw, 28px) !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.025em !important;
+}
+
+@media (max-width: 760px) {
+  body .dashboard-layout
+  .mentee-profile-complete-hero h2 {
+    font-size: 22px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  body .dashboard-layout
+  .mentee-profile-complete-hero h2 {
+    font-size: 20px !important;
+  }
 }

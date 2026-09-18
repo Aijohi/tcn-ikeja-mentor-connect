@@ -649,281 +649,309 @@
 
 
 /* =========================================================
-   FINAL LIVE HOME MENTOR SECTION
-   Home.jsx is the component rendered by App.jsx.
+   PUBLIC MENTOR VERIFIED BADGE
+   Matches the verified treatment used inside the mentee app.
    ========================================================= */
 
-/* Keep the approved heading/copy colours exactly in this section. */
-.hmc-public-mentor-section .hmc-public-mentor-heading > p {
-  color: #ef8a73 !important;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-heading h2 {
-  color: #ffffff !important;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-heading > span {
-  color: #b8c0c6 !important;
-}
-
-/* Neutral rating treatment. No gold stars or gold "No ratings yet". */
-.hmc-public-mentor-section .hmc-public-mentor-stars {
-  color: #c8d0d4 !important;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-rating > span {
-  color: #aeb7bc !important;
-  font-weight: 500;
-}
-
-/* The card position count is information only. */
-.hmc-public-mentor-section .hmc-public-mentor-mobile-arrow {
-  display: none !important;
-}
-
-@media (max-width: 680px) {
-  .hmc-public-mentor-section .hmc-public-mentor-mobile-controls {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    grid-template-columns: none !important;
-    margin-top: 14px;
-  }
-
-  .hmc-public-mentor-section .hmc-public-mentor-mobile-count {
-    display: block;
-    width: 100%;
-    color: #9da6ab !important;
-    font-size: 10px;
-    font-weight: 500;
-    text-align: center;
-  }
-}
-
-/* Pagination is the only previous / next navigation control. */
-.hmc-public-mentor-section .hmc-public-mentor-pagination {
-  display: grid !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* =========================================================
-   MENTOR SECTION SPACING + READABILITY REFINEMENT
-   Final override for the live Home.jsx mentor section.
-   ========================================================= */
-
-/* Give the card content a little more readable scale without
-   allowing it to dominate the portrait. */
-.hmc-public-mentor-section .hmc-public-mentor-card-tags span {
-  font-size: 8.5px !important;
-  line-height: 1.25;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-content h3 {
-  font-size: 20.5px !important;
-  line-height: 1.08;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-role {
-  font-size: 10px !important;
-  line-height: 1.45;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-stars svg {
-  width: 13px;
-  height: 13px;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-rating > span {
-  font-size: 9px !important;
-  line-height: 1.4;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-meta span {
-  font-size: 9px !important;
-  line-height: 1.4;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-meta svg {
-  width: 14px;
-  height: 14px;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-view {
-  font-size: 10px !important;
-  line-height: 1.4;
-}
-
-/* More breathing room between:
-   cards -> pagination -> primary CTA. */
-.hmc-public-mentor-section .hmc-public-mentor-pagination {
-  margin-top: 44px !important;
-}
-
-.hmc-public-mentor-footer-cta {
-  margin-top: 38px !important;
-}
-
-/* Disabled pagination remains visibly present without looking active. */
-.hmc-public-mentor-section .hmc-public-mentor-page-arrow:disabled {
-  opacity: 0.46;
-}
-
-/* Tablet keeps the increased readability while preserving card balance. */
-@media (max-width: 1000px) {
-  .hmc-public-mentor-section .hmc-public-mentor-content h3 {
-    font-size: 21px !important;
-  }
-
-  .hmc-public-mentor-section .hmc-public-mentor-role {
-    font-size: 10.5px !important;
-  }
-
-  .hmc-public-mentor-section .hmc-public-mentor-card-tags span {
-    font-size: 8.5px !important;
-  }
-
-  .hmc-public-mentor-section .hmc-public-mentor-rating > span,
-  .hmc-public-mentor-section .hmc-public-mentor-meta span {
-    font-size: 9px !important;
-  }
-
-  .hmc-public-mentor-section .hmc-public-mentor-view {
-    font-size: 10px !important;
-  }
-}
-
-/* Mobile gets a little more size because the card is viewed one at a time. */
-@media (max-width: 680px) {
-  .hmc-public-mentor-section .hmc-public-mentor-content {
-    right: 16px;
-    bottom: 14px;
-    left: 16px;
-  }
-
-  .hmc-public-mentor-section .hmc-public-mentor-content h3 {
-    font-size: 22px !important;
-  }
-
-  .hmc-public-mentor-section .hmc-public-mentor-role {
-    font-size: 11px !important;
-  }
-
-  .hmc-public-mentor-section .hmc-public-mentor-card-tags span {
-    font-size: 8.5px !important;
-  }
-
-  .hmc-public-mentor-section .hmc-public-mentor-rating > span,
-  .hmc-public-mentor-section .hmc-public-mentor-meta span {
-    font-size: 9.5px !important;
-  }
-
-  .hmc-public-mentor-section .hmc-public-mentor-view {
-    font-size: 10.5px !important;
-  }
-
-  .hmc-public-mentor-section .hmc-public-mentor-pagination {
-    margin-top: 30px !important;
-  }
-
-  .hmc-public-mentor-footer-cta {
-    margin-top: 30px !important;
-  }
-}
-
-
-/* =========================================================
-   MENTOR SECTION CTA
-   Reuses the exact hero primary button component styles.
-   ========================================================= */
-
-.hmc-public-mentor-footer-cta {
+.hmc-public-mentor-name-row {
   display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.hmc-public-mentor-name-row h3 {
+  min-width: 0;
+}
+
+.hmc-public-mentor-verified {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  margin-top: 38px;
+
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+  background: #1686f4;
+
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.12),
+    0 3px 10px rgba(0,0,0,.22);
+}
+
+.hmc-public-mentor-verified svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.2;
 }
 
 @media (max-width: 680px) {
-  .hmc-public-mentor-footer-cta {
-    justify-content: flex-start;
-    margin-top: 30px;
+  .hmc-public-mentor-name-row {
+    gap: 8px;
+  }
+
+  .hmc-public-mentor-verified {
+    width: 19px;
+    height: 19px;
+    flex-basis: 19px;
+  }
+
+  .hmc-public-mentor-verified svg {
+    width: 13px;
+    height: 13px;
   }
 }
 
 
 /* =========================================================
-   MENTOR SUPPORTING COPY
-   Match the Accountability section description exactly in
-   colour, size and reading rhythm.
+   PUBLIC MENTOR CTA + VERIFIED BADGE REFINEMENT
    ========================================================= */
 
-.hmc-home
-.hmc-public-mentor-section
-.hmc-public-mentor-heading
-> span {
-  display: block;
-
-  max-width: 820px;
-
-  margin-top: 14px !important;
-
-  color: var(--ink-200) !important;
-
-  font-size: 16px !important;
-  font-weight: 400 !important;
-  line-height: 1.7 !important;
-}
-
-@media (max-width: 680px) {
-  .hmc-home
-  .hmc-public-mentor-section
-  .hmc-public-mentor-heading
-  > span {
-    margin-top: 14px !important;
-
-    font-size: 16px !important;
-    line-height: 1.7 !important;
-  }
-}
-
-
-/* =========================================================
-   MENTOR CTA MOBILE SIZE
-   Keep the same hero pill appearance without stretching the
-   button across the mobile screen.
-   ========================================================= */
-
+/* Keep the Find a mentor CTA centred under the pagination. */
 .hmc-public-mentor-footer-cta {
-  display: flex;
-  justify-content: center;
+  display: flex !important;
+  align-items: center;
+  justify-content: center !important;
+
+  width: 100%;
+  margin-top: 24px;
 }
 
-.hmc-public-mentor-footer-cta
-.hmc-pill {
-  width: auto !important;
-  min-width: 0 !important;
-  max-width: max-content !important;
+/*
+  Keep the verified mark subtle, closer to the scale people
+  expect from social-profile verification marks.
+*/
+.hmc-public-mentor-name-row {
+  gap: 5px !important;
+}
 
-  flex:
-    0
-    0
-    auto !important;
+.hmc-public-mentor-verified {
+  width: 14px !important;
+  height: 14px !important;
+  flex: 0 0 14px !important;
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.14),
+    0 2px 6px rgba(0,0,0,.16) !important;
+}
+
+.hmc-public-mentor-verified svg {
+  width: 9px !important;
+  height: 9px !important;
+  stroke-width: 2.1 !important;
 }
 
 @media (max-width: 680px) {
   .hmc-public-mentor-footer-cta {
     justify-content: center !important;
+    margin-top: 22px;
   }
 
-  .hmc-public-mentor-footer-cta
-  .hmc-pill {
-    width: auto !important;
-    min-width: 0 !important;
-    max-width: max-content !important;
-
-    flex:
-      0
-      0
-      auto !important;
+  .hmc-public-mentor-name-row {
+    gap: 5px !important;
   }
+
+  .hmc-public-mentor-verified {
+    width: 14px !important;
+    height: 14px !important;
+    flex-basis: 14px !important;
+  }
+
+  .hmc-public-mentor-verified svg {
+    width: 9px !important;
+    height: 9px !important;
+  }
+}
+
+
+/* =========================================================
+   VERIFIED BADGE — NAME ALIGNMENT
+   Keep the badge visually centred on the mentor name, not on
+   the full line box.
+   ========================================================= */
+
+.hmc-public-mentor-name-row {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+
+  width: fit-content;
+  max-width: 100%;
+
+  line-height: 1 !important;
+}
+
+.hmc-public-mentor-name-row h3 {
+  margin: 0 !important;
+  line-height: 1 !important;
+}
+
+.hmc-public-mentor-verified {
+  position: relative;
+  top: -1px;
+
+  width: 13px !important;
+  height: 13px !important;
+  flex: 0 0 13px !important;
+
+  margin: 0 !important;
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.12) !important;
+}
+
+.hmc-public-mentor-verified svg {
+  width: 8px !important;
+  height: 8px !important;
+  stroke-width: 2.15 !important;
+}
+
+@media (max-width: 680px) {
+  .hmc-public-mentor-name-row {
+    gap: 4px !important;
+  }
+
+  .hmc-public-mentor-verified {
+    top: -1px;
+
+    width: 13px !important;
+    height: 13px !important;
+    flex-basis: 13px !important;
+  }
+
+  .hmc-public-mentor-verified svg {
+    width: 8px !important;
+    height: 8px !important;
+  }
+}
+
+
+/* =========================================================
+   VERIFIED BADGE — SINGLE ICON ONLY
+   Remove the extra circular container. The BadgeCheck icon
+   itself is the verification mark.
+   ========================================================= */
+
+.hmc-public-mentor-verified {
+  position: relative;
+  top: -1px;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: 14px !important;
+  height: 14px !important;
+  flex: 0 0 14px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  color: #1686f4 !important;
+  background: transparent !important;
+
+  box-shadow: none !important;
+}
+
+.hmc-public-mentor-verified svg {
+  display: block !important;
+
+  width: 14px !important;
+  height: 14px !important;
+
+  color: #1686f4 !important;
+
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2.2 !important;
+}
+
+@media (max-width: 680px) {
+  .hmc-public-mentor-verified {
+    width: 14px !important;
+    height: 14px !important;
+    flex-basis: 14px !important;
+  }
+
+  .hmc-public-mentor-verified svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+}
+
+
+/* =========================================================
+   VERIFIED BADGE — TRUE INLINE NAME ALIGNMENT
+   The name and verification mark now live in the same h3.
+   ========================================================= */
+
+.hmc-public-mentor-content
+h3.hmc-public-mentor-name-row {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+
+  width: fit-content !important;
+  max-width: 100% !important;
+
+  margin: 0 !important;
+
+  line-height: 1.05 !important;
+  vertical-align: middle !important;
+}
+
+.hmc-public-mentor-name-row > span:first-child {
+  min-width: 0;
+
+  line-height: inherit;
+}
+
+.hmc-public-mentor-name-row
+.hmc-public-mentor-verified {
+  position: static !important;
+  top: auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: 14px !important;
+  height: 14px !important;
+  flex: 0 0 14px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  line-height: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  color: #1686f4 !important;
+  background: transparent !important;
+
+  box-shadow: none !important;
+
+  transform: none !important;
+}
+
+.hmc-public-mentor-name-row
+.hmc-public-mentor-verified svg {
+  display: block !important;
+
+  width: 14px !important;
+  height: 14px !important;
+
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2.2 !important;
+
+  transform: none !important;
 }

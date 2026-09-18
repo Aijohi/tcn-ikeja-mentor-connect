@@ -1,109 +1,464 @@
+.mentor-my-profile-page {
+  display: grid;
+  gap: 22px;
+}
+
+.mentor-my-profile-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.mentor-my-profile-intro h2 {
+  max-width: 720px;
+  margin: 7px 0 8px;
+  color: #101419;
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.mentor-my-profile-intro p {
+  max-width: 720px;
+  margin: 0;
+  color: #66727e;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.mentor-my-profile-eyebrow {
+  color: #ff5303;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+}
+
+.mentor-profile-photo-section {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+  padding: 24px;
+  border: 1px solid #dfe4eb;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.mentor-profile-photo-column {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
 /* =========================================================
-   MENTOR PROFILE
-   Relationship-aware additions only.
-   Existing profile layout remains in the global stylesheet.
+   PROFILE IMAGE — OPTION 5
+   Three-dot menu in the top-right of the image.
    ========================================================= */
 
-/* Status surfaces stay clean. They are not filled status pills. */
-
-.mentor-profile-availability.relationship-accepted {
-  border-color: #cde6d5 !important;
-  color: #2f7d4a !important;
-  background: #ffffff !important;
+.mentor-profile-photo-preview {
+  position: relative;
+  width: 180px;
+  height: 180px;
 }
 
-.mentor-profile-availability.relationship-pending {
-  border-color: #ead8b5 !important;
-  color: #b56a00 !important;
-  background: #ffffff !important;
+.mentor-profile-photo-media {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #d6dde4;
+  border-radius: 18px;
+  color: #17313a;
+  background: #e5eaed;
 }
 
-.mentor-profile-availability.relationship-declined {
-  border-color: #ecd0d4 !important;
-  color: #a63d46 !important;
-  background: #ffffff !important;
+.mentor-profile-photo-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
-.mentor-profile-availability.relationship-referred {
-  border-color: #bcded6 !important;
-  color: #087967 !important;
-  background: #ffffff !important;
+.mentor-profile-photo-media > span {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 44px;
+  font-weight: 800;
 }
 
-.mentor-profile-availability.relationship-withdrawn,
-.mentor-profile-availability.relationship-unavailable {
-  border-color: #e4e8ef !important;
-  color: #6f8095 !important;
-  background: #ffffff !important;
+.mentor-profile-photo-menu {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 30;
 }
 
-.mentor-profile-availability.relationship-available {
-  border-color: #e4e8ef !important;
-  color: #c13c00 !important;
-  background: #ffffff !important;
-}
-
-.mentor-profile-referred-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  min-width: 170px;
-  padding: 0 16px;
-
-  border: 1px solid #9fcfc4;
-  border-radius: 9px;
-
-  color: #087967;
-  background: #ffffff;
-
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-
+.mentor-profile-photo-menu-trigger {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgba(217, 225, 228, 0.9);
+  border-radius: 50%;
+  color: #26343b;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 5px 16px rgba(16, 20, 25, 0.14);
   cursor: pointer;
-
+  backdrop-filter: blur(8px);
   transition:
     border-color 150ms ease,
     background-color 150ms ease,
-    color 150ms ease,
-    box-shadow 150ms ease,
     transform 150ms ease;
 }
 
-.mentor-profile-referred-action:hover {
-  border-color: #6fb6a6;
-  color: #066454;
-  background: #f4fbf9;
-
-  box-shadow:
-    0 4px 12px
-    rgba(8, 121, 103, 0.10);
-
+.mentor-profile-photo-menu-trigger:hover:not(:disabled) {
+  border-color: #c4cfd4;
+  background: #ffffff;
   transform: translateY(-1px);
 }
 
-.mentor-profile-referred-action:active {
-  box-shadow: none;
-  transform: translateY(0);
+.mentor-profile-photo-menu-trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
-/*
-   Keep profile actions compact on phone/tablet when they fit.
-   Do not force every action to become full-width.
-*/
-@media (max-width: 600px) {
-  .mentor-profile-actions {
-    align-items: center !important;
-    justify-content: flex-start !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
+.mentor-profile-photo-menu-popover {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  z-index: 40;
+  width: 176px;
+  padding: 6px;
+  border: 1px solid #e0e6ea;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 34px rgba(16, 20, 25, 0.16);
+}
+
+.mentor-profile-photo-menu-popover button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  color: #25343c;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mentor-profile-photo-menu-popover button:hover:not(:disabled) {
+  background: #f5f7f8;
+}
+
+.mentor-profile-photo-menu-popover button.is-danger {
+  color: #b93b3b;
+}
+
+.mentor-profile-photo-menu-popover button.is-danger:hover:not(:disabled) {
+  background: #fff4f4;
+}
+
+.mentor-profile-photo-menu-popover button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mentor-profile-photo-column > small {
+  color: #81909a;
+  font-size: 9px;
+}
+
+.mentor-profile-photo-copy {
+  max-width: 660px;
+}
+
+.mentor-profile-photo-copy h3 {
+  margin: 7px 0 8px;
+  color: #101419;
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+
+.mentor-profile-photo-copy p {
+  margin: 0;
+  color: #66727e;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.mentor-my-profile-message {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mentor-my-profile-message--error {
+  border: 1px solid #f0caca;
+  color: #a63232;
+  background: #fff5f5;
+}
+
+.mentor-my-profile-message--success {
+  border: 1px solid #bde3d9;
+  color: #087967;
+  background: #eef9f6;
+}
+
+.mentor-my-profile-form {
+  display: grid;
+  gap: 18px;
+}
+
+.mentor-my-profile-card {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid #dfe4eb;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.mentor-my-profile-card-heading h3 {
+  margin: 6px 0 0;
+  color: #101419;
+  font-size: 20px;
+}
+
+.mentor-my-profile-field-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mentor-my-profile-card label {
+  display: grid;
+  gap: 7px;
+  color: #2d353f;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.mentor-my-profile-card input,
+.mentor-my-profile-card select,
+.mentor-my-profile-card textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #cbd4dd;
+  border-radius: 10px;
+  outline: none;
+  color: #101419;
+  background: #ffffff;
+  font: inherit;
+  font-size: 12px;
+}
+
+.mentor-my-profile-card textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.mentor-my-profile-card input:focus,
+.mentor-my-profile-card select:focus,
+.mentor-my-profile-card textarea:focus {
+  border-color: #ff5303;
+  box-shadow: 0 0 0 3px rgba(255, 83, 3, 0.08);
+}
+
+.mentor-my-profile-card label > small {
+  color: #84929b;
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.mentor-my-profile-optional {
+  margin-left: 5px;
+  color: #8b98a0;
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.mentor-my-profile-availability {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 11px !important;
+  padding: 15px;
+  border: 1px solid #e0e5ea;
+  border-radius: 12px;
+  background: #f8f9fa;
+}
+
+.mentor-my-profile-availability input {
+  width: 16px !important;
+  min-height: 16px !important;
+  margin-top: 2px;
+  accent-color: #ff5303;
+}
+
+.mentor-my-profile-availability span {
+  display: grid;
+  gap: 3px;
+}
+
+.mentor-my-profile-availability strong {
+  color: #182028;
+  font-size: 11px;
+}
+
+.mentor-my-profile-availability small {
+  color: #71808a;
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.mentor-my-profile-save-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 20px;
+}
+
+.mentor-my-profile-save-row .primary-button {
+  min-width: 150px;
+}
+
+.mentor-photo-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 9, 13, 0.62);
+}
+
+.mentor-photo-delete-modal {
+  position: relative;
+  width: min(430px, 100%);
+  padding: 28px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+}
+
+.mentor-photo-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  color: #56636c;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mentor-photo-modal-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  color: #b93b3b;
+  background: #fff1f1;
+}
+
+.mentor-photo-delete-modal h2 {
+  margin: 17px 0 8px;
+  color: #101419;
+  font-size: 22px;
+}
+
+.mentor-photo-delete-modal p {
+  margin: 0;
+  color: #687681;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.mentor-photo-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.mentor-photo-confirm-delete {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid #b93b3b;
+  border-radius: 9px;
+  color: #ffffff;
+  background: #b93b3b;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mentor-photo-confirm-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .mentor-my-profile-field-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .mentor-my-profile-page {
+    gap: 16px;
   }
 
-  .mentor-profile-actions .primary-button,
-  .mentor-profile-actions .secondary-button,
-  .mentor-profile-referred-action {
-    width: auto !important;
-    min-width: 0 !important;
+  .mentor-profile-photo-section {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .mentor-profile-photo-preview {
+    width: 150px;
+    height: 150px;
+  }
+
+  .mentor-profile-photo-menu-popover {
+    width: 170px;
+  }
+
+  .mentor-my-profile-card {
+    padding: 18px;
+  }
+
+  .mentor-my-profile-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mentor-my-profile-save-row .primary-button {
+    width: 100%;
+  }
+
+  .mentor-photo-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .mentor-photo-modal-actions button {
+    width: 100%;
   }
 }

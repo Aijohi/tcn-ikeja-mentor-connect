@@ -1,12 +1,17 @@
 import {
   AlertTriangle,
+  Check,
   CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   ShieldAlert,
 } from "lucide-react";
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -14,6 +19,8 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { supabase } from "../lib/supabase";
 
 import "./SafetyReports.css";
+
+const REPORTS_PER_PAGE = 4;
 
 const REPORT_CATEGORIES = [
   {
@@ -74,6 +81,165 @@ const REPORT_CATEGORIES = [
   },
 ];
 
+function SafetyCategoryDropdown({
+  value,
+  onChange,
+  disabled,
+}) {
+  const [open, setOpen] =
+    useState(false);
+
+  const dropdownRef =
+    useRef(null);
+
+  const selectedItem =
+    REPORT_CATEGORIES.find(
+      (item) =>
+        item.value ===
+        value,
+    );
+
+  useEffect(() => {
+    function handleOutsideClick(event) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(
+          event.target,
+        )
+      ) {
+        setOpen(false);
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener(
+      "mousedown",
+      handleOutsideClick,
+    );
+
+    document.addEventListener(
+      "keydown",
+      handleEscape,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleOutsideClick,
+      );
+
+      document.removeEventListener(
+        "keydown",
+        handleEscape,
+      );
+    };
+  }, []);
+
+  function chooseCategory(
+    categoryValue,
+  ) {
+    onChange(categoryValue);
+    setOpen(false);
+  }
+
+  return (
+    <div
+      ref={dropdownRef}
+      className={`safety-category-dropdown${
+        open
+          ? " is-open"
+          : ""
+      }${
+        disabled
+          ? " is-disabled"
+          : ""
+      }`}
+    >
+      <button
+        type="button"
+        className="safety-category-trigger"
+        aria-label="Select report category"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        disabled={disabled}
+        onClick={() =>
+          setOpen(
+            (current) =>
+              !current,
+          )
+        }
+      >
+        <span
+          className={
+            selectedItem
+              ? ""
+              : "is-placeholder"
+          }
+        >
+          {selectedItem
+            ? selectedItem.label
+            : "Select a category"}
+        </span>
+
+        <ChevronDown
+          size={17}
+          aria-hidden="true"
+        />
+      </button>
+
+      {open && (
+        <div
+          className="safety-category-menu"
+          role="listbox"
+          aria-label="Report categories"
+        >
+          {REPORT_CATEGORIES.map(
+            (item) => {
+              const isSelected =
+                item.value === value;
+
+              return (
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  className={`safety-category-option${
+                    isSelected
+                      ? " is-selected"
+                      : ""
+                  }`}
+                  key={item.value}
+                  onClick={() =>
+                    chooseCategory(
+                      item.value,
+                    )
+                  }
+                >
+                  <span>
+                    {item.label}
+                  </span>
+
+                  {isSelected && (
+                    <Check
+                      size={16}
+                      aria-hidden="true"
+                    />
+                  )}
+                </button>
+              );
+            },
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SafetyReports() {
   const [reports, setReports] =
     useState([]);
@@ -98,6 +264,9 @@ function SafetyReports() {
 
   const [success, setSuccess] =
     useState("");
+
+  const [reportPage, setReportPage] =
+    useState(1);
 
   async function loadReports() {
     setLoading(true);
@@ -134,7 +303,9 @@ function SafetyReports() {
     loadReports();
   }, []);
 
-  async function submitReport(event) {
+  async function submitReport(
+    event,
+  ) {
     event.preventDefault();
 
     if (
@@ -159,7 +330,8 @@ function SafetyReports() {
       "submit_safety_report",
       {
         p_category: category,
-        p_summary: summary.trim(),
+        p_summary:
+          summary.trim(),
         p_description:
           description.trim(),
         p_reported_user_id: null,
@@ -178,6 +350,7 @@ function SafetyReports() {
         submitError.message ||
           "We could not submit your report.",
       );
+
       setSubmitting(false);
       return;
     }
@@ -190,6 +363,7 @@ function SafetyReports() {
     setCategory("");
     setSummary("");
     setDescription("");
+    setReportPage(1);
 
     setSuccess(
       created?.case_reference
@@ -215,6 +389,51 @@ function SafetyReports() {
         ).length,
       [reports],
     );
+
+  const totalReportPages =
+    Math.max(
+      1,
+      Math.ceil(
+        reports.length /
+          REPORTS_PER_PAGE,
+      ),
+    );
+
+  const safeReportPage =
+    Math.min(
+      reportPage,
+      totalReportPages,
+    );
+
+  useEffect(() => {
+    if (
+      reportPage >
+      totalReportPages
+    ) {
+      setReportPage(
+        totalReportPages,
+      );
+    }
+  }, [
+    reportPage,
+    totalReportPages,
+  ]);
+
+  const visibleReports =
+    useMemo(() => {
+      const start =
+        (safeReportPage - 1) *
+        REPORTS_PER_PAGE;
+
+      return reports.slice(
+        start,
+        start +
+          REPORTS_PER_PAGE,
+      );
+    }, [
+      reports,
+      safeReportPage,
+    ]);
 
   return (
     <DashboardLayout
@@ -291,31 +510,13 @@ function SafetyReports() {
                   What type of concern is this?
                 </span>
 
-                <select
+                <SafetyCategoryDropdown
                   value={category}
-                  onChange={(event) =>
-                    setCategory(
-                      event.target.value,
-                    )
+                  onChange={
+                    setCategory
                   }
                   disabled={submitting}
-                  required
-                >
-                  <option value="">
-                    Select a category
-                  </option>
-
-                  {REPORT_CATEGORIES.map(
-                    (item) => (
-                      <option
-                        key={item.value}
-                        value={item.value}
-                      >
-                        {item.label}
-                      </option>
-                    ),
-                  )}
-                </select>
+                />
               </label>
 
               <label>
@@ -397,123 +598,225 @@ function SafetyReports() {
               </small>
             </div>
 
-            {loading ? (
-              <div className="safety-report-state">
-                <div className="loader" />
-                <p>
-                  Loading reports...
-                </p>
-              </div>
-            ) : reports.length === 0 ? (
-              <div className="safety-report-state">
-                <ShieldAlert
-                  size={28}
+            <div className="safety-report-history-content">
+              {loading ? (
+                <div className="safety-report-state">
+                  <div className="loader" />
+
+                  <p>
+                    Loading reports...
+                  </p>
+                </div>
+              ) : (
+                <div className="safety-report-history-list">
+                  {Array.from(
+                    {
+                      length:
+                        REPORTS_PER_PAGE,
+                    },
+                    (_, slotIndex) => {
+                      const report =
+                        visibleReports[
+                          slotIndex
+                        ];
+
+                      const reportNumber =
+                        (safeReportPage -
+                          1) *
+                          REPORTS_PER_PAGE +
+                        slotIndex +
+                        1;
+
+                      if (!report) {
+                        return (
+                          <article
+                            key={`empty-${reportNumber}`}
+                            className="safety-report-history-item safety-report-placeholder"
+                          >
+                            <span className="safety-report-placeholder-icon">
+                              <ShieldAlert
+                                size={20}
+                                aria-hidden="true"
+                              />
+                            </span>
+
+                            <div className="safety-report-placeholder-copy">
+                              <strong>
+                                Report{" "}
+                                {reportNumber}
+                              </strong>
+
+                              <p>
+                                No report submitted yet.
+                              </p>
+
+                              <small>
+                                —
+                              </small>
+                            </div>
+
+                            <span className="safety-report-placeholder-status">
+                              No reports yet
+                            </span>
+                          </article>
+                        );
+                      }
+
+                      return (
+                        <article
+                          key={
+                            report.id
+                          }
+                          className="safety-report-history-item"
+                        >
+                          <div className="safety-report-history-top">
+                            <div>
+                              <strong>
+                                {
+                                  report.case_reference
+                                }
+                              </strong>
+
+                              <small>
+                                {formatLabel(
+                                  report.category,
+                                )}
+                              </small>
+                            </div>
+
+                            <SafetyStatus
+                              status={
+                                report.status
+                              }
+                            />
+                          </div>
+
+                          <dl>
+                            <div>
+                              <dt>
+                                Priority
+                              </dt>
+
+                              <dd>
+                                {formatLabel(
+                                  report.priority,
+                                )}
+                              </dd>
+                            </div>
+
+                            <div>
+                              <dt>
+                                Submitted
+                              </dt>
+
+                              <dd>
+                                {formatDate(
+                                  report.created_at,
+                                )}
+                              </dd>
+                            </div>
+                          </dl>
+
+                          {report.acknowledged_at && (
+                            <p className="safety-report-history-note">
+                              <CheckCircle2
+                                size={15}
+                                aria-hidden="true"
+                              />
+                              Acknowledged by the safety team
+                            </p>
+                          )}
+
+                          {!report.acknowledged_at &&
+                            ![
+                              "resolved",
+                              "closed",
+                            ].includes(
+                              report.status,
+                            ) && (
+                              <p className="safety-report-history-note">
+                                <Clock3
+                                  size={15}
+                                  aria-hidden="true"
+                                />
+                                Waiting for acknowledgement
+                              </p>
+                            )}
+                        </article>
+                      );
+                    },
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="safety-report-pagination">
+              <button
+                type="button"
+                aria-label="Previous reports page"
+                disabled={
+                  safeReportPage === 1
+                }
+                onClick={() =>
+                  setReportPage(
+                    (page) =>
+                      Math.max(
+                        1,
+                        page - 1,
+                      ),
+                  )
+                }
+              >
+                <ChevronLeft
+                  size={16}
                   aria-hidden="true"
                 />
+              </button>
 
-                <strong>
-                  No reports submitted
-                </strong>
+              <span>
+                Page {safeReportPage} of{" "}
+                {totalReportPages}
+              </span>
 
-                <p>
-                  Reports you submit will appear here with a case
-                  reference and status.
-                </p>
-              </div>
-            ) : (
-              <div className="safety-report-history-list">
-                {reports.map(
-                  (report) => (
-                    <article
-                      key={report.id}
-                      className="safety-report-history-item"
-                    >
-                      <div className="safety-report-history-top">
-                        <div>
-                          <strong>
-                            {
-                              report.case_reference
-                            }
-                          </strong>
-
-                          <small>
-                            {formatLabel(
-                              report.category,
-                            )}
-                          </small>
-                        </div>
-
-                        <SafetyStatus
-                          status={
-                            report.status
-                          }
-                        />
-                      </div>
-
-                      <dl>
-                        <div>
-                          <dt>
-                            Priority
-                          </dt>
-                          <dd>
-                            {formatLabel(
-                              report.priority,
-                            )}
-                          </dd>
-                        </div>
-
-                        <div>
-                          <dt>
-                            Submitted
-                          </dt>
-                          <dd>
-                            {formatDate(
-                              report.created_at,
-                            )}
-                          </dd>
-                        </div>
-                      </dl>
-
-                      {report.acknowledged_at && (
-                        <p className="safety-report-history-note">
-                          <CheckCircle2
-                            size={15}
-                            aria-hidden="true"
-                          />
-                          Acknowledged by the safety team
-                        </p>
-                      )}
-
-                      {!report.acknowledged_at &&
-                        ![
-                          "resolved",
-                          "closed",
-                        ].includes(
-                          report.status,
-                        ) && (
-                          <p className="safety-report-history-note">
-                            <Clock3
-                              size={15}
-                              aria-hidden="true"
-                            />
-                            Waiting for acknowledgement
-                          </p>
-                        )}
-                    </article>
-                  ),
-                )}
-              </div>
-            )}
+              <button
+                type="button"
+                aria-label="Next reports page"
+                disabled={
+                  safeReportPage ===
+                  totalReportPages
+                }
+                onClick={() =>
+                  setReportPage(
+                    (page) =>
+                      Math.min(
+                        totalReportPages,
+                        page + 1,
+                      ),
+                  )
+                }
+              >
+                <ChevronRight
+                  size={16}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
           </section>
         </div>
 
         <section className="safety-emergency-note">
-          <AlertTriangle
-            size={19}
-            aria-hidden="true"
-          />
+          <span className="safety-emergency-icon">
+            <AlertTriangle
+              size={19}
+              aria-hidden="true"
+            />
+          </span>
 
           <div>
+            <span className="safety-emergency-eyebrow">
+              URGENT SUPPORT
+            </span>
+
             <strong>
               Immediate danger
             </strong>
@@ -551,9 +854,13 @@ function SafetyStatus({
 
 function formatLabel(value) {
   return String(
-    value || "Not available",
+    value ||
+      "Not available",
   )
-    .replaceAll("_", " ")
+    .replaceAll(
+      "_",
+      " ",
+    )
     .replace(
       /\b\w/g,
       (letter) =>

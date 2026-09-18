@@ -860,15 +860,15 @@ function DashboardLayout({
         className="dashboard-content"
       >
         <header>
-          <span>
-            <small>
-              TCN IKEJA MENTOR CONNECT
-            </small>
+          <div className="dashboard-page-heading">
+            <div className="dashboard-page-brand">
+              <DashboardBrand />
+            </div>
 
             <h1>{title}</h1>
 
             <p>{description}</p>
-          </span>
+          </div>
 
           <div className="dashboard-header-actions">
             {(

@@ -1,31 +1,20 @@
+/* =========================================================
+   FIND A MENTOR
+   Matches the approved generated UI direction
+   ========================================================= */
+
 .find-mentor-page {
   display: grid;
   gap: 24px;
-}
-
-.find-mentor-intro {
-  max-width: 760px;
-}
-
-.find-mentor-intro h2 {
-  margin: 8px 0 10px;
-  color: #071b2b;
-  font-size: clamp(26px, 4vw, 42px);
-  line-height: 1.08;
-  letter-spacing: -0.04em;
-}
-
-.find-mentor-intro p {
-  max-width: 660px;
-  margin: 0;
-  color: #5d7079;
-  font-size: 13px;
-  line-height: 1.7;
+  width: 100%;
 }
 
 .find-mentor-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(230px, 0.72fr)
+    minmax(220px, 0.72fr);
   gap: 12px;
 }
 
@@ -33,61 +22,121 @@
 .find-mentor-filter {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 48px;
-  padding: 0 14px;
-  border: 1px solid #d8e0e3;
-  border-radius: 13px;
-  color: #60747c;
+  gap: 11px;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid #dce3e7;
+  border-radius: 12px;
+  color: #50666f;
   background: #ffffff;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.find-mentor-search:focus-within,
+.find-mentor-filter:focus-within {
+  border-color: #aebbc1;
+  box-shadow: 0 0 0 3px rgba(17, 37, 47, 0.05);
 }
 
 .find-mentor-search input,
 .find-mentor-filter select {
   width: 100%;
   min-width: 0;
-  border: none;
-  outline: none;
-  color: #102933;
+  border: 0;
+  outline: 0;
+  color: #1f3944;
   background: transparent;
   font: inherit;
   font-size: 13px;
 }
 
-.find-mentor-results-heading {
+.find-mentor-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  color: #526870;
-  font-size: 12px;
+  gap: 18px;
 }
 
-.find-mentor-results-heading span {
-  color: #17313b;
-  font-weight: 750;
+.find-mentor-results-count {
+  color: #172d37;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.find-mentor-sort {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #687b84;
+  font-size: 11px;
+}
+
+.find-mentor-sort select {
+  min-height: 42px;
+  padding: 0 34px 0 12px;
+  border: 1px solid #dce3e7;
+  border-radius: 10px;
+  outline: 0;
+  color: #243e49;
+  background: #ffffff;
+  font: inherit;
+  font-size: 11px;
 }
 
 .find-mentor-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
+  gap: 20px;
+  align-items: start;
 }
 
 .find-mentor-card {
   min-width: 0;
   overflow: hidden;
-  border: 1px solid #d8dfe2;
+  border: 1px solid #dfe5e8;
   border-radius: 18px;
   background: #ffffff;
-  box-shadow: 0 10px 26px rgba(19, 39, 47, 0.07);
+  box-shadow:
+    0 10px 24px
+    rgba(
+      19,
+      39,
+      47,
+      0.055
+    );
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.find-mentor-card:hover {
+  border-color: #cfd8dc;
+  box-shadow:
+    0 15px 30px
+    rgba(
+      19,
+      39,
+      47,
+      0.09
+    );
+  transform:
+    translateY(-2px);
 }
 
 .find-mentor-image-shell {
   position: relative;
-  aspect-ratio: 4 / 4.7;
+  aspect-ratio: 16 / 10.5;
   overflow: hidden;
-  background: #667176;
+  margin: 9px 9px 0;
+  border-radius: 13px;
+  background: #68757a;
 }
 
 .find-mentor-image {
@@ -100,170 +149,344 @@
   display: grid;
   place-items: center;
   color: #edf1f2;
-  background: linear-gradient(145deg, #6b777b, #354045);
-}
-
-.find-mentor-image-placeholder span {
-  font-size: 38px;
-  font-weight: 800;
-}
-
-.find-mentor-image-overlay {
-  position: absolute;
-  inset: auto 0 0;
-  padding: 72px 15px 15px;
-  color: #ffffff;
   background:
     linear-gradient(
-      180deg,
-      transparent,
-      rgba(0, 0, 0, 0.36) 32%,
-      rgba(0, 0, 0, 0.9)
+      145deg,
+      #6f7c81,
+      #3c484d
     );
 }
 
-.find-mentor-approved {
+.find-mentor-image-placeholder span {
+  font-size: 42px;
+  font-weight: 800;
+}
+
+.find-mentor-availability {
+  position: absolute;
+  top: 11px;
+  right: 11px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  color: #dbe7e3;
-  font-size: 8.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.find-mentor-image-overlay h3 {
-  margin: 8px 0 0;
-  font-size: 20px;
-  line-height: 1.1;
-}
-
-.find-mentor-image-overlay p {
-  min-height: 34px;
-  margin: 5px 0 0;
-  color: #d5dcdf;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid rgba(255,255,255,0.68);
+  border-radius: 999px;
+  color: #294a43;
+  background: rgba(255,255,255,0.9);
+  box-shadow:
+    0 4px 12px
+    rgba(0,0,0,0.08);
   font-size: 10px;
-  line-height: 1.5;
+  font-weight: 750;
+  backdrop-filter: blur(8px);
+}
+
+.find-mentor-availability i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #1bb26c;
+}
+
+.find-mentor-card-body {
+  display: grid;
+  gap: 13px;
+  padding: 15px 18px 18px;
+}
+
+.find-mentor-card-heading {
+  display: grid;
+  gap: 5px;
+}
+
+.find-mentor-name-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.find-mentor-name-row h3 {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #0c1f2a;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.find-mentor-verified {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #1686f4;
+  box-shadow:
+    0 0 0 2px
+    #ffffff;
+}
+
+.find-mentor-card-heading p {
+  margin: 0;
+  overflow: hidden;
+  color: #61747c;
+  font-size: 12px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .find-mentor-rating {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 10px;
-  color: #f3c66c;
-  font-size: 10px;
+  gap: 9px;
 }
 
-.find-mentor-rating span {
-  color: #dce2e4;
+.find-mentor-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: #82949c;
 }
 
-.find-mentor-card-body {
-  display: grid;
-  gap: 14px;
-  padding: 15px;
-  background: #edf0f1;
+.find-mentor-rating > span {
+  color: #7d8d94;
+  font-size: 10.5px;
 }
 
 .find-mentor-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 7px;
 }
 
 .find-mentor-tags span {
-  padding: 6px 8px;
-  border: 1px solid #cfd7da;
+  padding: 6px 10px;
+  border: 1px solid #dce3e6;
   border-radius: 999px;
-  color: #3e5159;
-  background: rgba(255, 255, 255, 0.7);
-  font-size: 9px;
+  color: #364d57;
+  background: #f7f9fa;
+  font-size: 9.5px;
   font-weight: 700;
+  line-height: 1.2;
+}
+
+.find-mentor-card-divider {
+  height: 1px;
+  background: #edf0f2;
 }
 
 .find-mentor-card-meta {
   display: grid;
-  gap: 7px;
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  gap: 10px;
+}
+
+.find-mentor-card-meta > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.find-mentor-card-meta > div + div {
+  padding-left: 14px;
+  border-left: 1px solid #e2e7e9;
+}
+
+.find-mentor-card-meta svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #526a74;
 }
 
 .find-mentor-card-meta span {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #53676f;
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.find-mentor-card-meta strong {
+  color: #263f49;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.find-mentor-card-meta small {
+  color: #778991;
   font-size: 10px;
-  line-height: 1.45;
+  line-height: 1.25;
+}
+
+.find-mentor-card-actions {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    44px;
+  gap: 9px;
+  align-items: center;
+}
+
+.find-mentor-view-button,
+.find-mentor-bookmark-button {
+  min-height: 44px;
+  border-radius: 10px;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
 }
 
 .find-mentor-view-button {
-  width: 100%;
-  min-height: 42px;
-  border: 1px solid #0b7d69;
-  border-radius: 11px;
-  color: #ffffff;
-  background: #0b7d69;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 750;
-  cursor: pointer;
-}
-
-.find-mentor-pagination {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 12px;
-  align-items: center;
-  margin-top: 2px;
-}
-
-.find-mentor-pagination button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: max-content;
-  min-height: 42px;
-  padding: 0 15px;
-  border: 1px solid #d6dfe2;
-  border-radius: 999px;
-  color: #29434d;
+  gap: 7px;
+  border: 1px solid #ff5303;
+  color: #ffffff;
+  background: #ff5303;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.find-mentor-view-button:hover {
+  background: #e94b00;
+  box-shadow:
+    0 7px 16px
+    rgba(
+      255,
+      83,
+      3,
+      0.18
+    );
+  transform:
+    translateY(-1px);
+}
+
+.find-mentor-bookmark-button {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #dce3e7;
+  color: #405963;
   background: #ffffff;
-  font: inherit;
-  font-size: 10px;
-  font-weight: 700;
+}
+
+.find-mentor-bookmark-button:hover,
+.find-mentor-bookmark-button.is-bookmarked {
+  border-color: #ffb28f;
+  color: #ff5303;
+  background: #fff8f4;
+}
+
+.find-mentor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 2px;
+}
+
+.find-mentor-footer > span {
+  color: #647780;
+  font-size: 11px;
+}
+
+.find-mentor-pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.find-mentor-pagination button,
+.find-mentor-pagination strong {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+}
+
+.find-mentor-pagination button {
+  border: 1px solid #dce3e7;
+  color: #526a74;
+  background: #ffffff;
   cursor: pointer;
 }
 
-.find-mentor-pagination button:last-child {
-  justify-self: end;
-}
-
 .find-mentor-pagination button:disabled {
-  opacity: 0.4;
+  opacity: 0.38;
   cursor: not-allowed;
 }
 
-.find-mentor-pagination span {
-  color: #65777e;
-  font-size: 10px;
-  text-align: center;
+.find-mentor-pagination strong {
+  color: #ffffff;
+  background: #ff5303;
+  font-size: 11px;
+  font-weight: 800;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1120px) {
+  .find-mentor-controls {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(220px, 0.8fr);
+  }
+
+  .find-mentor-controls
+  .find-mentor-filter:last-child {
+    grid-column:
+      1 / -1;
+  }
+
   .find-mentor-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
   }
 }
 
-@media (max-width: 900px) {
-  .find-mentor-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
+@media (max-width: 760px) {
   .find-mentor-controls {
     grid-template-columns: 1fr;
+  }
+
+  .find-mentor-controls
+  .find-mentor-filter:last-child {
+    grid-column: auto;
+  }
+
+  .find-mentor-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .find-mentor-sort {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .find-mentor-sort select {
+    min-width: 150px;
   }
 }
 
@@ -272,36 +495,925 @@
     gap: 18px;
   }
 
+  .find-mentor-search input,
+  .find-mentor-filter select {
+    font-size: 16px;
+  }
+
   .find-mentor-grid {
     grid-template-columns: 1fr;
   }
 
-  .find-mentor-card {
-    width: 100%;
-  }
-
   .find-mentor-image-shell {
-    aspect-ratio: 4 / 4.5;
+    aspect-ratio: 16 / 10;
   }
 
-  .find-mentor-results-heading small {
-    display: none;
+  .find-mentor-name-row h3 {
+    font-size: 20px;
+  }
+
+  .find-mentor-card-heading p {
+    font-size: 12.5px;
+  }
+
+  .find-mentor-rating > span {
+    font-size: 11px;
+  }
+
+  .find-mentor-tags span {
+    font-size: 10px;
+  }
+
+  .find-mentor-card-meta strong {
+    font-size: 11.5px;
+  }
+
+  .find-mentor-card-meta small {
+    font-size: 10.5px;
+  }
+
+  .find-mentor-footer {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .find-mentor-pagination {
-    position: sticky;
-    bottom: 12px;
-    z-index: 5;
-    padding: 8px;
-    border: 1px solid #dbe2e4;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: blur(10px);
+    justify-content: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .find-mentor-card-meta {
+    grid-template-columns: 1fr;
   }
 
-  .find-mentor-pagination button {
+  .find-mentor-card-meta > div + div {
+    padding-left: 0;
+    padding-top: 10px;
+    border-top: 1px solid #e2e7e9;
+    border-left: 0;
+  }
+}
+
+
+/* =========================================================
+   IMAGE FIT + CLEAN FORM CONTROLS
+   ========================================================= */
+
+/* Keep mentor portraits fully visible inside the card instead
+   of cropping faces/shoulders with object-fit: cover. */
+.find-mentor-image-shell {
+  aspect-ratio: 4 / 3 !important;
+  display: grid;
+  place-items: center;
+  background: #eef2f3 !important;
+}
+
+.find-mentor-image {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  background: #eef2f3;
+}
+
+/* Initials placeholder should still fill the entire image area. */
+.find-mentor-image-placeholder {
+  width: 100%;
+  height: 100%;
+}
+
+/* Remove the browser/global inner input/select borders.
+   The outer .find-mentor-search / .find-mentor-filter container
+   is the only visible field border. */
+.find-mentor-search input,
+.find-mentor-filter select,
+.find-mentor-sort select {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+.find-mentor-search input {
+  padding: 0 !important;
+}
+
+.find-mentor-filter select {
+  padding: 0 28px 0 0 !important;
+}
+
+.find-mentor-sort select {
+  background-color: #ffffff !important;
+}
+
+/* Avoid extra native focus rectangles inside the field. */
+.find-mentor-search input:focus,
+.find-mentor-filter select:focus,
+.find-mentor-sort select:focus {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Make the whole wrapper feel like one control. */
+.find-mentor-search,
+.find-mentor-filter {
+  overflow: hidden;
+}
+
+@media (max-width: 680px) {
+  .find-mentor-image-shell {
+    aspect-ratio: 4 / 3 !important;
+  }
+}
+
+
+/* =========================================================
+   SORT CONTROL ALIGNMENT
+   Match the icon-inside-field pattern used by search and filters.
+   ========================================================= */
+
+.find-mentor-sort-group {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.find-mentor-sort-label {
+  color: #687b84;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.find-mentor-sort-control {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 190px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #dce3e7;
+  border-radius: 10px;
+  color: #526a74;
+  background: #ffffff;
+}
+
+.find-mentor-sort-control > svg {
+  flex: 0 0 auto;
+}
+
+.find-mentor-sort-control select {
+  width: 100%;
+  min-width: 0;
+  padding: 0 26px 0 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  color: #243e49;
+  background-color: transparent !important;
+  font: inherit;
+  font-size: 11px;
+}
+
+.find-mentor-sort-control:focus-within {
+  border-color: #aebbc1;
+  box-shadow: 0 0 0 3px rgba(17, 37, 47, 0.05);
+}
+
+@media (max-width: 760px) {
+  .find-mentor-sort-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .find-mentor-sort-control {
+    min-width: 170px;
+  }
+}
+
+
+/* =========================================================
+   FINAL CONTROL RESET
+   Remove browser/global borders from the actual input/select.
+   The rounded wrapper is the only visible field boundary.
+   ========================================================= */
+
+.find-mentor-search,
+.find-mentor-filter,
+.find-mentor-sort-control {
+  position: relative;
+}
+
+/* Strong reset to beat global app form styles. */
+.find-mentor-search input,
+.find-mentor-filter select,
+.find-mentor-sort-control select {
+  all: unset !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  color: #243e49 !important;
+  font-family: inherit !important;
+  cursor: text;
+}
+
+.find-mentor-search input {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+
+.find-mentor-filter select,
+.find-mentor-sort-control select {
+  padding-right: 28px !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  cursor: pointer;
+}
+
+/* Placeholder stays soft like the mockup. */
+.find-mentor-search input::placeholder {
+  color: #9aabb3 !important;
+  opacity: 1 !important;
+}
+
+/* Custom dropdown arrow so native select chrome never draws
+   a second inner field/border. */
+.find-mentor-control-chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  flex: 0 0 auto;
+  color: #526a74;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.find-mentor-sort-control .find-mentor-control-chevron {
+  right: 11px;
+}
+
+/* Make sure browser focus rings appear on the outer wrapper only. */
+.find-mentor-search:focus-within,
+.find-mentor-filter:focus-within,
+.find-mentor-sort-control:focus-within {
+  border-color: #aebbc1 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(17, 37, 47, 0.05) !important;
+}
+
+.find-mentor-search input:focus,
+.find-mentor-filter select:focus,
+.find-mentor-sort-control select:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Prevent any global form CSS from adding a second rectangle. */
+.find-mentor-search input:hover,
+.find-mentor-search input:active,
+.find-mentor-filter select:hover,
+.find-mentor-filter select:active,
+.find-mentor-sort-control select:hover,
+.find-mentor-sort-control select:active {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+@media (max-width: 680px) {
+  .find-mentor-search input,
+  .find-mentor-filter select {
+    font-size: 16px !important;
+  }
+}
+
+
+/* =========================================================
+   MENTOR PHOTO FIT - FINAL
+   Show the full source photo instead of zooming/cropping faces.
+   ========================================================= */
+
+body .dashboard-layout .find-mentor-image-shell {
+  aspect-ratio: 16 / 11 !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  background: #f1f3f4 !important;
+}
+
+body .dashboard-layout .find-mentor-image-shell
+img.find-mentor-image {
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: contain !important;
+  object-position: center center !important;
+
+  background: #f1f3f4 !important;
+}
+
+/* Do not affect the initials placeholder. */
+body .dashboard-layout
+.find-mentor-image-placeholder {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+
+/* =========================================================
+   CUSTOM FIND MENTOR DROPDOWNS
+   Replaces the browser/Windows native select menu so the
+   opened dropdown matches the Mentor Connect visual system.
+   ========================================================= */
+
+.find-mentor-dropdown {
+  position: relative;
+  min-width: 0;
+  z-index: 20;
+}
+
+.find-mentor-dropdown.is-open {
+  z-index: 80;
+}
+
+.find-mentor-dropdown-trigger {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+
+  width: 100%;
+  min-height: 52px;
+
+  padding: 0 15px;
+
+  border: 1px solid #dce3e7;
+  border-radius: 14px;
+
+  color: #526a74;
+  background: #ffffff;
+
+  font-family: inherit;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+.find-mentor-dropdown-trigger:hover {
+  border-color: #bcc9ce;
+  background: #fbfcfc;
+}
+
+.find-mentor-dropdown.is-open
+.find-mentor-dropdown-trigger {
+  border-color: #4c5867;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(76, 88, 103, 0.08);
+}
+
+.find-mentor-dropdown-trigger
+> svg:first-child {
+  flex: 0 0 auto;
+
+  color: #607780;
+}
+
+.find-mentor-dropdown.is-open
+.find-mentor-dropdown-trigger
+> svg:first-child {
+  color: #ff5303;
+}
+
+.find-mentor-dropdown-trigger
+> span {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: #243e49;
+
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.25;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.find-mentor-dropdown-chevron {
+  flex: 0 0 auto;
+
+  color: #627881;
+
+  transition:
+    transform 150ms ease;
+}
+
+.find-mentor-dropdown.is-open
+.find-mentor-dropdown-chevron {
+  transform:
+    rotate(180deg);
+}
+
+.find-mentor-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+
+  z-index: 90;
+
+  max-height: 280px;
+
+  overflow-y: auto;
+
+  padding: 7px;
+
+  border: 1px solid #dce3e7;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 18px 44px
+    rgba(17, 37, 47, 0.16);
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    #c5d0d4
+    transparent;
+}
+
+.find-mentor-dropdown-menu::-webkit-scrollbar {
+  width: 7px;
+}
+
+.find-mentor-dropdown-menu::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+
+  background: #c5d0d4;
+}
+
+.find-mentor-dropdown-option {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  width: 100%;
+  min-height: 42px;
+
+  padding: 9px 10px;
+
+  border: 0;
+  border-radius: 9px;
+
+  color: #344e58;
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.find-mentor-dropdown-option:hover {
+  color: #172f39;
+  background: #f5f7f8;
+}
+
+.find-mentor-dropdown-option.is-selected {
+  color: #b93d05;
+  background: #fff5f0;
+  font-weight: 700;
+}
+
+.find-mentor-dropdown-option.is-selected
+svg {
+  flex: 0 0 auto;
+
+  color: #ff5303;
+}
+
+.find-mentor-dropdown--compact {
+  min-width: 190px;
+}
+
+.find-mentor-dropdown--compact
+.find-mentor-dropdown-trigger {
+  min-height: 42px;
+
+  padding:
+    0
+    11px;
+
+  border-radius: 10px;
+}
+
+.find-mentor-dropdown--compact
+.find-mentor-dropdown-trigger
+> span {
+  font-size: 11px;
+}
+
+.find-mentor-dropdown--compact
+.find-mentor-dropdown-menu {
+  right: 0;
+  left: auto;
+
+  width: max-content;
+  min-width: 220px;
+}
+
+.find-mentor-dropdown--compact
+.find-mentor-dropdown-option {
+  min-height: 39px;
+
+  font-size: 11px;
+}
+
+/* Make sure global dashboard button rules do not turn these
+   custom controls into primary/secondary action buttons. */
+.dashboard-layout
+.find-mentor-dropdown-trigger,
+.dashboard-layout
+.find-mentor-dropdown-option {
+  box-shadow: none;
+  transform: none;
+}
+
+@media (max-width: 1120px) {
+  .find-mentor-dropdown--compact {
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 760px) {
+  .find-mentor-dropdown-trigger {
+    min-height: 52px;
+  }
+
+  .find-mentor-dropdown-trigger
+  > span {
+    font-size: 16px;
+  }
+
+  .find-mentor-dropdown-menu {
+    max-height: 250px;
+  }
+
+  .find-mentor-dropdown-option {
+    min-height: 46px;
+
+    font-size: 14px;
+  }
+
+  .find-mentor-dropdown--compact {
     width: 100%;
     min-width: 0;
-    padding: 0 10px;
   }
+
+  .find-mentor-dropdown--compact
+  .find-mentor-dropdown-trigger {
+    min-height: 44px;
+  }
+
+  .find-mentor-dropdown--compact
+  .find-mentor-dropdown-trigger
+  > span {
+    font-size: 13px;
+  }
+
+  .find-mentor-dropdown--compact
+  .find-mentor-dropdown-menu {
+    right: 0;
+    left: 0;
+
+    width: auto;
+    min-width: 0;
+  }
+}
+
+
+/* =========================================================
+   MENTOR PHOTO FRAMING - FINAL
+   Headshots should sit naturally in the frame:
+   - slightly taller photo area
+   - face positioned higher
+   - enough shoulder/neck visible
+   - no stretched image
+   ========================================================= */
+
+body .dashboard-layout
+.find-mentor-card
+.find-mentor-image-shell {
+  aspect-ratio: 4 / 3 !important;
+  display: block !important;
+  overflow: hidden !important;
+
+  background: #eef2f3 !important;
+}
+
+/*
+  Mentor profile photos are headshots, so "cover" gives a clean
+  edge-to-edge card image. The vertical position is biased upward
+  so the face sits naturally instead of being pushed toward the
+  bottom of the frame.
+*/
+body .dashboard-layout
+.find-mentor-card
+.find-mentor-image-shell
+img.find-mentor-image {
+  display: block !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: cover !important;
+  object-position: 50% 18% !important;
+
+  background: #eef2f3 !important;
+}
+
+/* Keep initials placeholder visually identical to photo sizing. */
+body .dashboard-layout
+.find-mentor-card
+.find-mentor-image-placeholder {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Tablet */
+@media (max-width: 1120px) {
+  body .dashboard-layout
+  .find-mentor-card
+  .find-mentor-image-shell {
+    aspect-ratio: 4 / 3 !important;
+  }
+}
+
+/* Mobile: a touch taller because there is only one card at a time. */
+@media (max-width: 680px) {
+  body .dashboard-layout
+  .find-mentor-card
+  .find-mentor-image-shell {
+    aspect-ratio: 5 / 4 !important;
+  }
+
+  body .dashboard-layout
+  .find-mentor-card
+  .find-mentor-image-shell
+  img.find-mentor-image {
+    object-position: 50% 16% !important;
+  }
+}
+
+
+/* =========================================================
+   FIND MENTOR VERIFIED BADGE — SMALLER
+   Keep verification visible without competing with the name.
+   ========================================================= */
+
+.find-mentor-name-row {
+  gap: 5px !important;
+}
+
+.find-mentor-verified {
+  width: 14px !important;
+  height: 14px !important;
+  flex: 0 0 14px !important;
+
+  box-shadow:
+    0 0 0 1px #ffffff !important;
+}
+
+.find-mentor-verified svg {
+  width: 9px !important;
+  height: 9px !important;
+  stroke-width: 2.1 !important;
+}
+
+@media (max-width: 680px) {
+  .find-mentor-name-row {
+    gap: 5px !important;
+  }
+
+  .find-mentor-verified {
+    width: 14px !important;
+    height: 14px !important;
+    flex-basis: 14px !important;
+  }
+
+  .find-mentor-verified svg {
+    width: 9px !important;
+    height: 9px !important;
+  }
+}
+
+
+/* =========================================================
+   VERIFIED BADGE — NAME ALIGNMENT
+   Same subtle treatment used on the public website.
+   ========================================================= */
+
+.find-mentor-name-row {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+
+  width: fit-content;
+  max-width: 100%;
+
+  line-height: 1 !important;
+}
+
+.find-mentor-name-row h3 {
+  margin: 0 !important;
+  line-height: 1 !important;
+}
+
+.find-mentor-verified {
+  position: relative;
+  top: -1px;
+
+  width: 13px !important;
+  height: 13px !important;
+  flex: 0 0 13px !important;
+
+  margin: 0 !important;
+
+  box-shadow:
+    0 0 0 1px #ffffff !important;
+}
+
+.find-mentor-verified svg {
+  width: 8px !important;
+  height: 8px !important;
+  stroke-width: 2.15 !important;
+}
+
+@media (max-width: 680px) {
+  .find-mentor-name-row {
+    gap: 4px !important;
+  }
+
+  .find-mentor-verified {
+    top: -1px;
+
+    width: 13px !important;
+    height: 13px !important;
+    flex-basis: 13px !important;
+  }
+
+  .find-mentor-verified svg {
+    width: 8px !important;
+    height: 8px !important;
+  }
+}
+
+
+/* =========================================================
+   VERIFIED BADGE — SINGLE ICON ONLY
+   Same treatment as the public website.
+   ========================================================= */
+
+.find-mentor-verified {
+  position: relative;
+  top: -1px;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: 14px !important;
+  height: 14px !important;
+  flex: 0 0 14px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  color: #1686f4 !important;
+  background: transparent !important;
+
+  box-shadow: none !important;
+}
+
+.find-mentor-verified svg {
+  display: block !important;
+
+  width: 14px !important;
+  height: 14px !important;
+
+  color: #1686f4 !important;
+
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2.2 !important;
+}
+
+@media (max-width: 680px) {
+  .find-mentor-verified {
+    width: 14px !important;
+    height: 14px !important;
+    flex-basis: 14px !important;
+  }
+
+  .find-mentor-verified svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+}
+
+
+/* =========================================================
+   VERIFIED BADGE — TRUE INLINE NAME ALIGNMENT
+   The name and verification mark now live in the same h3.
+   ========================================================= */
+
+.find-mentor-card-heading
+h3.find-mentor-name-row {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+
+  width: fit-content !important;
+  max-width: 100% !important;
+
+  margin: 0 !important;
+
+  line-height: 1.05 !important;
+  vertical-align: middle !important;
+}
+
+.find-mentor-name-row > span:first-child {
+  min-width: 0;
+
+  line-height: inherit;
+}
+
+.find-mentor-name-row
+.find-mentor-verified {
+  position: static !important;
+  top: auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: 14px !important;
+  height: 14px !important;
+  flex: 0 0 14px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  line-height: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  color: #1686f4 !important;
+  background: transparent !important;
+
+  box-shadow: none !important;
+
+  transform: none !important;
+}
+
+.find-mentor-name-row
+.find-mentor-verified svg {
+  display: block !important;
+
+  width: 14px !important;
+  height: 14px !important;
+
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2.2 !important;
+
+  transform: none !important;
 }

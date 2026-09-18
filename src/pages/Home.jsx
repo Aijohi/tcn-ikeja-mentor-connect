@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  BadgeCheck,
   ArrowRight,
   BriefcaseBusiness,
   CalendarDays,
@@ -66,7 +67,7 @@ const howSteps = [
   },
   {
     number: "05",
-    title: "Reflect",
+    title: "Review",
     copy:
       "Confirm attendance and share feedback after the session.",
     icon: Sparkles,
@@ -1243,7 +1244,7 @@ function Home() {
               </p>
 
               <h2>
-                From request to reflection,
+                From request to mentorship,
                 in five clear steps.
               </h2>
 
@@ -1453,10 +1454,23 @@ function Home() {
                                 </div>
                               )}
 
-                              <h3>
-                                {
-                                  mentor.name
-                                }
+                              <h3 className="hmc-public-mentor-name-row">
+                                <span>
+                                  {
+                                    mentor.name
+                                  }
+                                </span>
+
+                                <span
+                                  className="hmc-public-mentor-verified"
+                                  aria-label="TCN Ikeja approved mentor"
+                                  title="TCN Ikeja approved mentor"
+                                >
+                                  <BadgeCheck
+                                    size={14}
+                                    aria-hidden="true"
+                                  />
+                                </span>
                               </h3>
 
                               <p className="hmc-public-mentor-role">

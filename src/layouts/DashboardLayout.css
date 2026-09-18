@@ -630,3 +630,138 @@ span {
     letter-spacing: 0.1em !important;
   }
 }
+
+
+/* =========================================================
+   APPLICATION BRAND IN PAGE HEADER
+   The shared DashboardLayout now renders the full product
+   identity instead of the plain "TCN IKEJA MENTOR CONNECT"
+   eyebrow text.
+
+   Desktop:
+   - visible in the white content area
+   - Mentor Connect is dark and readable
+
+   Tablet / mobile:
+   - the existing responsive top header already shows the
+     same DashboardBrand, so this copy is hidden to avoid
+     duplicate branding.
+   ========================================================= */
+
+.dashboard-page-heading {
+  min-width: 0;
+}
+
+.dashboard-page-brand {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 0 16px;
+}
+
+.dashboard-page-brand .dashboard-brand {
+  gap: 9px;
+}
+
+.dashboard-page-brand .dashboard-brand-logo {
+  width: 54px;
+  height: 27px;
+}
+
+.dashboard-page-brand .dashboard-brand-text {
+  gap: 3px;
+}
+
+.dashboard-page-brand .dashboard-brand-text strong {
+  display: block !important;
+  margin: 0 !important;
+
+  color: #101419 !important;
+
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.05 !important;
+
+  white-space: nowrap;
+}
+
+.dashboard-page-brand .dashboard-brand-text small {
+  display: block !important;
+  margin: 0 !important;
+
+  color: #6f8095 !important;
+
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0.12em !important;
+
+  white-space: nowrap;
+}
+
+/* The responsive top header already contains DashboardBrand. */
+@media (max-width: 1180px) {
+  .dashboard-page-brand {
+    display: none !important;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE HEADER BRAND - SINGLE SOURCE OF TRUTH
+   Mentor Connect must never disappear against the white
+   tablet/mobile header.
+   ========================================================= */
+
+@media (max-width: 1180px) {
+  .dashboard-mobile-header .dashboard-brand-text strong {
+    display: block !important;
+
+    color: #101419 !important;
+
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1.05 !important;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text small {
+    display: block !important;
+
+    color: #6f8095 !important;
+
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0.11em !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-mobile-header .dashboard-brand-text strong {
+    display: block !important;
+
+    color: #101419 !important;
+
+    font-size: 12px !important;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text small {
+    display: block !important;
+
+    min-height: 0 !important;
+
+    color: #738397 !important;
+
+    font-size: 8px !important;
+    letter-spacing: 0.1em !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .dashboard-mobile-header .dashboard-brand-text strong {
+    font-size: 11px !important;
+  }
+
+  .dashboard-mobile-header .dashboard-brand-text small {
+    font-size: 7.5px !important;
+  }
+}
