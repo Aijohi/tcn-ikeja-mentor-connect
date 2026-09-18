@@ -1699,3 +1699,109 @@ body:has(.login-page) #root,
     width: 72px;
   }
 }
+
+/* =========================================================
+   FINAL AUTH BRAND + MOBILE USABILITY PASS
+   Keeps Login visually consistent with Register while making
+   the brand easier to see and preserving balanced spacing.
+   ========================================================= */
+
+/* Desktop and tablet brand visibility */
+.login-brand-row {
+  margin-bottom: 34px;
+}
+
+.login-brand {
+  gap: 12px;
+}
+
+.login-brand img {
+  width: 90px;
+  height: 52px;
+}
+
+.login-brand strong {
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.login-brand small {
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+@media (max-width: 1000px) {
+  .login-brand-row {
+    margin-bottom: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-form-inner {
+    padding-top: max(24px, env(safe-area-inset-top));
+  }
+
+  .login-brand-row {
+    margin-bottom: 30px;
+  }
+
+  .login-brand {
+    gap: 12px;
+  }
+
+  .login-brand img {
+    width: 94px;
+    height: 54px;
+  }
+
+  .login-brand strong {
+    font-size: 17px;
+    line-height: 1.2;
+  }
+
+  .login-brand small {
+    font-size: 9px;
+    line-height: 1.2;
+  }
+
+  .login-heading {
+    margin-top: 0;
+    margin-bottom: 26px;
+  }
+
+  /* Keep iPhone/Safari from zooming when a form field receives focus. */
+  .login-field input {
+    font-size: 16px;
+  }
+
+  .login-field input::placeholder {
+    font-size: 16px;
+  }
+
+  /* Keep both authentication actions visually equal. */
+  .login-submit,
+  .login-google,
+  .login-google-text {
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .login-brand-row {
+    margin-bottom: 26px;
+  }
+
+  .login-brand img {
+    width: 88px;
+    height: 51px;
+  }
+
+  .login-brand strong {
+    font-size: 16px;
+  }
+
+  .login-brand small {
+    font-size: 8px;
+  }
+}

@@ -1464,3 +1464,103 @@ body:has(.register-page) #root {
     width: 72px;
   }
 }
+
+/* =========================================================
+   FINAL AUTH BRAND + MOBILE USABILITY PASS
+   Keeps the approved layout while making the brand easier
+   to see and preserving comfortable spacing below it.
+   ========================================================= */
+
+/* Desktop and tablet brand visibility */
+.register-brand-row {
+  margin-bottom: 34px;
+}
+
+.register-brand {
+  gap: 12px;
+}
+
+.register-brand img {
+  width: 90px;
+  height: 52px;
+}
+
+.register-brand strong {
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.register-brand small {
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+@media (max-width: 1000px) {
+  .register-brand-row {
+    margin-bottom: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .register-form-inner {
+    padding-top: max(24px, env(safe-area-inset-top));
+  }
+
+  .register-brand-row {
+    margin-bottom: 30px;
+  }
+
+  .register-brand {
+    gap: 12px;
+  }
+
+  .register-brand img {
+    width: 94px;
+    height: 54px;
+  }
+
+  .register-brand strong {
+    font-size: 17px;
+    line-height: 1.2;
+  }
+
+  .register-brand small {
+    font-size: 9px;
+    line-height: 1.2;
+  }
+
+  .register-heading {
+    margin-top: 0;
+    margin-bottom: 24px;
+  }
+
+  /* Keep iPhone/Safari from zooming when a form control receives focus. */
+  .register-field input,
+  .register-select-wrap select {
+    font-size: 16px;
+  }
+
+  .register-field input::placeholder {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  .register-brand-row {
+    margin-bottom: 26px;
+  }
+
+  .register-brand img {
+    width: 88px;
+    height: 51px;
+  }
+
+  .register-brand strong {
+    font-size: 16px;
+  }
+
+  .register-brand small {
+    font-size: 8px;
+  }
+}

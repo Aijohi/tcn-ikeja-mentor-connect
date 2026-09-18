@@ -20,11 +20,13 @@
 }
 
 .hmc-public-mentor-heading > p {
-  margin: 0 0 14px;
+  margin: 0 0 10px;
   color: #ef8a73;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .2em;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: .17em;
+  text-transform: uppercase;
 }
 
 .hmc-public-mentor-heading h2 {
@@ -376,7 +378,13 @@
 /* mobile: 4 mentors per page, swipe one card at a time */
 @media (max-width: 680px) {
   .hmc-public-mentor-section { padding: 58px 0 68px; }
-  .hmc-public-mentor-heading > p { margin-bottom: 11px; font-size: 9px; }
+  .hmc-public-mentor-heading > p {
+    margin-bottom: 10px;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: .17em;
+  }
   .hmc-public-mentor-heading h2 { font-size: clamp(35px, 11vw, 47px); }
   .hmc-public-mentor-heading > span { margin-top: 15px; font-size: 12px; line-height:1.65; }
   .hmc-public-mentor-tabs { gap:8px; margin-top:24px; }
@@ -451,5 +459,471 @@
     flex: 0 0 calc(100vw - 68px);
     width: calc(100vw - 68px);
     max-width: 390px;
+  }
+}
+
+/* =========================================================
+   PRODUCTION OVERRIDES
+   Approved responsive mentor behaviour
+   ========================================================= */
+
+/* Filter tabs: active is burnt orange/brown, never white. */
+.hmc-public-mentor-section .hmc-public-mentor-tabs button {
+  color: #c7cdd2 !important;
+  background: #171b1f !important;
+  border-color: #353b41 !important;
+  font-weight: 500 !important;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-tabs button:hover {
+  color: #ffffff !important;
+  background: #1d2227 !important;
+  border-color: #4b535a !important;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-tabs button.is-active,
+.hmc-public-mentor-section .hmc-public-mentor-tabs button[aria-selected="true"] {
+  color: #ffffff !important;
+  background: #4f2b24 !important;
+  border-color: #b65438 !important;
+}
+
+/* Mobile single-card navigation controls.
+   Hidden on desktop/tablet. */
+.hmc-public-mentor-mobile-controls {
+  display: none;
+}
+
+/* Keep page pagination visible. */
+.hmc-public-mentor-section .hmc-public-mentor-pagination {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* The old swipe instruction is not required. */
+.hmc-public-mentor-mobile-hint {
+  display: none !important;
+}
+
+@media (max-width: 680px) {
+  /* Make the tabs horizontally scrollable without changing their colours. */
+  .hmc-public-mentor-section .hmc-public-mentor-tabs {
+    display: flex !important;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 0 0 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-tabs button {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 0 15px;
+    font-size: 10px;
+    font-weight: 500 !important;
+  }
+
+  /* Show one main mentor card while deliberately revealing the next card. */
+  .hmc-public-mentor-section .hmc-public-mentor-viewport {
+    width: calc(100vw - 28px) !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 0;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-grid {
+    display: flex !important;
+    gap: 12px;
+    width: max-content !important;
+    min-width: 100%;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-card {
+    flex: 0 0 calc(100vw - 72px) !important;
+    width: calc(100vw - 72px) !important;
+    max-width: 382px;
+    height: 430px;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  /* Actual previous / next mentor arrows for the 4-card mobile page. */
+  .hmc-public-mentor-mobile-controls {
+    display: grid !important;
+    grid-template-columns: 42px 1fr 42px;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .hmc-public-mentor-mobile-arrow {
+    display: inline-grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 50%;
+    color: #ffffff;
+    background: rgba(255,255,255,.055);
+    cursor: pointer;
+  }
+
+  .hmc-public-mentor-mobile-arrow:last-child {
+    justify-self: end;
+  }
+
+  .hmc-public-mentor-mobile-arrow:disabled {
+    opacity: .32;
+    cursor: not-allowed;
+  }
+
+  .hmc-public-mentor-mobile-count {
+    color: #9da6ab;
+    font-size: 10px;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  /* Page pagination controls groups of 4 mentors.
+     This is separate from the arrows above, which move card by card. */
+  .hmc-public-mentor-section .hmc-public-mentor-pagination {
+    display: grid !important;
+    grid-template-columns: 42px 1fr 42px !important;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-page-arrow {
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 42px;
+    min-height: 42px;
+    padding: 0 !important;
+    border-radius: 50%;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-page-arrow:last-child {
+    justify-self: end;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-page-arrow span {
+    display: none !important;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-page-numbers {
+    display: flex !important;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-page-item > button {
+    width: 36px;
+    height: 36px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-page-item > button.is-current {
+    color: #ffffff !important;
+    background: #4f2b24 !important;
+    border-color: #b65438 !important;
+  }
+}
+
+
+/* =========================================================
+   FINAL LIVE HOME MENTOR SECTION
+   Home.jsx is the component rendered by App.jsx.
+   ========================================================= */
+
+/* Keep the approved heading/copy colours exactly in this section. */
+.hmc-public-mentor-section .hmc-public-mentor-heading > p {
+  color: #ef8a73 !important;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-heading h2 {
+  color: #ffffff !important;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-heading > span {
+  color: #b8c0c6 !important;
+}
+
+/* Neutral rating treatment. No gold stars or gold "No ratings yet". */
+.hmc-public-mentor-section .hmc-public-mentor-stars {
+  color: #c8d0d4 !important;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-rating > span {
+  color: #aeb7bc !important;
+  font-weight: 500;
+}
+
+/* The card position count is information only. */
+.hmc-public-mentor-section .hmc-public-mentor-mobile-arrow {
+  display: none !important;
+}
+
+@media (max-width: 680px) {
+  .hmc-public-mentor-section .hmc-public-mentor-mobile-controls {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    grid-template-columns: none !important;
+    margin-top: 14px;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-mobile-count {
+    display: block;
+    width: 100%;
+    color: #9da6ab !important;
+    font-size: 10px;
+    font-weight: 500;
+    text-align: center;
+  }
+}
+
+/* Pagination is the only previous / next navigation control. */
+.hmc-public-mentor-section .hmc-public-mentor-pagination {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* =========================================================
+   MENTOR SECTION SPACING + READABILITY REFINEMENT
+   Final override for the live Home.jsx mentor section.
+   ========================================================= */
+
+/* Give the card content a little more readable scale without
+   allowing it to dominate the portrait. */
+.hmc-public-mentor-section .hmc-public-mentor-card-tags span {
+  font-size: 8.5px !important;
+  line-height: 1.25;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-content h3 {
+  font-size: 20.5px !important;
+  line-height: 1.08;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-role {
+  font-size: 10px !important;
+  line-height: 1.45;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-stars svg {
+  width: 13px;
+  height: 13px;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-rating > span {
+  font-size: 9px !important;
+  line-height: 1.4;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-meta span {
+  font-size: 9px !important;
+  line-height: 1.4;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-meta svg {
+  width: 14px;
+  height: 14px;
+}
+
+.hmc-public-mentor-section .hmc-public-mentor-view {
+  font-size: 10px !important;
+  line-height: 1.4;
+}
+
+/* More breathing room between:
+   cards -> pagination -> primary CTA. */
+.hmc-public-mentor-section .hmc-public-mentor-pagination {
+  margin-top: 44px !important;
+}
+
+.hmc-public-mentor-footer-cta {
+  margin-top: 38px !important;
+}
+
+/* Disabled pagination remains visibly present without looking active. */
+.hmc-public-mentor-section .hmc-public-mentor-page-arrow:disabled {
+  opacity: 0.46;
+}
+
+/* Tablet keeps the increased readability while preserving card balance. */
+@media (max-width: 1000px) {
+  .hmc-public-mentor-section .hmc-public-mentor-content h3 {
+    font-size: 21px !important;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-role {
+    font-size: 10.5px !important;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-card-tags span {
+    font-size: 8.5px !important;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-rating > span,
+  .hmc-public-mentor-section .hmc-public-mentor-meta span {
+    font-size: 9px !important;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-view {
+    font-size: 10px !important;
+  }
+}
+
+/* Mobile gets a little more size because the card is viewed one at a time. */
+@media (max-width: 680px) {
+  .hmc-public-mentor-section .hmc-public-mentor-content {
+    right: 16px;
+    bottom: 14px;
+    left: 16px;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-content h3 {
+    font-size: 22px !important;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-role {
+    font-size: 11px !important;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-card-tags span {
+    font-size: 8.5px !important;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-rating > span,
+  .hmc-public-mentor-section .hmc-public-mentor-meta span {
+    font-size: 9.5px !important;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-view {
+    font-size: 10.5px !important;
+  }
+
+  .hmc-public-mentor-section .hmc-public-mentor-pagination {
+    margin-top: 30px !important;
+  }
+
+  .hmc-public-mentor-footer-cta {
+    margin-top: 30px !important;
+  }
+}
+
+
+/* =========================================================
+   MENTOR SECTION CTA
+   Reuses the exact hero primary button component styles.
+   ========================================================= */
+
+.hmc-public-mentor-footer-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 38px;
+}
+
+@media (max-width: 680px) {
+  .hmc-public-mentor-footer-cta {
+    justify-content: flex-start;
+    margin-top: 30px;
+  }
+}
+
+
+/* =========================================================
+   MENTOR SUPPORTING COPY
+   Match the Accountability section description exactly in
+   colour, size and reading rhythm.
+   ========================================================= */
+
+.hmc-home
+.hmc-public-mentor-section
+.hmc-public-mentor-heading
+> span {
+  display: block;
+
+  max-width: 820px;
+
+  margin-top: 14px !important;
+
+  color: var(--ink-200) !important;
+
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  line-height: 1.7 !important;
+}
+
+@media (max-width: 680px) {
+  .hmc-home
+  .hmc-public-mentor-section
+  .hmc-public-mentor-heading
+  > span {
+    margin-top: 14px !important;
+
+    font-size: 16px !important;
+    line-height: 1.7 !important;
+  }
+}
+
+
+/* =========================================================
+   MENTOR CTA MOBILE SIZE
+   Keep the same hero pill appearance without stretching the
+   button across the mobile screen.
+   ========================================================= */
+
+.hmc-public-mentor-footer-cta {
+  display: flex;
+  justify-content: center;
+}
+
+.hmc-public-mentor-footer-cta
+.hmc-pill {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: max-content !important;
+
+  flex:
+    0
+    0
+    auto !important;
+}
+
+@media (max-width: 680px) {
+  .hmc-public-mentor-footer-cta {
+    justify-content: center !important;
+  }
+
+  .hmc-public-mentor-footer-cta
+  .hmc-pill {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: max-content !important;
+
+    flex:
+      0
+      0
+      auto !important;
   }
 }

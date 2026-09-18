@@ -5,15 +5,18 @@ import {
   Star,
   Users,
 } from "lucide-react";
+
 import {
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
+
 import {
   createPortal,
 } from "react-dom";
+
 import {
   Link,
 } from "react-router-dom";
@@ -51,9 +54,12 @@ function normaliseMentor(row) {
       row.years_of_experience ??
       null,
     spaces:
-      Number(
-        row.available_spaces ??
-          0,
+      Math.max(
+        Number(
+          row.available_spaces ??
+            0,
+        ),
+        0,
       ),
     rating:
       row.average_rating ===
@@ -63,9 +69,12 @@ function normaliseMentor(row) {
             row.average_rating,
           ),
     reviewCount:
-      Number(
-        row.review_count ??
-          0,
+      Math.max(
+        Number(
+          row.review_count ??
+            0,
+        ),
+        0,
       ),
   };
 }
@@ -101,13 +110,14 @@ function getSpecialisations(
         mentor,
       ).forEach(
         (value) => {
-          if (
+          const cleanValue =
             String(
               value || "",
-            ).trim()
-          ) {
+            ).trim();
+
+          if (cleanValue) {
             values.add(
-              value,
+              cleanValue,
             );
           }
         },
@@ -124,12 +134,8 @@ function getSpecialisations(
         first,
         second,
       ) =>
-        String(
-          first,
-        ).localeCompare(
-          String(
-            second,
-          ),
+        first.localeCompare(
+          second,
         ),
     ),
   ];
@@ -163,6 +169,21 @@ function PublicMentorShowcasePortal() {
     setError,
   ] = useState("");
 
+  const [
+    mentorPage,
+    setMentorPage,
+  ] = useState(1);
+
+  const [
+    mentorPageSize,
+    setMentorPageSize,
+  ] = useState(8);
+
+  const [
+    mentorSlideIndex,
+    setMentorSlideIndex,
+  ] = useState(0);
+
   const viewportRef =
     useRef(null);
 
@@ -180,6 +201,7 @@ function PublicMentorShowcasePortal() {
           window.requestAnimationFrame(
             findTarget,
           );
+
         return;
       }
 
@@ -244,14 +266,8 @@ function PublicMentorShowcasePortal() {
           "We could not load available mentors right now.",
         );
 
-        setMentors(
-          [],
-        );
-
-        setLoading(
-          false,
-        );
-
+        setMentors([]);
+        setLoading(false);
         return;
       }
 
@@ -274,6 +290,34 @@ function PublicMentorShowcasePortal() {
 
     return () => {
       mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    function updatePageSize() {
+      const width =
+        window.innerWidth;
+
+      if (width <= 1000) {
+        setMentorPageSize(4);
+        return;
+      }
+
+      setMentorPageSize(8);
+    }
+
+    updatePageSize();
+
+    window.addEventListener(
+      "resize",
+      updatePageSize,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "resize",
+        updatePageSize,
+      );
     };
   }, []);
 
@@ -308,22 +352,127 @@ function PublicMentorShowcasePortal() {
       selectedArea,
     ]);
 
+  const mentorTotalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        filteredMentors.length /
+          mentorPageSize,
+      ),
+    );
+
+  const safeMentorPage =
+    Math.min(
+      mentorPage,
+      mentorTotalPages,
+    );
+
+  const pagedMentors =
+    useMemo(() => {
+      const startIndex =
+        (safeMentorPage - 1) *
+        mentorPageSize;
+
+      return filteredMentors.slice(
+        startIndex,
+        startIndex +
+          mentorPageSize,
+      );
+    }, [
+      filteredMentors,
+      mentorPageSize,
+      safeMentorPage,
+    ]);
+
+  const paginationPages =
+    useMemo(() => {
+      if (
+        mentorTotalPages <= 5
+      ) {
+        return Array.from(
+          {
+            length:
+              mentorTotalPages,
+          },
+          (
+            _,
+            index,
+          ) => index + 1,
+        );
+      }
+
+      const pages =
+        new Set([
+          1,
+          mentorTotalPages,
+          safeMentorPage - 1,
+          safeMentorPage,
+          safeMentorPage + 1,
+        ]);
+
+      return Array.from(
+        pages,
+      )
+        .filter(
+          (page) =>
+            page >= 1 &&
+            page <=
+              mentorTotalPages,
+        )
+        .sort(
+          (
+            first,
+            second,
+          ) =>
+            first - second,
+        );
+    }, [
+      mentorTotalPages,
+      safeMentorPage,
+    ]);
+
+  useEffect(() => {
+    setMentorPage(1);
+    setMentorSlideIndex(0);
+  }, [
+    selectedArea,
+    mentorPageSize,
+  ]);
+
   useEffect(() => {
     if (
-      viewportRef.current
+      mentorPage >
+      mentorTotalPages
     ) {
-      viewportRef.current.scrollTo({
-        left: 0,
-        behavior: "smooth",
-      });
+      setMentorPage(
+        mentorTotalPages,
+      );
     }
   }, [
+    mentorPage,
+    mentorTotalPages,
+  ]);
+
+  useEffect(() => {
+    setMentorSlideIndex(0);
+
+    viewportRef.current?.scrollTo({
+      left: 0,
+      behavior: "auto",
+    });
+  }, [
+    safeMentorPage,
     selectedArea,
   ]);
 
-  function move(
-    direction,
-  ) {
+  function handleMentorScroll() {
+    if (
+      window.innerWidth >
+      680
+    ) {
+      return;
+    }
+
     const viewport =
       viewportRef.current;
 
@@ -331,19 +480,48 @@ function PublicMentorShowcasePortal() {
       return;
     }
 
-    const distance =
-      Math.max(
-        280,
-        viewport.clientWidth *
-          0.82,
+    const cards =
+      Array.from(
+        viewport.querySelectorAll(
+          ".mentor-showcase-redesign__card",
+        ),
       );
 
-    viewport.scrollBy({
-      left:
-        direction *
-        distance,
-      behavior: "smooth",
-    });
+    if (!cards.length) {
+      return;
+    }
+
+    let closestIndex = 0;
+    let closestDistance =
+      Number.POSITIVE_INFINITY;
+
+    cards.forEach(
+      (
+        card,
+        index,
+      ) => {
+        const distance =
+          Math.abs(
+            card.offsetLeft -
+              viewport.scrollLeft,
+          );
+
+        if (
+          distance <
+          closestDistance
+        ) {
+          closestDistance =
+            distance;
+
+          closestIndex =
+            index;
+        }
+      },
+    );
+
+    setMentorSlideIndex(
+      closestIndex,
+    );
   }
 
   if (!portalTarget) {
@@ -353,53 +531,22 @@ function PublicMentorShowcasePortal() {
   return createPortal(
     <section className="mentor-showcase-redesign">
       <div className="mentor-showcase-redesign__shell">
-        <div className="mentor-showcase-redesign__top">
-          <div className="mentor-showcase-redesign__heading">
-            <span>
-              APPROVED MENTORS
-            </span>
+        <div className="mentor-showcase-redesign__heading">
+          <span>
+            FIND A MENTOR
+          </span>
 
-            <h2>
-              Meet mentors ready to
-              support your growth.
-            </h2>
-          </div>
+          <h2>
+            Meet some of our approved
+            mentors.
+          </h2>
 
-          <div className="mentor-showcase-redesign__intro">
-            <p>
-              Explore experienced
-              mentors across different
-              areas. Create an account
-              to view a full profile
-              and request mentorship.
-            </p>
-
-            <div className="mentor-showcase-redesign__arrows">
-              <button
-                type="button"
-                aria-label="Previous mentors"
-                onClick={() =>
-                  move(-1)
-                }
-              >
-                <ArrowLeft
-                  size={18}
-                />
-              </button>
-
-              <button
-                type="button"
-                aria-label="Next mentors"
-                onClick={() =>
-                  move(1)
-                }
-              >
-                <ArrowRight
-                  size={18}
-                />
-              </button>
-            </div>
-          </div>
+          <p>
+            Discover approved TCN Ikeja
+            mentors who are currently
+            accepting mentorship requests
+            and have space for a new mentee.
+          </p>
         </div>
 
         {specialisations.length >
@@ -410,6 +557,10 @@ function PublicMentorShowcasePortal() {
                 <button
                   type="button"
                   key={area}
+                  aria-pressed={
+                    area ===
+                    selectedArea
+                  }
                   className={
                     area ===
                     selectedArea
@@ -432,13 +583,16 @@ function PublicMentorShowcasePortal() {
         {loading ? (
           <div className="mentor-showcase-redesign__state">
             <div className="loader" />
+
             <p>
-              Loading approved mentors...
+              Loading available mentors...
             </p>
           </div>
         ) : error ? (
           <div className="mentor-showcase-redesign__state">
-            <p>{error}</p>
+            <p>
+              {error}
+            </p>
           </div>
         ) : filteredMentors.length ===
           0 ? (
@@ -449,184 +603,394 @@ function PublicMentorShowcasePortal() {
             </p>
           </div>
         ) : (
-          <div
-            ref={
-              viewportRef
-            }
-            className="mentor-showcase-redesign__viewport"
-          >
-            <div className="mentor-showcase-redesign__track">
-              {filteredMentors.map(
-                (mentor) => {
-                  const areas =
-                    getAreas(
-                      mentor,
-                    ).slice(
-                      0,
-                      2,
-                    );
+          <>
+            <div
+              ref={
+                viewportRef
+              }
+              className="mentor-showcase-redesign__viewport"
+              onScroll={
+                handleMentorScroll
+              }
+            >
+              <div className="mentor-showcase-redesign__track">
+                {pagedMentors.map(
+                  (mentor) => {
+                    const areas =
+                      getAreas(
+                        mentor,
+                      ).slice(
+                        0,
+                        2,
+                      );
 
-                  return (
-                    <article
-                      className="mentor-showcase-redesign__card"
-                      key={
-                        mentor.id
-                      }
-                    >
-                      {mentor.photo ? (
-                        <img
-                          src={
-                            mentor.photo
-                          }
-                          alt=""
-                          className="mentor-showcase-redesign__image"
-                        />
-                      ) : (
-                        <div className="mentor-showcase-redesign__image mentor-showcase-redesign__placeholder">
-                          <span>
-                            {mentor.name
-                              .split(
-                                " ",
-                              )
-                              .filter(
-                                Boolean,
-                              )
-                              .slice(
-                                0,
-                                2,
-                              )
-                              .map(
-                                (
-                                  part,
-                                ) =>
-                                  part
-                                    .charAt(
-                                      0,
-                                    )
-                                    .toUpperCase(),
-                              )
-                              .join(
-                                "",
-                              ) ||
-                              "MC"}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="mentor-showcase-redesign__shade" />
-
-                      <div className="mentor-showcase-redesign__card-content">
-                        <span className="mentor-showcase-redesign__approved">
-                          TCN IKEJA APPROVED
-                        </span>
-
-                        <div className="mentor-showcase-redesign__areas">
-                          {areas.map(
-                            (area) => (
-                              <span
-                                key={
-                                  area
-                                }
-                              >
-                                {area}
-                              </span>
+                    const safeRating =
+                      mentor.rating ===
+                      null
+                        ? null
+                        : Math.min(
+                            5,
+                            Math.max(
+                              0,
+                              mentor.rating,
                             ),
-                          )}
-                        </div>
+                          );
 
-                        <h3>
-                          {
-                            mentor.name
-                          }
-                        </h3>
+                    const roundedRating =
+                      safeRating === null
+                        ? 0
+                        : Math.round(
+                            safeRating,
+                          );
 
-                        <p className="mentor-showcase-redesign__role">
-                          {
-                            mentor.role
-                          }
-                          {mentor.organisation
-                            ? ` · ${mentor.organisation}`
-                            : ""}
-                        </p>
-
-                        <div className="mentor-showcase-redesign__rating">
-                          <Star
-                            size={14}
-                            fill="currentColor"
+                    return (
+                      <article
+                        className="mentor-showcase-redesign__card"
+                        key={
+                          mentor.id
+                        }
+                      >
+                        {mentor.photo ? (
+                          <img
+                            src={
+                              mentor.photo
+                            }
+                            alt=""
+                            className="mentor-showcase-redesign__image"
                           />
-
-                          <strong>
-                            {mentor.rating !==
-                            null
-                              ? mentor.rating.toFixed(
-                                  1,
+                        ) : (
+                          <div className="mentor-showcase-redesign__image mentor-showcase-redesign__placeholder">
+                            <span>
+                              {mentor.name
+                                .split(
+                                  " ",
                                 )
-                              : "New"}
-                          </strong>
+                                .filter(
+                                  Boolean,
+                                )
+                                .slice(
+                                  0,
+                                  2,
+                                )
+                                .map(
+                                  (
+                                    part,
+                                  ) =>
+                                    part
+                                      .charAt(
+                                        0,
+                                      )
+                                      .toUpperCase(),
+                                )
+                                .join(
+                                  "",
+                                ) ||
+                                "MC"}
+                            </span>
+                          </div>
+                        )}
 
-                          <span>
-                            {mentor.reviewCount >
-                            0
-                              ? `(${mentor.reviewCount})`
-                              : "No ratings yet"}
-                          </span>
-                        </div>
+                        <div className="mentor-showcase-redesign__shade" />
 
-                        <div className="mentor-showcase-redesign__meta">
-                          <span>
-                            <BriefcaseBusiness
-                              size={14}
-                            />
-                            {mentor.years ===
-                            null
-                              ? "Experience not listed"
-                              : `${mentor.years} ${
-                                  mentor.years ===
-                                  1
-                                    ? "year"
-                                    : "years"
-                                } experience`}
-                          </span>
+                        <div className="mentor-showcase-redesign__card-content">
+                          {areas.length >
+                            0 && (
+                            <div className="mentor-showcase-redesign__areas">
+                              {areas.map(
+                                (
+                                  area,
+                                ) => (
+                                  <span
+                                    key={
+                                      area
+                                    }
+                                  >
+                                    {area}
+                                  </span>
+                                ),
+                              )}
+                            </div>
+                          )}
 
-                          <span>
-                            <Users
-                              size={14}
-                            />
+                          <h3>
                             {
-                              mentor.spaces
-                            }{" "}
-                            {mentor.spaces ===
-                            1
-                              ? "space"
-                              : "spaces"}{" "}
-                            available
-                          </span>
+                              mentor.name
+                            }
+                          </h3>
+
+                          <p className="mentor-showcase-redesign__role">
+                            {
+                              mentor.role
+                            }
+                            {mentor.organisation
+                              ? ` · ${mentor.organisation}`
+                              : ""}
+                          </p>
+
+                          <div className="mentor-showcase-redesign__rating">
+                            <div
+                              className="mentor-showcase-redesign__stars"
+                              aria-label={
+                                safeRating ===
+                                null
+                                  ? "No ratings yet"
+                                  : `${safeRating.toFixed(
+                                      1,
+                                    )} out of 5`
+                              }
+                            >
+                              {Array.from(
+                                {
+                                  length: 5,
+                                },
+                                (
+                                  _,
+                                  index,
+                                ) => (
+                                  <Star
+                                    key={
+                                      index
+                                    }
+                                    size={14}
+                                    fill={
+                                      index <
+                                      roundedRating
+                                        ? "currentColor"
+                                        : "none"
+                                    }
+                                    aria-hidden="true"
+                                  />
+                                ),
+                              )}
+                            </div>
+
+                            <span>
+                              {safeRating ===
+                              null
+                                ? "No ratings yet"
+                                : `${safeRating.toFixed(
+                                    1,
+                                  )}${
+                                    mentor.reviewCount >
+                                    0
+                                      ? ` (${mentor.reviewCount})`
+                                      : ""
+                                  }`}
+                            </span>
+                          </div>
+
+                          <div className="mentor-showcase-redesign__meta">
+                            <span>
+                              <BriefcaseBusiness
+                                size={14}
+                                aria-hidden="true"
+                              />
+
+                              {mentor.years ===
+                              null
+                                ? "Experience not listed"
+                                : `${mentor.years} ${
+                                    mentor.years ===
+                                    1
+                                      ? "year"
+                                      : "years"
+                                  } experience`}
+                            </span>
+
+                            <span>
+                              <Users
+                                size={14}
+                                aria-hidden="true"
+                              />
+
+                              {
+                                mentor.spaces
+                              }{" "}
+                              {mentor.spaces ===
+                              1
+                                ? "space"
+                                : "spaces"}{" "}
+                              available
+                            </span>
+                          </div>
+
+                          <Link
+                            to="/register"
+                            className="mentor-showcase-redesign__cta"
+                          >
+                            <span>
+                              View mentor
+                            </span>
+
+                            <ArrowRight
+                              size={15}
+                              aria-hidden="true"
+                            />
+                          </Link>
                         </div>
-
-                        <Link
-                          to="/register"
-                          className="mentor-showcase-redesign__cta"
-                        >
-                          View mentor
-                          <ArrowRight
-                            size={15}
-                          />
-                        </Link>
-                      </div>
-                    </article>
-                  );
-                },
-              )}
+                      </article>
+                    );
+                  },
+                )}
+              </div>
             </div>
-          </div>
-        )}
 
-        {filteredMentors.length >
-          1 && (
-          <div className="mentor-showcase-redesign__mobile-hint">
-            Swipe or use the arrows to
-            see more mentors.
-          </div>
+            {pagedMentors.length >
+              1 && (
+              <div
+                className="mentor-showcase-redesign__mobile-count"
+                aria-live="polite"
+              >
+                {mentorSlideIndex + 1}
+                {" / "}
+                {pagedMentors.length}
+              </div>
+            )}
+
+            <nav
+              className="mentor-showcase-redesign__pagination"
+              aria-label="Mentor pages"
+            >
+              <button
+                type="button"
+                className="mentor-showcase-redesign__page-arrow"
+                onClick={() =>
+                  setMentorPage(
+                    (
+                      current,
+                    ) =>
+                      Math.max(
+                        1,
+                        current - 1,
+                      ),
+                  )
+                }
+                disabled={
+                  safeMentorPage ===
+                  1
+                }
+                aria-label="Previous mentor page"
+              >
+                <ArrowLeft
+                  size={16}
+                  aria-hidden="true"
+                />
+
+                <span>
+                  Previous
+                </span>
+              </button>
+
+              <div className="mentor-showcase-redesign__page-numbers">
+                {paginationPages.map(
+                  (
+                    page,
+                    index,
+                  ) => {
+                    const previousPage =
+                      paginationPages[
+                        index -
+                          1
+                      ];
+
+                    const showGap =
+                      previousPage &&
+                      page -
+                        previousPage >
+                        1;
+
+                    return (
+                      <span
+                        className="mentor-showcase-redesign__page-item"
+                        key={
+                          page
+                        }
+                      >
+                        {showGap && (
+                          <i
+                            aria-hidden="true"
+                          >
+                            …
+                          </i>
+                        )}
+
+                        <button
+                          type="button"
+                          className={
+                            page ===
+                            safeMentorPage
+                              ? "is-current"
+                              : ""
+                          }
+                          aria-current={
+                            page ===
+                            safeMentorPage
+                              ? "page"
+                              : undefined
+                          }
+                          onClick={() =>
+                            setMentorPage(
+                              page,
+                            )
+                          }
+                        >
+                          {
+                            page
+                          }
+                        </button>
+                      </span>
+                    );
+                  },
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="mentor-showcase-redesign__page-arrow"
+                onClick={() =>
+                  setMentorPage(
+                    (
+                      current,
+                    ) =>
+                      Math.min(
+                        mentorTotalPages,
+                        current + 1,
+                      ),
+                  )
+                }
+                disabled={
+                  safeMentorPage ===
+                  mentorTotalPages
+                }
+                aria-label="Next mentor page"
+              >
+                <span>
+                  Next
+                </span>
+
+                <ArrowRight
+                  size={16}
+                  aria-hidden="true"
+                />
+              </button>
+            </nav>
+
+            <div className="mentor-showcase-redesign__footer-cta">
+              <Link
+                to="/register"
+                className="mentor-showcase-redesign__find-button"
+              >
+                <span>
+                  Find a mentor
+                </span>
+
+                <ArrowRight
+                  size={17}
+                  aria-hidden="true"
+                />
+              </Link>
+            </div>
+          </>
         )}
       </div>
     </section>,

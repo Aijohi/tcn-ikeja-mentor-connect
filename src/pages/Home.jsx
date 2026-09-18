@@ -208,6 +208,11 @@ function Home() {
   ] = useState(1);
 
   const [
+    mentorSlideIndex,
+    setMentorSlideIndex,
+  ] = useState(0);
+
+  const [
     mentorPageSize,
     setMentorPageSize,
   ] = useState(4);
@@ -714,6 +719,8 @@ function Home() {
   ]);
 
   useEffect(() => {
+    setMentorSlideIndex(0);
+
     mentorViewportRef.current?.scrollTo({
       left: 0,
       behavior: "smooth",
@@ -722,6 +729,60 @@ function Home() {
     safeMentorPage,
     selectedArea,
   ]);
+
+  function handleMentorViewportScroll() {
+    if (
+      window.innerWidth > 680
+    ) {
+      return;
+    }
+
+    const viewport =
+      mentorViewportRef.current;
+
+    if (!viewport) {
+      return;
+    }
+
+    const cards =
+      Array.from(
+        viewport.querySelectorAll(
+          ".hmc-public-mentor-card",
+        ),
+      );
+
+    if (!cards.length) {
+      return;
+    }
+
+    let closestIndex = 0;
+    let closestDistance =
+      Number.POSITIVE_INFINITY;
+
+    cards.forEach(
+      (card, index) => {
+        const distance =
+          Math.abs(
+            card.offsetLeft -
+              viewport.scrollLeft,
+          );
+
+        if (
+          distance <
+          closestDistance
+        ) {
+          closestDistance =
+            distance;
+          closestIndex =
+            index;
+        }
+      },
+    );
+
+    setMentorSlideIndex(
+      closestIndex,
+    );
+  }
 
   function goToSection(
     event,
@@ -1322,6 +1383,9 @@ function Home() {
                     mentorViewportRef
                   }
                   className="hmc-public-mentor-viewport"
+                  onScroll={
+                    handleMentorViewportScroll
+                  }
                 >
                   <div className="hmc-public-mentor-grid">
                     {pagedMentors.map(
@@ -1511,6 +1575,19 @@ function Home() {
                     )}
                   </div>
                 </div>
+                {pagedMentors.length > 1 && (
+                  <div
+                    className="hmc-public-mentor-mobile-controls"
+                    aria-label="Current mentor position on this page"
+                  >
+                    <span
+                      className="hmc-public-mentor-mobile-count"
+                      aria-live="polite"
+                    >
+                      {mentorSlideIndex + 1} / {pagedMentors.length}
+                    </span>
+                  </div>
+                )}
 
                 <div
                   className="hmc-public-mentor-pagination"
@@ -1636,6 +1713,24 @@ function Home() {
                       size={16}
                     />
                   </button>
+                </div>
+
+                <div className="hmc-public-mentor-footer-cta">
+                  <Link
+                    to="/register"
+                    className="hmc-pill hmc-pill--glass-primary"
+                  >
+                    <span>
+                      Find a mentor
+                    </span>
+
+                    <i>
+                      <ArrowRight
+                        size={18}
+                        aria-hidden="true"
+                      />
+                    </i>
+                  </Link>
                 </div>
               </>
             )}

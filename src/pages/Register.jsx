@@ -121,6 +121,11 @@ function Register() {
       "from",
     ) === "mentor";
 
+  const registrationDraftKey =
+    isMenteeHandoff
+      ? "mentorConnectRegistrationDraft:menteeHandoff"
+      : "mentorConnectRegistrationDraft:standard";
+
   const {
     signUp,
     signInWithGoogle,
@@ -129,13 +134,42 @@ function Register() {
   const [
     form,
     setForm,
-  ] = useState(() => ({
-    ...initialForm,
-    role:
-      isMenteeHandoff
-        ? "mentee"
-        : "",
-  }));
+  ] = useState(() => {
+    let savedDraft = null;
+
+    try {
+      const storedDraft =
+        window.sessionStorage.getItem(
+          registrationDraftKey,
+        );
+
+      if (storedDraft) {
+        savedDraft =
+          JSON.parse(
+            storedDraft,
+          );
+      }
+    } catch (error) {
+      console.warn(
+        "Unable to restore registration draft:",
+        error,
+      );
+    }
+
+    return {
+      ...initialForm,
+      ...savedDraft,
+      password: "",
+      confirmPassword: "",
+      role:
+        isMenteeHandoff
+          ? "mentee"
+          : (
+              savedDraft?.role ||
+              ""
+            ),
+    };
+  });
 
   const [
     showPassword,
@@ -223,6 +257,48 @@ function Register() {
     );
 
     setError("");
+  }
+
+  function saveRegistrationDraft() {
+    const draft = {
+      fullName:
+        form.fullName,
+      email:
+        form.email,
+      phoneNumber:
+        form.phoneNumber,
+      role:
+        form.role,
+      acceptedTerms:
+        form.acceptedTerms,
+    };
+
+    try {
+      window.sessionStorage.setItem(
+        registrationDraftKey,
+        JSON.stringify(
+          draft,
+        ),
+      );
+    } catch (error) {
+      console.warn(
+        "Unable to save registration draft:",
+        error,
+      );
+    }
+  }
+
+  function clearRegistrationDraft() {
+    try {
+      window.sessionStorage.removeItem(
+        registrationDraftKey,
+      );
+    } catch (error) {
+      console.warn(
+        "Unable to clear registration draft:",
+        error,
+      );
+    }
   }
 
   async function handleSubmit(
@@ -313,6 +389,8 @@ function Register() {
       );
       return;
     }
+
+    clearRegistrationDraft();
 
     navigate(
       "/check-email",
@@ -703,13 +781,14 @@ function Register() {
 
               <span>
                 I agree to the{" "}
-                <a
-                  href="/terms?from=register"
-                  target="_blank"
-                  rel="noreferrer"
+                <Link
+                  to="/terms?from=register"
+                  onClick={
+                    saveRegistrationDraft
+                  }
                 >
                   Terms &amp; Conditions
-                </a>
+                </Link>
                 , Privacy Notice, Code of
                 Conduct and Safety Guidelines.
               </span>
