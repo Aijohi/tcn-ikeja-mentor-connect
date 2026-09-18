@@ -1256,3 +1256,211 @@
   transition:
     background-color 9999s ease-out 0s;
 }
+
+
+/* =========================================================
+   PRODUCTION RESPONSIVE + ACCESSIBILITY PASS
+   ========================================================= */
+
+html:has(.register-page),
+body:has(.register-page),
+body:has(.register-page) #root {
+  margin: 0;
+  background: #ffffff !important;
+  background-image: none !important;
+}
+
+.register-page,
+.register-form-side,
+.register-form-inner {
+  background: #ffffff !important;
+  background-image: none !important;
+}
+
+.register-form-inner {
+  scroll-margin-top: 0;
+}
+
+/* Desktop / large tablet readability */
+.register-brand img {
+  width: 78px;
+  height: 46px;
+}
+
+.register-brand strong {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.register-brand small {
+  font-size: 8px;
+}
+
+.register-heading p {
+  font-size: 14px;
+}
+
+.register-field > span {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.register-field input,
+.register-select-wrap select {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.register-field input::placeholder {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.register-terms {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.register-terms a {
+  color: var(--register-orange-700);
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.register-terms a:hover,
+.register-terms a:focus-visible {
+  color: var(--register-orange-600);
+}
+
+@media (max-width: 1000px) {
+  .register-page {
+    display: block;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  .register-form-side {
+    min-height: 100dvh;
+    align-items: flex-start;
+  }
+
+  .register-form-inner {
+    min-height: 0;
+    padding-top: 28px;
+    padding-bottom: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .register-form-side {
+    min-height: 100dvh;
+  }
+
+  .register-form-inner {
+    width: 100%;
+    max-width: 430px;
+    min-height: 0;
+    padding:
+      max(22px, env(safe-area-inset-top))
+      20px
+      max(28px, env(safe-area-inset-bottom));
+  }
+
+  .register-brand-row {
+    margin-bottom: 24px;
+  }
+
+  .register-brand {
+    gap: 11px;
+  }
+
+  .register-brand img {
+    width: 76px;
+    height: 44px;
+  }
+
+  .register-brand strong {
+    font-size: 15px;
+    font-weight: 650;
+  }
+
+  .register-brand small {
+    font-size: 8px;
+  }
+
+  .register-heading {
+    margin-top: 0;
+    margin-bottom: 24px;
+  }
+
+  .register-heading h1 {
+    font-size: 27px;
+    line-height: 1.13;
+  }
+
+  .register-heading p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .register-form {
+    gap: 17px;
+  }
+
+  .register-field > span {
+    margin-bottom: 7px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .register-field input,
+  .register-select-wrap select {
+    min-height: 52px;
+    padding-inline: 15px;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .register-field input::placeholder {
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .register-terms {
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .register-terms input {
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+  }
+
+  .register-submit,
+  .register-google {
+    min-height: 52px;
+    font-size: 14px !important;
+  }
+
+  .register-bottom-signin,
+  .register-bottom-signin a {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .register-form-inner {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .register-brand img {
+    width: 72px;
+  }
+}

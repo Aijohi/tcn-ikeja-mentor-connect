@@ -1528,12 +1528,12 @@ body,
    ===================================================== */
 
 .login-google {
-  font-size: 14px !important;
+  font-size: 12px !important;
 }
 
 .login-google-text {
   display: inline-block;
-  font-size: 14px !important;
+  font-size: 12px !important;
   font-weight: 500 !important;
   line-height: 1.2 !important;
 }
@@ -1547,6 +1547,155 @@ body,
 @media (max-width: 1000px) {
   .login-google,
   .login-google-text {
+    font-size: 12px !important;
+  }
+}
+
+
+/* =========================================================
+   PRODUCTION MOBILE LAYOUT + ACCESSIBILITY PASS
+   ========================================================= */
+
+html:has(.login-page),
+body:has(.login-page),
+body:has(.login-page) #root,
+.login-page,
+.login-form-side,
+.login-form-inner {
+  background: #ffffff !important;
+  background-image: none !important;
+}
+
+.login-heading p {
+  font-size: 14px;
+}
+
+.login-field > span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.login-field input {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.login-field input::placeholder {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+@media (max-width: 1000px) {
+  .login-page {
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  .login-form-side {
+    min-height: 100dvh;
+    align-items: flex-start;
+  }
+
+  .login-form-inner {
+    min-height: 0;
+    padding-top: 28px;
+    padding-bottom: 30px;
+  }
+
+  .login-brand-row {
+    margin-bottom: 34px;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-form-inner {
+    width: 100%;
+    max-width: 430px;
+    min-height: 0;
+    padding:
+      max(22px, env(safe-area-inset-top))
+      20px
+      max(28px, env(safe-area-inset-bottom));
+  }
+
+  .login-brand-row {
+    margin-bottom: 30px;
+  }
+
+  .login-brand {
+    gap: 11px;
+  }
+
+  .login-brand img {
+    width: 76px;
+    height: 44px;
+  }
+
+  .login-brand strong {
+    font-size: 15px;
+    font-weight: 650;
+  }
+
+  .login-brand small {
+    font-size: 8px;
+  }
+
+  .login-heading {
+    margin-bottom: 26px;
+  }
+
+  .login-heading h1 {
+    font-size: 27px;
+    line-height: 1.13;
+  }
+
+  .login-heading p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .login-field > span {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .login-field input {
+    min-height: 52px;
+    padding-inline: 15px;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .login-field input::placeholder {
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .login-forgot,
+  .login-account-copy,
+  .login-account-copy a {
+    font-size: 14px;
+  }
+
+  .login-submit,
+  .login-google {
+    min-height: 52px;
     font-size: 14px !important;
+  }
+
+  .login-google-text {
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .login-form-inner {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .login-brand img {
+    width: 72px;
   }
 }

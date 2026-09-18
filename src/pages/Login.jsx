@@ -85,28 +85,40 @@ function Login() {
     useState("");
 
   useLayoutEffect(() => {
-    const resetScroll = () => {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: "auto",
-      });
+    const previousScrollRestoration =
+      "scrollRestoration" in window.history
+        ? window.history.scrollRestoration
+        : null;
 
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
     };
 
     resetScroll();
 
-    const frame =
-      window.requestAnimationFrame(
-        resetScroll,
-      );
+    const firstFrame = window.requestAnimationFrame(() => {
+      resetScroll();
+      window.requestAnimationFrame(resetScroll);
+    });
+
+    const timer = window.setTimeout(resetScroll, 120);
 
     return () => {
-      window.cancelAnimationFrame(
-        frame,
-      );
+      window.cancelAnimationFrame(firstFrame);
+      window.clearTimeout(timer);
+
+      if (
+        previousScrollRestoration &&
+        "scrollRestoration" in window.history
+      ) {
+        window.history.scrollRestoration = previousScrollRestoration;
+      }
     };
   }, []);
 

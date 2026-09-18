@@ -524,7 +524,7 @@ function Home() {
         window.innerWidth;
 
       if (width <= 680) {
-        setMentorPageSize(3);
+        setMentorPageSize(4);
         return;
       }
 
@@ -1637,16 +1637,6 @@ function Home() {
                     />
                   </button>
                 </div>
-
-                {mentorPageSize ===
-                  3 &&
-                  pagedMentors.length >
-                    1 && (
-                  <p className="hmc-public-mentor-mobile-hint">
-                    Swipe to see the other
-                    mentors on this page.
-                  </p>
-                )}
               </>
             )}
           </div>
@@ -2042,8 +2032,8 @@ function Home() {
                 Member sign in
               </Link>
 
-              <Link to="/admin/login">
-                TCN Administrator
+              <Link to="/terms?from=website">
+                Terms &amp; Conditions
               </Link>
             </div>
           </div>

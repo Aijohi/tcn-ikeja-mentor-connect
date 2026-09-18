@@ -373,7 +373,7 @@
   .hmc-testimonial-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
-/* mobile: 3 mentors per page, swipe one card at a time */
+/* mobile: 4 mentors per page, swipe one card at a time */
 @media (max-width: 680px) {
   .hmc-public-mentor-section { padding: 58px 0 68px; }
   .hmc-public-mentor-heading > p { margin-bottom: 11px; font-size: 9px; }
@@ -399,8 +399,8 @@
     min-width: 100%;
   }
   .hmc-public-mentor-card {
-    flex: 0 0 calc(100vw - 42px);
-    width: calc(100vw - 42px);
+    flex: 0 0 calc(100vw - 68px);
+    width: calc(100vw - 68px);
     max-width: 380px;
     height: 430px;
     scroll-snap-align: start;
@@ -433,4 +433,23 @@
   }
   .hmc-testimonial-grid { grid-template-columns:1fr; }
   .hmc-testimonial-card { min-height:0; padding:20px; }
+}
+
+
+/* Mobile mentor discovery cue: show a piece of the next card instead of instructional copy. */
+.hmc-public-mentor-mobile-hint {
+  display: none !important;
+}
+
+@media (max-width: 680px) {
+  .hmc-public-mentor-viewport {
+    width: calc(100vw - 28px);
+    padding-right: 0;
+  }
+
+  .hmc-public-mentor-card {
+    flex: 0 0 calc(100vw - 68px);
+    width: calc(100vw - 68px);
+    max-width: 390px;
+  }
 }
