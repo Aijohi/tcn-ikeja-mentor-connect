@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BriefcaseBusiness,
+  Camera,
   ChevronDown,
   HeartHandshake,
   Languages,
+  Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -12,6 +14,34 @@ import { useAuth } from "../context/AuthContext";
 import DashboardLayout from "../layouts/DashboardLayout";
 
 import "./BecomeAMentor.css";
+
+const PHOTO_BUCKET =
+  "mentor-profile-photos";
+
+function getStoragePathFromPublicUrl(
+  publicUrl,
+) {
+  if (!publicUrl) {
+    return "";
+  }
+
+  const marker =
+    `/storage/v1/object/public/${PHOTO_BUCKET}/`;
+
+  const markerIndex =
+    publicUrl.indexOf(marker);
+
+  if (markerIndex === -1) {
+    return "";
+  }
+
+  return decodeURIComponent(
+    publicUrl.slice(
+      markerIndex +
+        marker.length,
+    ),
+  );
+}
 
 const mentorshipCategories = [
   "Career development",
@@ -40,10 +70,33 @@ const initialForm = {
 
 function BecomeAMentor() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const {
+    user,
+    profile,
+    refreshProfile,
+  } = useAuth();
+
+  const photoInputRef =
+    useRef(null);
 
   const [form, setForm] =
     useState(initialForm);
+
+  const [photoUrl, setPhotoUrl] =
+    useState(
+      profile?.profile_photo_url ||
+        "",
+    );
+
+  const [
+    uploadingPhoto,
+    setUploadingPhoto,
+  ] = useState(false);
+
+  const [
+    deletingPhoto,
+    setDeletingPhoto,
+  ] = useState(false);
 
   const [
     checkingExistingApplication,
@@ -55,6 +108,13 @@ function BecomeAMentor() {
 
   const [error, setError] =
     useState("");
+
+  useEffect(() => {
+    setPhotoUrl(
+      profile?.profile_photo_url ||
+        "",
+    );
+  }, [profile?.profile_photo_url]);
 
   useEffect(() => {
     let isMounted = true;
@@ -195,6 +255,263 @@ function BecomeAMentor() {
     setError("");
   }
 
+  async function uploadPhoto(
+    event,
+  ) {
+    const file =
+      event.target.files?.[0];
+
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    setError("");
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (
+      !allowedTypes.includes(
+        file.type,
+      )
+    ) {
+      setError(
+        "Please choose a JPG, PNG or WebP image.",
+      );
+      return;
+    }
+
+    if (
+      file.size >
+      5 * 1024 * 1024
+    ) {
+      setError(
+        "Please choose an image smaller than 5 MB.",
+      );
+      return;
+    }
+
+    if (!user?.id) {
+      setError(
+        "We could not identify your account. Please sign in again.",
+      );
+      return;
+    }
+
+    setUploadingPhoto(true);
+
+    const extension =
+      (
+        file.name
+          .split(".")
+          .pop() ||
+        "jpg"
+      )
+        .toLowerCase()
+        .replace(
+          /[^a-z0-9]/g,
+          "",
+        ) ||
+      "jpg";
+
+    const filePath =
+      `${user.id}/mentor-application-${Date.now()}.${extension}`;
+
+    const {
+      error: uploadError,
+    } = await supabase.storage
+      .from(PHOTO_BUCKET)
+      .upload(
+        filePath,
+        file,
+        {
+          upsert: false,
+          cacheControl:
+            "3600",
+        },
+      );
+
+    if (uploadError) {
+      console.error(
+        "Unable to upload mentor application photo:",
+        uploadError.message,
+      );
+
+      setError(
+        uploadError.message ||
+          "We could not upload your profile photo.",
+      );
+
+      setUploadingPhoto(false);
+      return;
+    }
+
+    const {
+      data:
+        publicUrlData,
+    } = supabase.storage
+      .from(PHOTO_BUCKET)
+      .getPublicUrl(
+        filePath,
+      );
+
+    const newPhotoUrl =
+      publicUrlData
+        ?.publicUrl;
+
+    if (!newPhotoUrl) {
+      await supabase.storage
+        .from(PHOTO_BUCKET)
+        .remove([filePath]);
+
+      setError(
+        "The image uploaded, but we could not prepare its link.",
+      );
+
+      setUploadingPhoto(false);
+      return;
+    }
+
+    const oldPhotoUrl =
+      photoUrl;
+
+    const {
+      error:
+        profilePhotoError,
+    } = await supabase.rpc(
+      "set_my_profile_photo_url",
+      {
+        p_profile_photo_url:
+          newPhotoUrl,
+      },
+    );
+
+    if (
+      profilePhotoError
+    ) {
+      console.error(
+        "Unable to save mentor application photo:",
+        profilePhotoError.message,
+      );
+
+      await supabase.storage
+        .from(PHOTO_BUCKET)
+        .remove([filePath]);
+
+      setError(
+        profilePhotoError.message ||
+          "We could not save your profile photo.",
+      );
+
+      setUploadingPhoto(false);
+      return;
+    }
+
+    setPhotoUrl(
+      newPhotoUrl,
+    );
+
+    await refreshProfile?.();
+
+    const oldPath =
+      getStoragePathFromPublicUrl(
+        oldPhotoUrl,
+      );
+
+    if (
+      oldPath &&
+      oldPath !== filePath
+    ) {
+      const {
+        error:
+          oldPhotoDeleteError,
+      } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .remove([oldPath]);
+
+      if (
+        oldPhotoDeleteError
+      ) {
+        console.warn(
+          "The new photo was saved, but the old file could not be removed:",
+          oldPhotoDeleteError.message,
+        );
+      }
+    }
+
+    setUploadingPhoto(false);
+  }
+
+  async function deletePhoto() {
+    if (
+      !photoUrl ||
+      deletingPhoto
+    ) {
+      return;
+    }
+
+    setError("");
+    setDeletingPhoto(true);
+
+    const oldPhotoUrl =
+      photoUrl;
+
+    const {
+      error: clearError,
+    } = await supabase.rpc(
+      "clear_my_profile_photo_url",
+    );
+
+    if (clearError) {
+      console.error(
+        "Unable to remove mentor application photo:",
+        clearError.message,
+      );
+
+      setError(
+        clearError.message ||
+          "We could not remove your profile photo.",
+      );
+
+      setDeletingPhoto(false);
+      return;
+    }
+
+    setPhotoUrl("");
+
+    await refreshProfile?.();
+
+    const oldPath =
+      getStoragePathFromPublicUrl(
+        oldPhotoUrl,
+      );
+
+    if (oldPath) {
+      const {
+        error:
+          storageDeleteError,
+      } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .remove([oldPath]);
+
+      if (
+        storageDeleteError
+      ) {
+        console.warn(
+          "The photo reference was removed, but the old storage file could not be deleted:",
+          storageDeleteError.message,
+        );
+      }
+    }
+
+    setDeletingPhoto(false);
+  }
+
   function splitCommaSeparatedValues(
     value,
   ) {
@@ -221,6 +538,23 @@ function BecomeAMentor() {
       splitCommaSeparatedValues(
         form.languages,
       );
+
+    if (!photoUrl) {
+      setError(
+        "Please upload a profile photo before submitting your mentor application.",
+      );
+      return;
+    }
+
+    if (
+      uploadingPhoto ||
+      deletingPhoto
+    ) {
+      setError(
+        "Please wait for your profile photo update to finish.",
+      );
+      return;
+    }
 
     if (
       form.biography.trim().length <
@@ -376,6 +710,151 @@ function BecomeAMentor() {
               team before you can
               create a mentor account.
             </p>
+          </div>
+        </section>
+
+        <section className="mentor-application-section mentor-application-photo-section">
+          <div className="mentor-application-section-heading">
+            <Camera
+              size={21}
+            />
+
+            <div>
+              <h3>
+                Profile photo
+              </h3>
+
+              <p>
+                Add a clear and recent
+                photo of yourself. This
+                photo will be used on
+                your mentor profile if
+                your application is
+                approved.
+              </p>
+            </div>
+          </div>
+
+          <div className="mentor-application-photo-layout">
+            <div className="mentor-application-photo-column">
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+                onChange={uploadPhoto}
+                disabled={
+                  submitting ||
+                  uploadingPhoto ||
+                  deletingPhoto
+                }
+              />
+
+              <div
+                className={`mentor-application-photo-preview ${
+                  photoUrl
+                    ? "has-photo"
+                    : ""
+                }`}
+              >
+                {photoUrl ? (
+                  <img
+                    src={photoUrl}
+                    alt="Your mentor profile preview"
+                  />
+                ) : (
+                  <div className="mentor-application-photo-empty">
+                    <Camera
+                      size={28}
+                      aria-hidden="true"
+                    />
+
+                    <span>
+                      Add profile photo
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <small className="mentor-application-photo-help">
+                JPG, PNG or WebP. Maximum 5 MB.
+              </small>
+            </div>
+
+            <div className="mentor-application-photo-copy">
+              <span className="mentor-application-photo-kicker">
+                PROFILE IMAGE
+              </span>
+
+              <h4>
+                Help mentees recognise
+                you.
+              </h4>
+
+              <p>
+                Use a clear photo with
+                your face visible. Once
+                your mentor application
+                is approved and your
+                mentor account is
+                created, this same photo
+                will appear on your
+                mentor profile and in
+                mentor discovery.
+              </p>
+
+              <div className="mentor-application-photo-actions">
+                <button
+                  type="button"
+                  className="mentor-application-photo-upload"
+                  onClick={() =>
+                    photoInputRef.current?.click()
+                  }
+                  disabled={
+                    submitting ||
+                    uploadingPhoto ||
+                    deletingPhoto
+                  }
+                >
+                  <Camera
+                    size={16}
+                    aria-hidden="true"
+                  />
+
+                  <span>
+                    {uploadingPhoto
+                      ? "Uploading..."
+                      : photoUrl
+                        ? "Replace photo"
+                        : "Upload photo"}
+                  </span>
+                </button>
+
+                {photoUrl && (
+                  <button
+                    type="button"
+                    className="mentor-application-photo-remove"
+                    onClick={deletePhoto}
+                    disabled={
+                      submitting ||
+                      uploadingPhoto ||
+                      deletingPhoto
+                    }
+                  >
+                    <Trash2
+                      size={16}
+                      aria-hidden="true"
+                    />
+
+                    <span>
+                      {deletingPhoto
+                        ? "Removing..."
+                        : "Remove photo"}
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -810,12 +1289,19 @@ function BecomeAMentor() {
             type="submit"
             className="mentor-application-submit"
             disabled={
-              submitting
+              submitting ||
+              uploadingPhoto ||
+              deletingPhoto ||
+              !photoUrl
             }
           >
             {submitting
               ? "Submitting application..."
-              : "Submit application"}
+              : uploadingPhoto
+                ? "Uploading photo..."
+                : deletingPhoto
+                  ? "Updating photo..."
+                  : "Submit application"}
           </button>
         </div>
       </form>
