@@ -806,18 +806,6 @@ function SubmittedApplications({
   return (
     <>
       <section className="admin-list-section admin-submitted-applications-section">
-        <div className="admin-workflow-section-heading admin-workflow-section-heading--no-kicker">
-          <div>
-            <h2>
-              Submitted mentor applications
-            </h2>
-
-            <p>
-              Review each mentor’s submitted information and approve or decline the application.
-            </p>
-          </div>
-        </div>
-
         <div className="admin-application-toolbar">
           <div className="admin-search-field">
             <Search
