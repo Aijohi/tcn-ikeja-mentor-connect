@@ -31,19 +31,13 @@ const PHOTO_BUCKET =
   "mentor-profile-photos";
 
 const mentorshipCategories = [
-  "Career Development",
-  "Business & Entrepreneurship",
-  "Leadership & Management",
-  "Faith, Spirituality & Ministry",
-  "Personal Development",
-  "Education & Academic Development",
-  "Technology & Digital Skills",
-  "Finance & Stewardship",
-  "Creative Arts, Media & Communication",
-  "Family, Relationships & Parenting",
-  "Health & Wellbeing",
-  "Trades & Vocational Skills",
-  "Social Impact",
+  "Career development",
+  "Business and entrepreneurship",
+  "Leadership",
+  "Faith and spiritual growth",
+  "Personal development",
+  "Product design",
+  "Technology",
 ];
 
 const meetingFormatOptions = [
@@ -79,7 +73,7 @@ const initialForm = {
   organisation: "",
   yearsOfExperience: "",
   biography: "",
-  
+  expertise: "",
   categories: [],
   languages: "English",
   meetingFormats: [
@@ -709,7 +703,13 @@ function CompleteProfile() {
     event.preventDefault();
 
     setError("");
-const languages =
+
+    const expertise =
+      convertTextToArray(
+        form.expertise,
+      );
+
+    const languages =
       convertTextToArray(
         form.languages,
       );
@@ -792,12 +792,24 @@ const languages =
 
       return;
     }
-if (
+
+    if (
+      expertise.length ===
+      0
+    ) {
+      setError(
+        "Please provide at least one area of expertise.",
+      );
+
+      return;
+    }
+
+    if (
       form.categories.length ===
       0
     ) {
       setError(
-        "Please select at least one mentoring area.",
+        "Please select at least one mentorship area.",
       );
 
       return;
@@ -858,7 +870,8 @@ if (
           form.organisation.trim() ||
           null,
 
-        p_expertise: form.categories,
+        p_expertise:
+          expertise,
 
         p_mentorship_categories:
           form.categories,
@@ -1386,7 +1399,29 @@ if (
               </small>
             </label>
 
-            
+            <label>
+              Areas of expertise
+
+              <input
+                type="text"
+                name="expertise"
+                value={
+                  form.expertise
+                }
+                onChange={
+                  updateForm
+                }
+                placeholder="Product design, leadership, career growth"
+                disabled={
+                  busy
+                }
+                required
+              />
+
+              <small>
+                Separate each area with a comma.
+              </small>
+            </label>
 
             <fieldset className="mentor-onboarding-options">
               <legend>

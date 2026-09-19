@@ -566,7 +566,13 @@ function MentorApplicationStatus() {
     event.preventDefault();
     setError("");
     setSuccess("");
-const categories =
+
+    const expertise =
+      convertTextToArray(
+        form.expertise,
+      );
+
+    const categories =
       convertTextToArray(
         form.mentorshipCategories,
       );
@@ -602,7 +608,17 @@ const categories =
       );
       return;
     }
-if (
+
+    if (
+      expertise.length === 0
+    ) {
+      setError(
+        "Please provide at least one area of expertise.",
+      );
+      return;
+    }
+
+    if (
       categories.length === 0
     ) {
       setError(
@@ -657,7 +673,8 @@ if (
           form.organisation.trim() ||
           null,
 
-        p_expertise: form.categories,
+        p_expertise:
+          expertise,
 
         p_mentorship_categories:
           categories,
@@ -1128,10 +1145,33 @@ function ApplicationForm({
           </small>
         </label>
 
-        
+        <label>
+          Areas of expertise
+
+          <input
+            type="text"
+            name="expertise"
+            value={
+              form.expertise
+            }
+            onChange={
+              updateForm
+            }
+            placeholder="Product design, leadership, career growth"
+            disabled={
+              submitting
+            }
+            required
+          />
+
+          <small className="field-help">
+            Separate each area with
+            a comma.
+          </small>
+        </label>
 
         <label>
-          Areas you want to mentor in
+          Mentorship categories
 
           <input
             type="text"

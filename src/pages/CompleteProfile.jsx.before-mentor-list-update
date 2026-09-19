@@ -79,7 +79,7 @@ const initialForm = {
   organisation: "",
   yearsOfExperience: "",
   biography: "",
-  
+  expertise: "",
   categories: [],
   languages: "English",
   meetingFormats: [

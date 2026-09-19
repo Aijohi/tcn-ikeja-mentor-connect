@@ -226,11 +226,22 @@ function MentorInterestList() {
   }, []);
 
   if (loading) {
+    return null;
+  }
+
+  if (error) {
     return (
-      <section className="admin-list-section">
-        <AdminLoadingState />
-      </section>
+      <p
+        className="form-error"
+        role="alert"
+      >
+        {error}
+      </p>
     );
+  }
+
+  if (registrations.length === 0) {
+    return null;
   }
 
   return (
@@ -242,11 +253,11 @@ function MentorInterestList() {
           </span>
 
           <h2>
-            Registered interest
+            Mentor registrations awaiting application
           </h2>
 
           <p>
-            These people selected “I want to mentor” but have not submitted the mentor application yet. No approval action is required until an application is submitted.
+            These people selected “I want to mentor” but have not submitted the mentor application yet. This section only appears when someone is still at that stage.
           </p>
         </div>
 
@@ -258,23 +269,7 @@ function MentorInterestList() {
         </strong>
       </div>
 
-      {error && (
-        <p
-          className="form-error"
-          role="alert"
-        >
-          {error}
-        </p>
-      )}
-
-      {registrations.length ===
-      0 ? (
-        <AdminEmptyState
-          title="No incomplete mentor registrations"
-          description="People who register an interest in mentoring but have not submitted the mentor application will appear here."
-        />
-      ) : (
-        <div className="admin-table-wrapper admin-table-wrapper--flush">
+      <div className="admin-table-wrapper admin-table-wrapper--flush">
           <table className="admin-data-table admin-mentor-interest-table">
             <thead>
               <tr>
@@ -338,7 +333,6 @@ function MentorInterestList() {
             </tbody>
           </table>
         </div>
-      )}
     </section>
   );
 }
@@ -440,10 +434,10 @@ function SubmittedApplications({
   ] = useState("");
 
   async function loadApplications({
-    keepDrawerOpen = false,
+    keepModalOpen = false,
   } = {}) {
     if (
-      !keepDrawerOpen
+      !keepModalOpen
     ) {
       setLoading(true);
     }
@@ -602,7 +596,7 @@ function SubmittedApplications({
     );
 
     if (
-      keepDrawerOpen &&
+      keepModalOpen &&
       selectedApplication
     ) {
       setSelectedApplication(
@@ -900,7 +894,7 @@ function SubmittedApplications({
     setFeedback("");
 
     await loadApplications({
-      keepDrawerOpen:
+      keepModalOpen:
         true,
     });
 
@@ -929,7 +923,7 @@ function SubmittedApplications({
             </h2>
 
             <p>
-              Mentors submit one application. Membership verification, application review, recommendation and final approval are handled from the same application record.
+              Submitted mentor applications appear here. Review the mentor’s details, confirm the membership check, record the Mentor Onboarding recommendation, and complete the Operations and Governance decision.
             </p>
           </div>
         </div>
@@ -1040,12 +1034,12 @@ function SubmittedApplications({
                 <thead>
                   <tr>
                     <th>Applicant</th>
-                    <th>Membership</th>
+                    <th>Membership check</th>
                     <th>Current role</th>
                     <th>Experience</th>
                     <th>Mentoring areas</th>
                     <th>Review stage</th>
-                    <th>Application status</th>
+                    <th>Decision status</th>
                     <th>Submitted</th>
                     <th aria-label="Action" />
                   </tr>
@@ -1087,7 +1081,7 @@ function SubmittedApplications({
                               application.applicant
                                 ?.membership_verified
                                 ? "Verified"
-                                : "Needs verification"
+                                : "Not verified"
                             }
                           />
                         </td>
@@ -1271,7 +1265,7 @@ function SubmittedApplications({
       </section>
 
       {selectedApplication && (
-        <ApplicationReviewDrawer
+        <ApplicationReviewModal
           application={
             selectedApplication
           }
@@ -1342,7 +1336,7 @@ function SubmittedApplications({
   );
 }
 
-function ApplicationReviewDrawer({
+function ApplicationReviewModal({
   application,
   reviewMode,
   setReviewMode,
@@ -1409,7 +1403,7 @@ function ApplicationReviewDrawer({
 
   return (
     <div
-      className="admin-review-drawer-backdrop"
+      className="admin-mentor-review-backdrop"
       role="presentation"
       onMouseDown={(
         event,
@@ -1424,13 +1418,13 @@ function ApplicationReviewDrawer({
       }}
     >
       <aside
-        className="admin-review-drawer admin-application-review-drawer"
+        className="admin-mentor-review-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="mentor-application-review-title"
       >
-        <header className="admin-review-drawer-header">
-          <div className="admin-review-drawer-person">
+        <header className="admin-mentor-review-header">
+          <div className="admin-mentor-review-person">
             {application.applicant
               ?.profile_photo_url ? (
               <img
@@ -1441,7 +1435,7 @@ function ApplicationReviewDrawer({
                 alt=""
               />
             ) : (
-              <span className="admin-review-drawer-avatar">
+              <span className="admin-mentor-review-avatar">
                 {getInitials(
                   application.applicant
                     ?.full_name,
@@ -1470,7 +1464,7 @@ function ApplicationReviewDrawer({
 
           <button
             type="button"
-            className="admin-review-drawer-close"
+            className="admin-mentor-review-close"
             onClick={
               onClose
             }
@@ -1483,8 +1477,8 @@ function ApplicationReviewDrawer({
           </button>
         </header>
 
-        <div className="admin-review-drawer-body">
-          <div className="admin-review-status-row">
+        <div className="admin-mentor-review-body">
+          <div className="admin-mentor-review-status-row">
             <StatusBadge
               value={
                 application.status
@@ -1509,7 +1503,7 @@ function ApplicationReviewDrawer({
           </div>
 
           {isFullAccessAdmin && (
-            <section className="admin-review-callout">
+            <section className="admin-mentor-review-callout">
               <strong>
                 Full Access Admin
               </strong>
@@ -1522,7 +1516,7 @@ function ApplicationReviewDrawer({
 
           {!isFullAccessAdmin &&
             adminOperationalRole && (
-              <section className="admin-review-callout">
+              <section className="admin-mentor-review-callout">
                 <strong>
                   Your administrator role
                 </strong>
@@ -1535,12 +1529,12 @@ function ApplicationReviewDrawer({
               </section>
             )}
 
-          <section className="admin-review-drawer-section">
+          <section className="admin-mentor-review-section">
             <h3>
               Membership verification information
             </h3>
 
-            <div className="admin-review-details-grid">
+            <div className="admin-mentor-review-details-grid">
               <ReviewDetail
                 label="Verification method"
                 value={formatMembershipVerificationMethod(
@@ -1593,12 +1587,12 @@ function ApplicationReviewDrawer({
             </div>
           </section>
 
-          <section className="admin-review-drawer-section">
+          <section className="admin-mentor-review-section">
             <h3>
               Professional information
             </h3>
 
-            <div className="admin-review-details-grid">
+            <div className="admin-mentor-review-details-grid">
               <ReviewDetail
                 label="Current role"
                 value={
@@ -1675,18 +1669,18 @@ function ApplicationReviewDrawer({
             }
           />
 
-          <section className="admin-review-drawer-section">
+          <section className="admin-mentor-review-section">
             <h3>
               Biography
             </h3>
 
-            <p className="admin-review-biography">
+            <p className="admin-mentor-review-biography">
               {application.biography ||
                 "Not provided"}
             </p>
           </section>
 
-          <section className="admin-review-stage-card">
+          <section className="admin-mentor-review-stage-card">
             <span>
               STAGE 1
             </span>
@@ -1789,7 +1783,7 @@ function ApplicationReviewDrawer({
             )}
           </section>
 
-          <section className="admin-review-stage-card">
+          <section className="admin-mentor-review-stage-card">
             <span>
               STAGE 2
             </span>
@@ -1916,7 +1910,7 @@ function ApplicationReviewDrawer({
           )}
         </div>
 
-        <footer className="admin-review-drawer-footer">
+        <footer className="admin-mentor-review-footer">
           <button
             type="button"
             className="admin-drawer-secondary"
@@ -1950,7 +1944,7 @@ function ReviewActionBox({
   onApprove,
 }) {
   return (
-    <div className="admin-review-actions-box">
+    <div className="admin-mentor-review-actions-box">
       {rejectionMode && (
         <label className="admin-rejection-field">
           <span>
@@ -1978,14 +1972,14 @@ function ReviewActionBox({
       )}
 
       {approveDisabledMessage && (
-        <p className="admin-review-action-warning">
+        <p className="admin-mentor-review-action-warning">
           {
             approveDisabledMessage
           }
         </p>
       )}
 
-      <div className="admin-review-inline-actions">
+      <div className="admin-mentor-review-inline-actions">
         {rejectionMode ? (
           <>
             <button
@@ -2058,7 +2052,7 @@ function ReviewDetail({
   value,
 }) {
   return (
-    <div className="admin-review-detail">
+    <div className="admin-mentor-review-detail">
       <span>
         {label}
       </span>
@@ -2076,14 +2070,14 @@ function ReviewList({
   items = [],
 }) {
   return (
-    <section className="admin-review-drawer-section">
+    <section className="admin-mentor-review-section">
       <h3>
         {label}
       </h3>
 
       {items?.length >
       0 ? (
-        <div className="admin-review-chip-list">
+        <div className="admin-mentor-review-chip-list">
           {items.map(
             (
               item,
@@ -2099,7 +2093,7 @@ function ReviewList({
           )}
         </div>
       ) : (
-        <p className="admin-review-biography">
+        <p className="admin-mentor-review-biography">
           Not provided
         </p>
       )}
@@ -2194,10 +2188,10 @@ function getApplicationReviewStageLabel(
   if (
     application.onboarding_recommendation
   ) {
-    return "Awaiting Operations sign-off";
+    return "Operations & Governance sign-off";
   }
 
-  return "Awaiting Mentor Onboarding review";
+  return "Mentor Onboarding review";
 }
 
 function formatMembershipVerificationMethod(

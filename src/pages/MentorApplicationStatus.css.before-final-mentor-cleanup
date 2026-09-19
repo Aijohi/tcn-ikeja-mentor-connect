@@ -1135,36 +1135,3 @@ label:has(input:checked) {
   }
 }
 
-
-
-/* =========================================================
-   FINAL MENTORING OPTION FOCUS
-   Keep the option border thin and neutral.
-   ========================================================= */
-
-.mentor-onboarding-form label:has(input[type="checkbox"]),
-.mentor-application-form label:has(input[type="checkbox"]) {
-  border-width: 1px !important;
-  box-shadow: none !important;
-}
-
-.mentor-onboarding-form label:has(input[type="checkbox"]:checked),
-.mentor-application-form label:has(input[type="checkbox"]:checked) {
-  border: 1px solid #4c5867 !important;
-  background: #ffffff !important;
-  box-shadow: none !important;
-}
-
-.mentor-onboarding-form input[type="checkbox"],
-.mentor-application-form input[type="checkbox"] {
-  accent-color: #ff5303 !important;
-}
-
-.mentor-onboarding-form input[type="checkbox"]:focus,
-.mentor-onboarding-form input[type="checkbox"]:focus-visible,
-.mentor-application-form input[type="checkbox"]:focus,
-.mentor-application-form input[type="checkbox"]:focus-visible {
-  outline: 1px solid #97aac2 !important;
-  outline-offset: 2px !important;
-  box-shadow: none !important;
-}
