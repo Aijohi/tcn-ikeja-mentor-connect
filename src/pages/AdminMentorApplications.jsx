@@ -671,11 +671,6 @@ function SubmittedApplications({
             application.status,
 
             ...(
-              application.expertise ??
-              []
-            ),
-
-            ...(
               application.mentorship_categories ??
               []
             ),
@@ -731,17 +726,6 @@ function SubmittedApplications({
     }
 
     if (
-      !application.applicant
-        ?.membership_verified &&
-      (
-        canVerifyMembership ||
-        isFullAccessAdmin
-      )
-    ) {
-      return true;
-    }
-
-    if (
       !application.onboarding_recommendation
     ) {
       return (
@@ -760,61 +744,6 @@ function SubmittedApplications({
     }
 
     return false;
-  }
-
-  async function verifyMembership() {
-    if (
-      !selectedApplication ||
-      processing
-    ) {
-      return;
-    }
-
-    setProcessing(true);
-    setError("");
-    setSuccess("");
-
-    const {
-      error: membershipError,
-    } = await supabase.rpc(
-      "admin_review_mentor_membership",
-      {
-        p_user_id:
-          selectedApplication.applicant_user_id,
-
-        p_action:
-          "verify",
-      },
-    );
-
-    if (
-      membershipError
-    ) {
-      console.error(
-        "Unable to verify mentor membership:",
-        membershipError,
-      );
-
-      setError(
-        membershipError.message ||
-          "We could not verify this mentor's membership.",
-      );
-
-      setProcessing(false);
-
-      return;
-    }
-
-    setSuccess(
-      "TCN Ikeja membership verified. You can continue the mentor application review.",
-    );
-
-    await loadApplications({
-      keepDrawerOpen:
-        true,
-    });
-
-    setProcessing(false);
   }
 
   async function submitReview(
@@ -873,39 +802,13 @@ function SubmittedApplications({
     }
 
     if (
-      action ===
-        "recommend_approve" &&
-      !selectedApplication
-        .applicant
-        ?.membership_verified
-    ) {
-      setError(
-        "Confirm the applicant's TCN Ikeja membership before recommending approval.",
-      );
-
-      return;
-    }
-
-    if (
       finalAction &&
       !selectedApplication
-        .onboarding_recommendation
+        .onboarding_recommendation &&
+      !isFullAccessAdmin
     ) {
       setError(
-        "The Mentor Onboarding recommendation must be recorded before the final decision.",
-      );
-
-      return;
-    }
-
-    if (
-      action === "approve" &&
-      !selectedApplication
-        .applicant
-        ?.membership_verified
-    ) {
-      setError(
-        "The applicant's TCN Ikeja membership must be verified before final approval.",
+        "The Mentor Onboarding recommendation must be recorded before the final Operations and Governance decision.",
       );
 
       return;
@@ -1043,7 +946,7 @@ function SubmittedApplications({
               value={
                 searchTerm
               }
-              placeholder="Search applicant, email or expertise"
+              placeholder="Search applicant or email"
               aria-label="Search mentor applications"
               onChange={(
                 event,
@@ -1210,7 +1113,7 @@ function SubmittedApplications({
 
                         <td className="admin-application-areas-cell">
                           {(
-                            application.expertise ??
+                            application.mentorship_categories ??
                             []
                           )
                             .slice(
@@ -1399,17 +1302,11 @@ function SubmittedApplications({
           canSecondSignoffApplications={
             canSecondSignoffApplications
           }
-          canVerifyMembership={
-            canVerifyMembership
-          }
           isFullAccessAdmin={
             isFullAccessAdmin
           }
           adminOperationalRole={
             adminOperationalRole
-          }
-          onVerifyMembership={
-            verifyMembership
           }
           onSubmitReview={
             submitReview
@@ -1456,10 +1353,8 @@ function ApplicationReviewDrawer({
   processing,
   canRecommendApplications,
   canSecondSignoffApplications,
-  canVerifyMembership,
   isFullAccessAdmin,
   adminOperationalRole,
-  onVerifyMembership,
   onSubmitReview,
   onClose,
 }) {
@@ -1468,12 +1363,6 @@ function ApplicationReviewDrawer({
   const isPending =
     application.status ===
     "pending";
-
-  const membershipVerified =
-    Boolean(
-      application.applicant
-        ?.membership_verified,
-    );
 
   const onboardingComplete =
     Boolean(
@@ -1491,14 +1380,13 @@ function ApplicationReviewDrawer({
       application.status,
     );
 
-  const canConfirmMembership =
-    isPending &&
-    !membershipVerified &&
-    (
-      canVerifyMembership ||
-      isFullAccessAdmin
-    );
+  /*
+    This restores the mentor review experience used before
+    the separate membership-verification action was added.
 
+    Full-access administrators can see both review action groups.
+    Scoped administrators only see actions allowed by their role.
+  */
   const canMakeOnboardingRecommendation =
     isPending &&
     !onboardingComplete &&
@@ -1509,10 +1397,13 @@ function ApplicationReviewDrawer({
 
   const canMakeFinalDecision =
     isPending &&
-    onboardingComplete &&
     !finalDecisionComplete &&
     (
       canSecondSignoffApplications ||
+      isFullAccessAdmin
+    ) &&
+    (
+      onboardingComplete ||
       isFullAccessAdmin
     );
 
@@ -1609,6 +1500,10 @@ function ApplicationReviewDrawer({
             <span>
               {getApplicationReviewStageLabel(
                 application,
+              )}{" "}
+              · Submitted{" "}
+              {formatDate(
+                application.created_at,
               )}
             </span>
           </div>
@@ -1620,7 +1515,7 @@ function ApplicationReviewDrawer({
               </strong>
 
               <p>
-                You can complete the membership check, Mentor Onboarding recommendation and Operations and Governance sign-off. The stages still remain sequential so the audit trail stays clear.
+                You can perform either review stage. Your access is not restricted by an operational role.
               </p>
             </section>
           )}
@@ -1642,19 +1537,10 @@ function ApplicationReviewDrawer({
 
           <section className="admin-review-drawer-section">
             <h3>
-              Membership and registration
+              Membership verification information
             </h3>
 
             <div className="admin-review-details-grid">
-              <ReviewDetail
-                label="Membership"
-                value={
-                  membershipVerified
-                    ? "Verified"
-                    : "Needs verification"
-                }
-              />
-
               <ReviewDetail
                 label="Verification method"
                 value={formatMembershipVerificationMethod(
@@ -1670,7 +1556,16 @@ function ApplicationReviewDrawer({
                   application.membership_reference ||
                   application.applicant
                     ?.membership_reference ||
-                  "Not provided"
+                  (
+                    (
+                      application.membership_verification_method ||
+                      application.applicant
+                        ?.membership_verification_method
+                    ) ===
+                    "manual_admin_review"
+                      ? "Manual administration review requested"
+                      : "Not provided"
+                  )
                 }
               />
 
@@ -1678,53 +1573,24 @@ function ApplicationReviewDrawer({
                 label="Email"
                 value={
                   application.applicant
-                    ?.email_verified
-                    ? "Verified"
-                    : "Not verified"
-                }
-              />
-
-              <ReviewDetail
-                label="Mobile number"
-                value={
-                  application.applicant
-                    ?.phone_number ||
+                    ?.email ||
                   "Not provided"
                 }
               />
 
               <ReviewDetail
-                label="Submitted"
-                value={formatDate(
-                  application.created_at,
-                )}
+                label="Email verification"
+                value={
+                  application.applicant
+                    ?.email_verified === true
+                    ? "Verified"
+                    : application.applicant
+                        ?.email_verified === false
+                      ? "Not verified"
+                      : "Not available"
+                }
               />
             </div>
-
-            {canConfirmMembership && (
-              <div className="admin-review-actions-box">
-                <p className="admin-review-action-copy">
-                  Confirm the applicant's TCN Ikeja membership as part of this application review. This is not a second application from the mentor.
-                </p>
-
-                <div className="admin-review-inline-actions">
-                  <button
-                    type="button"
-                    className="admin-drawer-primary"
-                    onClick={
-                      onVerifyMembership
-                    }
-                    disabled={
-                      processing
-                    }
-                  >
-                    {processing
-                      ? "Saving..."
-                      : "Confirm membership verified"}
-                  </button>
-                </div>
-              </div>
-            )}
           </section>
 
           <section className="admin-review-drawer-section">
@@ -1796,14 +1662,7 @@ function ApplicationReviewDrawer({
           </section>
 
           <ReviewList
-            label="Areas of expertise"
-            items={
-              application.expertise
-            }
-          />
-
-          <ReviewList
-            label="Mentorship categories"
+            label="Mentoring areas"
             items={
               application.mentorship_categories
             }
@@ -1829,7 +1688,7 @@ function ApplicationReviewDrawer({
 
           <section className="admin-review-stage-card">
             <span>
-              REVIEW 1
+              STAGE 1
             </span>
 
             <h3>
@@ -1877,7 +1736,7 @@ function ApplicationReviewDrawer({
               </>
             ) : (
               <p>
-                Review the submitted mentor information and record the Mentor Onboarding recommendation.
+                No recommendation has been recorded yet.
               </p>
             )}
 
@@ -1898,14 +1757,6 @@ function ApplicationReviewDrawer({
                 }
                 rejectLabel="Recommend rejection"
                 approveLabel="Recommend approval"
-                approveDisabled={
-                  !membershipVerified
-                }
-                approveDisabledMessage={
-                  !membershipVerified
-                    ? "Confirm TCN Ikeja membership before recommending approval."
-                    : ""
-                }
                 onCancel={() => {
                   setReviewMode(
                     "",
@@ -1940,7 +1791,7 @@ function ApplicationReviewDrawer({
 
           <section className="admin-review-stage-card">
             <span>
-              REVIEW 2
+              STAGE 2
             </span>
 
             <h3>
@@ -1988,7 +1839,11 @@ function ApplicationReviewDrawer({
               </>
             ) : onboardingComplete ? (
               <p>
-                The Mentor Onboarding recommendation is complete. Record the final Operations and Governance decision.
+                The application is ready for Operations and Governance sign-off.
+              </p>
+            ) : isFullAccessAdmin ? (
+              <p>
+                No onboarding recommendation has been recorded. As a Full Access Admin, you can still see the final-decision actions.
               </p>
             ) : (
               <p>
@@ -2011,16 +1866,8 @@ function ApplicationReviewDrawer({
                 processing={
                   processing
                 }
-                rejectLabel="Reject application"
+                rejectLabel="Reject"
                 approveLabel="Final approval"
-                approveDisabled={
-                  !membershipVerified
-                }
-                approveDisabledMessage={
-                  !membershipVerified
-                    ? "Membership must be verified before final approval."
-                    : ""
-                }
                 onCancel={() => {
                   setReviewMode(
                     "",

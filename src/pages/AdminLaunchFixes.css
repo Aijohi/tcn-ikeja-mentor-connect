@@ -52,10 +52,27 @@
   font-weight: 700;
 }
 
-.admin-membership-reference-cell {
-  max-width: 260px;
+.admin-mentor-interest-section,
+.admin-submitted-applications-section {
+  min-width: 0;
+}
+
+.admin-mentor-interest-table td,
+.admin-mentor-interest-table th,
+.admin-application-table td,
+.admin-application-table th {
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-application-areas-cell {
+  max-width: 230px;
   white-space: normal;
   line-height: 1.5;
+}
+
+.admin-application-table-shell {
+  min-width: 0;
 }
 
 /* =========================================================
@@ -79,24 +96,18 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
   background: #ffffff;
-  box-shadow:
-    -20px 0 60px
-      rgba(16, 24, 40, 0.18);
-  animation:
-    admin-review-drawer-enter
-    180ms ease-out;
+  box-shadow: -20px 0 60px rgba(16, 24, 40, 0.18);
+  animation: admin-review-drawer-enter 180ms ease-out;
 }
 
 @keyframes admin-review-drawer-enter {
   from {
-    transform:
-      translateX(24px);
+    transform: translateX(24px);
     opacity: 0;
   }
 
   to {
-    transform:
-      translateX(0);
+    transform: translateX(0);
     opacity: 1;
   }
 }
@@ -107,8 +118,7 @@
   justify-content: space-between;
   gap: 20px;
   padding: 24px 26px 20px;
-  border-bottom:
-    1px solid #e7eaee;
+  border-bottom: 1px solid #e7eaee;
   background: #ffffff;
 }
 
@@ -147,8 +157,7 @@
 .admin-review-drawer-person img {
   display: block;
   object-fit: cover;
-  object-position:
-    center 22%;
+  object-position: center 22%;
 }
 
 .admin-review-drawer-avatar {
@@ -174,9 +183,7 @@
   cursor: pointer;
 }
 
-.admin-review-drawer-close:hover:not(
-    :disabled
-  ) {
+.admin-review-drawer-close:hover:not(:disabled) {
   border-color: #cbd3dc;
   background: #f8f9fa;
 }
@@ -199,20 +206,14 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 26px;
-  border-top:
-    1px solid #e7eaee;
+  border-top: 1px solid #e7eaee;
   background: #ffffff;
-}
-
-.admin-review-drawer-footer--single {
-  justify-content: flex-end;
 }
 
 .admin-review-drawer-section {
   margin-bottom: 20px;
   padding-bottom: 20px;
-  border-bottom:
-    1px solid #edf0f3;
+  border-bottom: 1px solid #edf0f3;
 }
 
 .admin-review-drawer-section:last-child {
@@ -229,8 +230,7 @@
 
 .admin-review-details-grid {
   display: grid;
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -270,9 +270,7 @@
   margin-bottom: 20px;
 }
 
-.admin-review-status-row > span:not(
-    .admin-status-badge
-  ) {
+.admin-review-status-row > span:not(.admin-status-badge) {
   color: #687582;
   font-size: 11px;
 }
@@ -363,15 +361,25 @@
   color: #29343e;
 }
 
-/* =========================================================
-   ACTIONS INSIDE DRAWER
-========================================================= */
-
 .admin-review-actions-box {
   margin-top: 16px;
   padding-top: 16px;
-  border-top:
-    1px solid #eceff2;
+  border-top: 1px solid #eceff2;
+}
+
+.admin-review-action-copy {
+  margin: 0 0 12px;
+  color: #667481;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.admin-review-action-warning {
+  margin: 0 0 10px;
+  color: #b54708;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.5;
 }
 
 .admin-rejection-field {
@@ -401,9 +409,7 @@
 
 .admin-rejection-field textarea:focus {
   border-color: #ff5303;
-  box-shadow:
-    0 0 0 3px
-      rgba(255, 83, 3, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 83, 3, 0.1);
 }
 
 .admin-review-inline-actions {
@@ -435,9 +441,7 @@
   background: #ff5303;
 }
 
-.admin-drawer-primary:hover:not(
-    :disabled
-  ) {
+.admin-drawer-primary:hover:not(:disabled) {
   background: #e94b00;
 }
 
@@ -447,9 +451,7 @@
   background: #ffffff;
 }
 
-.admin-drawer-secondary:hover:not(
-    :disabled
-  ) {
+.admin-drawer-secondary:hover:not(:disabled) {
   background: #f8f9fa;
 }
 
@@ -459,9 +461,7 @@
   background: #ffffff;
 }
 
-.admin-drawer-secondary-danger:hover:not(
-    :disabled
-  ) {
+.admin-drawer-secondary-danger:hover:not(:disabled) {
   background: #fff7f6;
 }
 
@@ -479,53 +479,15 @@
   cursor: not-allowed;
 }
 
-/* =========================================================
-   EXISTING TABLE SUPPORT
-========================================================= */
-
-.admin-submitted-applications-section {
-  min-width: 0;
-}
-
-.admin-application-areas-cell {
-  max-width: 230px;
-  white-space: normal;
-  line-height: 1.5;
-}
-
-.admin-application-table-shell {
-  min-width: 0;
-}
-
-.admin-membership-queue-table td,
-.admin-membership-queue-table th,
-.admin-application-table td,
-.admin-application-table th {
-  text-align: left;
-  vertical-align: middle;
-}
-
-/* =========================================================
-   TABLET
-========================================================= */
-
 @media (max-width: 900px) {
   .admin-review-drawer {
-    width: min(
-      620px,
-      94vw
-    );
+    width: min(620px, 94vw);
   }
 
   .admin-review-details-grid {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: 1fr;
   }
 }
-
-/* =========================================================
-   MOBILE
-========================================================= */
 
 @media (max-width: 760px) {
   .admin-workflow-section-heading {
@@ -543,8 +505,7 @@
   }
 
   .admin-review-drawer-header {
-    padding:
-      19px 16px 16px;
+    padding: 19px 16px 16px;
   }
 
   .admin-review-drawer-header h2 {
@@ -552,13 +513,11 @@
   }
 
   .admin-review-drawer-body {
-    padding:
-      18px 16px 28px;
+    padding: 18px 16px 28px;
   }
 
   .admin-review-drawer-footer {
-    padding:
-      13px 16px;
+    padding: 13px 16px;
   }
 
   .admin-review-drawer-person img,
