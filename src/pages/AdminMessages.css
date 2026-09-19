@@ -1,8 +1,160 @@
 /* =========================================================
-   ADMIN MESSAGE SEARCH
-   Only the input owns the visible border.
-   This prevents the double-border problem caused by
-   global input styles elsewhere in the application.
+   ADMIN MESSAGES
+   Full replacement file.
+   ========================================================= */
+
+.admin-messages-page {
+  width: 100%;
+  min-width: 0;
+}
+
+/* =========================================================
+   TOP ACTION
+   ========================================================= */
+
+.admin-messages-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 16px;
+
+  width: 100%;
+
+  margin-bottom: 18px;
+}
+
+/*
+  The DashboardLayout already provides the page title and
+  description. Hide any older duplicate messaging heading
+  that may still exist in the toolbar.
+*/
+.admin-messages-toolbar > div {
+  display: none;
+}
+
+.admin-message-new-button {
+  appearance: none;
+  -webkit-appearance: none;
+
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 42px;
+
+  padding: 0 16px;
+
+  border: 1px solid #ff5303;
+  border-radius: 9px;
+
+  color: #ffffff;
+  background: #ff5303;
+
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow: none;
+  transform: none;
+
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.admin-message-new-button:hover:not(:disabled) {
+  border-color: #c13c00;
+  background: #c13c00;
+}
+
+.admin-message-new-button:focus-visible {
+  outline: 2px solid rgba(76, 88, 103, 0.24);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   MAIN MESSAGE CANVAS
+   ========================================================= */
+
+.admin-message-shell {
+  display: grid;
+
+  grid-template-columns:
+    minmax(300px, 34%)
+    minmax(0, 1fr);
+
+  width: 100%;
+  min-width: 0;
+  min-height: 620px;
+
+  overflow: hidden;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 24px
+    rgba(16, 20, 25, 0.025);
+}
+
+/* =========================================================
+   LEFT CONVERSATION PANEL
+   ========================================================= */
+
+.admin-message-conversation-panel {
+  min-width: 0;
+
+  border-right: 1px solid #e4e8ef;
+
+  background: #ffffff;
+}
+
+.admin-message-conversation-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 20px 18px 13px;
+}
+
+.admin-message-conversation-heading > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.admin-message-conversation-heading strong {
+  color: #101419;
+
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.admin-message-conversation-heading small {
+  color: #6f8095;
+
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* =========================================================
+   SEARCH
+   Only the actual input owns the border.
+   No inner/duplicate border.
    ========================================================= */
 
 .admin-message-search,
@@ -26,8 +178,6 @@
   box-shadow: none !important;
 }
 
-/* Search icon */
-
 .admin-message-search > svg,
 .admin-message-member-search > svg {
   position: absolute;
@@ -37,16 +187,12 @@
 
   z-index: 2;
 
-  flex: 0 0 auto;
-
-  color: #667085;
+  color: #6f8095;
 
   pointer-events: none;
 
   transform: translateY(-50%);
 }
-
-/* The INPUT is now the single search box */
 
 .admin-message-search > input,
 .admin-message-member-search > input,
@@ -62,8 +208,8 @@
   width: 100% !important;
   min-width: 0 !important;
 
-  height: 42px !important;
-  min-height: 42px !important;
+  height: 44px !important;
+  min-height: 44px !important;
 
   margin: 0 !important;
 
@@ -75,16 +221,16 @@
 
   border:
     1px solid
-    #d0d5dd !important;
+    #c9d2df !important;
 
   border-radius:
-    8px !important;
+    9px !important;
 
   outline:
     none !important;
 
   color:
-    #101828 !important;
+    #101419 !important;
 
   background:
     #ffffff !important;
@@ -96,69 +242,53 @@
     inherit !important;
 
   font-size:
-    14px !important;
-
-  line-height:
-    1.4 !important;
+    13px !important;
 
   box-shadow:
     none !important;
 }
 
-/* Hover */
-
 .admin-message-search > input:hover,
 .admin-message-member-search > input:hover {
   border-color:
-    #b8c0cc !important;
+    #97aac2 !important;
 }
-
-/* Focus */
 
 .admin-message-search > input:focus,
 .admin-message-member-search > input:focus,
 .admin-message-search > input:focus-visible,
 .admin-message-member-search > input:focus-visible {
   border-color:
-    #ff5303 !important;
+    #4c5867 !important;
 
   outline:
     none !important;
 
   box-shadow:
-    0 0 0 3px
+    0 0 0 2px
     rgba(
-      255,
-      83,
-      3,
-      0.1
+      76,
+      88,
+      103,
+      0.10
     ) !important;
 }
 
-/* Do NOT apply focus styling to the wrapper */
-
 .admin-message-search:focus-within,
 .admin-message-member-search:focus-within {
-  border:
-    0 !important;
-
-  box-shadow:
-    none !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
-
-/* Placeholder */
 
 .admin-message-search
   > input::placeholder,
 .admin-message-member-search
   > input::placeholder {
   color:
-    #98a2b3 !important;
+    #97aac2 !important;
 
   opacity: 1;
 }
-
-/* Remove browser search decorations */
 
 .admin-message-search
   > input[type="search"]::-webkit-search-decoration,
@@ -178,4 +308,868 @@
   > input[type="search"]::-webkit-search-results-decoration {
   appearance: none;
   -webkit-appearance: none;
+}
+
+/* =========================================================
+   CONVERSATION LIST
+   ========================================================= */
+
+.admin-message-conversation-list {
+  max-height: 524px;
+
+  overflow-y: auto;
+}
+
+.admin-message-conversation-item {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 11px;
+
+  width: 100%;
+
+  padding: 14px 16px;
+
+  border: 0;
+  border-top: 1px solid #f0f2f5;
+
+  color: inherit;
+  background: #ffffff;
+
+  font: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.admin-message-conversation-item:hover {
+  background: #f8f9fb;
+}
+
+.admin-message-conversation-item.active {
+  background: #fff8f4;
+
+  box-shadow:
+    inset 3px 0 0
+    #ff5303;
+}
+
+.admin-message-avatar {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  border-radius: 50%;
+
+  color: #344054;
+  background: #f2f4f7;
+
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.admin-message-avatar.large {
+  width: 40px;
+  height: 40px;
+}
+
+.admin-message-conversation-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.admin-message-conversation-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+}
+
+.admin-message-conversation-name-row strong {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: #101419;
+
+  font-size: 13px;
+  font-weight: 650;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-message-conversation-name-row i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 20px;
+  height: 20px;
+
+  padding: 0 6px;
+
+  border-radius: 999px;
+
+  color: #ffffff;
+  background: #ff5303;
+
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.admin-message-conversation-copy small {
+  margin-top: 2px;
+
+  overflow: hidden;
+
+  color: #6f8095;
+
+  font-size: 10px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-message-conversation-copy p {
+  margin: 7px 0 0;
+
+  overflow: hidden;
+
+  color: #4c5867;
+
+  font-size: 11px;
+  line-height: 1.4;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-message-conversation-copy time {
+  margin-top: 5px;
+
+  color: #97aac2;
+
+  font-size: 9px;
+}
+
+/* =========================================================
+   LEFT EMPTY STATE
+   ========================================================= */
+
+.admin-message-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+
+  min-height: 230px;
+
+  padding: 28px 20px;
+
+  color: #6f8095;
+}
+
+.admin-message-list-empty > svg {
+  color: #6f8095;
+}
+
+.admin-message-list-empty strong {
+  margin-top: 12px;
+
+  color: #101419;
+
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.admin-message-list-empty p {
+  max-width: 260px;
+
+  margin: 5px 0 0;
+
+  color: #6f8095;
+
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   RIGHT THREAD PANEL
+   ========================================================= */
+
+.admin-message-thread-panel {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  min-height: 620px;
+
+  background: #ffffff;
+}
+
+.admin-message-thread-header {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  min-height: 72px;
+
+  padding: 14px 18px;
+
+  border-bottom: 1px solid #e4e8ef;
+
+  background: #ffffff;
+}
+
+.admin-message-thread-header > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  min-width: 0;
+}
+
+.admin-message-thread-header strong {
+  color: #101419;
+
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.admin-message-thread-header small {
+  overflow: hidden;
+
+  color: #6f8095;
+
+  font-size: 11px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-message-mobile-back {
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  padding: 0;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 8px;
+
+  color: #344054;
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   THREAD BODY
+   ========================================================= */
+
+.admin-message-thread {
+  flex: 1;
+
+  min-height: 0;
+  max-height: 474px;
+
+  overflow-y: auto;
+
+  padding: 20px;
+
+  background: #ffffff;
+}
+
+.admin-message-thread-state,
+.admin-message-thread-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+
+  min-height: 100%;
+
+  padding: 34px;
+
+  color: #6f8095;
+}
+
+.admin-message-thread-state > svg,
+.admin-message-thread-empty > svg {
+  color: #6f8095;
+}
+
+.admin-message-thread-state strong,
+.admin-message-thread-empty h2 {
+  margin: 12px 0 0;
+
+  color: #101419;
+
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.admin-message-thread-state p,
+.admin-message-thread-empty p {
+  max-width: 430px;
+
+  margin: 6px 0 0;
+
+  color: #6f8095;
+
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   MESSAGE BUBBLES
+   ========================================================= */
+
+.admin-message-bubble-row {
+  display: flex;
+  justify-content: flex-start;
+
+  margin-bottom: 12px;
+}
+
+.admin-message-bubble-row.mine {
+  justify-content: flex-end;
+}
+
+.admin-message-bubble {
+  max-width:
+    min(
+      72%,
+      560px
+    );
+
+  padding: 10px 12px;
+
+  border: 1px solid #e4e8ef;
+  border-radius:
+    12px
+    12px
+    12px
+    4px;
+
+  background: #f8f9fb;
+}
+
+.admin-message-bubble-row.mine
+.admin-message-bubble {
+  border-color: #ffded0;
+
+  border-radius:
+    12px
+    12px
+    4px
+    12px;
+
+  background: #fff8f4;
+}
+
+.admin-message-bubble p {
+  margin: 0;
+
+  color: #344054;
+
+  font-size: 13px;
+  line-height: 1.55;
+
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.admin-message-bubble time {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #97aac2;
+
+  font-size: 9px;
+}
+
+/* =========================================================
+   MESSAGE COMPOSER
+   ========================================================= */
+
+.admin-message-composer {
+  display: flex;
+  align-items: flex-end;
+
+  gap: 10px;
+
+  padding: 14px 16px;
+
+  border-top: 1px solid #e4e8ef;
+
+  background: #ffffff;
+}
+
+.admin-message-composer label {
+  flex: 1;
+
+  min-width: 0;
+}
+
+.admin-message-composer textarea {
+  box-sizing: border-box;
+
+  width: 100%;
+  min-height: 44px;
+  max-height: 140px;
+
+  padding: 11px 12px;
+
+  border: 1px solid #c9d2df;
+  border-radius: 9px;
+
+  outline: none;
+
+  color: #101419;
+  background: #ffffff;
+
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+
+  resize: vertical;
+
+  box-shadow: none;
+}
+
+.admin-message-composer textarea:hover {
+  border-color: #97aac2;
+}
+
+.admin-message-composer textarea:focus,
+.admin-message-composer textarea:focus-visible {
+  border-color: #4c5867;
+
+  outline: none;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(
+      76,
+      88,
+      103,
+      0.10
+    );
+}
+
+.admin-message-composer button {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  min-height: 44px;
+
+  padding: 0 15px;
+
+  border: 1px solid #ff5303;
+  border-radius: 9px;
+
+  color: #ffffff;
+  background: #ff5303;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow: none;
+}
+
+.admin-message-composer button:hover:not(:disabled) {
+  border-color: #c13c00;
+  background: #c13c00;
+}
+
+.admin-message-composer button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.5;
+}
+
+/* =========================================================
+   NEW MESSAGE MODAL
+   ========================================================= */
+
+.admin-message-modal-backdrop {
+  position: fixed;
+  inset: 0;
+
+  z-index: 1100;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background:
+    rgba(
+      16,
+      20,
+      25,
+      0.46
+    );
+}
+
+.admin-message-new-modal {
+  display: flex;
+  flex-direction: column;
+
+  width:
+    min(
+      560px,
+      100%
+    );
+
+  max-height:
+    min(
+      720px,
+      calc(
+        100vh -
+        40px
+      )
+    );
+
+  overflow: hidden;
+
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 24px 60px
+    rgba(
+      16,
+      20,
+      25,
+      0.18
+    );
+}
+
+.admin-message-new-modal > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding: 20px;
+
+  border-bottom: 1px solid #e4e8ef;
+}
+
+.admin-message-new-modal h2 {
+  margin: 4px 0 0;
+
+  color: #101419;
+
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.admin-message-new-modal header p {
+  margin: 5px 0 0;
+
+  color: #6f8095;
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.admin-message-modal-close {
+  appearance: none;
+  -webkit-appearance: none;
+
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  border: 1px solid #d7dee7;
+  border-radius: 8px;
+
+  color: #4c5867;
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   MEMBER SEARCH IN MODAL
+   ========================================================= */
+
+.admin-message-member-search {
+  margin: 16px 18px 12px;
+}
+
+.admin-message-member-list {
+  min-height: 180px;
+
+  overflow-y: auto;
+
+  padding: 0 12px 14px;
+}
+
+.admin-message-member-list > button {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: grid;
+
+  grid-template-columns:
+    auto
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 11px;
+
+  width: 100%;
+
+  padding: 12px 10px;
+
+  border: 0;
+  border-bottom: 1px solid #f0f2f5;
+
+  color: inherit;
+  background: #ffffff;
+
+  font: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.admin-message-member-list
+> button:hover {
+  background: #f8f9fb;
+}
+
+.admin-message-member-list
+> button:disabled {
+  cursor: wait;
+
+  opacity: 0.7;
+}
+
+.admin-message-member-list
+> button
+> span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  min-width: 0;
+}
+
+.admin-message-member-list strong {
+  overflow: hidden;
+
+  color: #101419;
+
+  font-size: 13px;
+  font-weight: 650;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-message-member-list small {
+  overflow: hidden;
+
+  color: #6f8095;
+
+  font-size: 10px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-message-member-list i {
+  color: #ff5303;
+
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .admin-message-shell {
+    grid-template-columns:
+      minmax(250px, 38%)
+      minmax(0, 1fr);
+  }
+
+  .admin-message-bubble {
+    max-width: 82%;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .admin-messages-toolbar {
+    align-items: stretch;
+
+    margin-bottom: 14px;
+  }
+
+  .admin-message-new-button {
+    width: 100%;
+  }
+
+  .admin-message-shell {
+    display: block;
+
+    min-height: 560px;
+
+    border-radius: 12px;
+  }
+
+  .admin-message-conversation-panel {
+    border-right: 0;
+  }
+
+  .admin-message-thread-panel {
+    display: none;
+
+    min-height: 560px;
+  }
+
+  .admin-message-shell.has-selection
+  .admin-message-conversation-panel {
+    display: none;
+  }
+
+  .admin-message-shell.has-selection
+  .admin-message-thread-panel {
+    display: flex;
+  }
+
+  .admin-message-mobile-back {
+    display: inline-flex;
+  }
+
+  .admin-message-conversation-list {
+    max-height: 470px;
+  }
+
+  .admin-message-thread {
+    max-height: 412px;
+
+    padding: 16px 12px;
+  }
+
+  .admin-message-bubble {
+    max-width: 88%;
+  }
+
+  .admin-message-composer {
+    padding: 12px;
+  }
+}
+
+/* =========================================================
+   SMALL PHONE
+   ========================================================= */
+
+@media (max-width: 520px) {
+  .admin-message-conversation-heading {
+    padding:
+      16px
+      14px
+      12px;
+  }
+
+  .admin-message-search {
+    margin:
+      0
+      12px
+      12px;
+  }
+
+  .admin-message-modal-backdrop {
+    align-items: flex-end;
+
+    padding: 0;
+  }
+
+  .admin-message-new-modal {
+    width: 100%;
+    max-height: 86vh;
+
+    border-radius:
+      16px
+      16px
+      0
+      0;
+  }
+
+  .admin-message-thread-header {
+    padding: 12px;
+  }
+
+  .admin-message-avatar.large {
+    width: 36px;
+    height: 36px;
+  }
+
+  .admin-message-composer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-message-composer button {
+    width: 100%;
+  }
 }
