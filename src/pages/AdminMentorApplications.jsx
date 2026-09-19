@@ -46,11 +46,7 @@ function AdminMentorApplications({
 }) {
   return (
     <div className="admin-mentor-workflow-page">
-      <MentorMembershipQueue
-        canVerifyMembership={
-          canVerifyMembership
-        }
-      />
+      <MentorInterestList />
 
       <SubmittedApplications
         canRecommendApplications={
@@ -62,6 +58,9 @@ function AdminMentorApplications({
         isFullAccessAdmin={
           isFullAccessAdmin
         }
+        canVerifyMembership={
+          canVerifyMembership
+        }
         adminOperationalRole={
           adminOperationalRole
         }
@@ -70,18 +69,11 @@ function AdminMentorApplications({
   );
 }
 
-function MentorMembershipQueue({
-  canVerifyMembership,
-}) {
+function MentorInterestList() {
   const [
     registrations,
     setRegistrations,
   ] = useState([]);
-
-  const [
-    selectedRegistration,
-    setSelectedRegistration,
-  ] = useState(null);
 
   const [
     loading,
@@ -89,217 +81,205 @@ function MentorMembershipQueue({
   ] = useState(true);
 
   const [
-    processing,
-    setProcessing,
-  ] = useState(false);
-
-  const [
     error,
     setError,
   ] = useState("");
 
-  const [
-    success,
-    setSuccess,
-  ] = useState("");
+  useEffect(() => {
+    let isMounted = true;
 
-  async function loadRegistrations() {
-    setLoading(true);
-    setError("");
+    async function loadMentorInterest() {
+      setLoading(true);
+      setError("");
 
-    const {
-      data,
-      error: registrationError,
-    } = await supabase
-      .from("profiles")
-      .select(`
-        id,
-        full_name,
-        email,
-        phone_number,
-        signup_intent,
-        account_status,
-        membership_verified,
-        membership_verification_method,
-        membership_reference,
-        email_verified,
-        onboarding_completed,
-        created_at
-      `)
-      .eq(
-        "signup_intent",
-        "mentor",
-      )
-      .eq(
-        "account_status",
-        "pending",
-      )
-      .eq(
-        "email_verified",
-        true,
-      )
-      .eq(
-        "onboarding_completed",
-        true,
-      )
-      .or(
-        "membership_verified.eq.false,membership_verified.is.null",
-      )
-      .order(
-        "created_at",
-        {
-          ascending: false,
-        },
-      );
+      const {
+        data: profileData,
+        error: profileError,
+      } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          full_name,
+          email,
+          signup_intent,
+          role,
+          account_status,
+          email_verified,
+          onboarding_completed,
+          created_at
+        `)
+        .eq(
+          "signup_intent",
+          "mentor",
+        )
+        .neq(
+          "role",
+          "mentor",
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          },
+        );
 
-    if (registrationError) {
-      console.error(
-        "Unable to load mentor membership verification requests:",
-        registrationError,
-      );
+      if (!isMounted) {
+        return;
+      }
 
-      setError(
-        "We could not load mentor membership verification requests.",
+      if (profileError) {
+        console.error(
+          "Unable to load mentor registrations:",
+          profileError,
+        );
+
+        setError(
+          "We could not load mentor registrations.",
+        );
+
+        setLoading(false);
+        return;
+      }
+
+      const profiles =
+        profileData ?? [];
+
+      if (
+        profiles.length ===
+        0
+      ) {
+        setRegistrations([]);
+        setLoading(false);
+        return;
+      }
+
+      const {
+        data: applicationData,
+        error: applicationError,
+      } = await supabase
+        .from(
+          "mentor_applications",
+        )
+        .select(
+          "applicant_user_id",
+        )
+        .in(
+          "applicant_user_id",
+          profiles.map(
+            (
+              person,
+            ) =>
+              person.id,
+          ),
+        );
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (applicationError) {
+        console.error(
+          "Unable to check mentor applications:",
+          applicationError,
+        );
+
+        setError(
+          "We could not prepare the mentor registration list.",
+        );
+
+        setLoading(false);
+        return;
+      }
+
+      const submittedIds =
+        new Set(
+          (
+            applicationData ??
+            []
+          ).map(
+            (
+              application,
+            ) =>
+              application.applicant_user_id,
+          ),
+        );
+
+      setRegistrations(
+        profiles.filter(
+          (
+            person,
+          ) =>
+            !submittedIds.has(
+              person.id,
+            ),
+        ),
       );
 
       setLoading(false);
-
-      return;
     }
 
-    setRegistrations(
-      data ?? [],
-    );
+    loadMentorInterest();
 
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    loadRegistrations();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  async function reviewMembership(
-    action,
-  ) {
-    if (
-      !selectedRegistration ||
-      processing
-    ) {
-      return;
-    }
-
-    setProcessing(true);
-    setError("");
-    setSuccess("");
-
-    const {
-      error: reviewError,
-    } = await supabase.rpc(
-      "admin_review_mentor_membership",
-      {
-        p_user_id:
-          selectedRegistration.id,
-
-        p_action:
-          action,
-      },
+  if (loading) {
+    return (
+      <section className="admin-list-section">
+        <AdminLoadingState />
+      </section>
     );
-
-    if (reviewError) {
-      console.error(
-        "Unable to review mentor membership:",
-        reviewError,
-      );
-
-      setError(
-        reviewError.message ||
-          "We could not update this mentor membership request.",
-      );
-
-      setProcessing(false);
-
-      return;
-    }
-
-    setSuccess(
-      action === "verify"
-        ? "The mentor membership has been verified."
-        : "The mentor membership has been rejected.",
-    );
-
-    setSelectedRegistration(
-      null,
-    );
-
-    await loadRegistrations();
-
-    setProcessing(false);
   }
 
   return (
-    <section className="admin-list-section admin-membership-queue-section">
+    <section className="admin-list-section admin-mentor-interest-section">
       <div className="admin-workflow-section-heading">
         <div>
           <span>
-            STAGE 1
+            MENTOR INTEREST
           </span>
 
           <h2>
-            Mentor membership verification
+            Registered interest
           </h2>
 
           <p>
-            Review completed mentor registrations before the applicant moves through the mentor approval process.
+            These people selected “I want to mentor” but have not submitted the mentor application yet. No approval action is required until an application is submitted.
           </p>
         </div>
 
         <strong>
           {registrations.length}{" "}
           {registrations.length === 1
-            ? "awaiting review"
-            : "awaiting review"}
+            ? "person"
+            : "people"}
         </strong>
       </div>
 
-      {success && (
-        <p className="admin-success-message">
-          {success}
+      {error && (
+        <p
+          className="form-error"
+          role="alert"
+        >
+          {error}
         </p>
       )}
 
-      {error &&
-        !selectedRegistration && (
-          <p
-            className="form-error"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
-
-      {loading ? (
-        <AdminLoadingState />
-      ) : registrations.length ===
-        0 ? (
+      {registrations.length ===
+      0 ? (
         <AdminEmptyState
-          title="No mentor membership requests"
-          description="Mentors will appear here after they verify their email and complete the required mentor onboarding information."
+          title="No incomplete mentor registrations"
+          description="People who register an interest in mentoring but have not submitted the mentor application will appear here."
         />
       ) : (
         <div className="admin-table-wrapper admin-table-wrapper--flush">
-          <table className="admin-data-table admin-membership-queue-table">
+          <table className="admin-data-table admin-mentor-interest-table">
             <thead>
               <tr>
                 <th>
-                  Applicant
-                </th>
-
-                <th>
-                  Verification method
-                </th>
-
-                <th>
-                  Information supplied
+                  Person
                 </th>
 
                 <th>
@@ -307,74 +287,50 @@ function MentorMembershipQueue({
                 </th>
 
                 <th>
-                  Registered
+                  Progress
                 </th>
 
-                <th aria-label="Action" />
+                <th>
+                  Registered
+                </th>
               </tr>
             </thead>
 
             <tbody>
               {registrations.map(
                 (
-                  registration,
+                  person,
                 ) => (
                   <tr
                     key={
-                      registration.id
+                      person.id
                     }
                   >
                     <td>
                       <strong>
-                        {registration.full_name ||
+                        {person.full_name ||
                           "Name not provided"}
                       </strong>
-
-                      <small>
-                        {registration.email ||
-                          ""}
-                      </small>
                     </td>
 
                     <td>
-                      {formatMembershipVerificationMethod(
-                        registration.membership_verification_method,
-                      )}
-                    </td>
-
-                    <td className="admin-membership-reference-cell">
-                      {getMembershipReferenceText(
-                        registration,
-                      )}
+                      {
+                        person.email
+                      }
                     </td>
 
                     <td>
-                      <StatusBadge
-                        value="verified"
-                        label="Verified"
+                      <RegistrationProgress
+                        person={
+                          person
+                        }
                       />
                     </td>
 
                     <td>
                       {formatDate(
-                        registration.created_at,
+                        person.created_at,
                       )}
-                    </td>
-
-                    <td className="admin-table-action-cell">
-                      <button
-                        type="button"
-                        className="admin-review-button"
-                        onClick={() => {
-                          setSelectedRegistration(
-                            registration,
-                          );
-
-                          setError("");
-                        }}
-                      >
-                        Review
-                      </button>
                     </td>
                   </tr>
                 ),
@@ -383,242 +339,41 @@ function MentorMembershipQueue({
           </table>
         </div>
       )}
-
-      {selectedRegistration && (
-        <MembershipReviewDrawer
-          registration={
-            selectedRegistration
-          }
-          canVerifyMembership={
-            canVerifyMembership
-          }
-          processing={
-            processing
-          }
-          error={
-            error
-          }
-          onConfirm={
-            reviewMembership
-          }
-          onClose={() => {
-            if (
-              !processing
-            ) {
-              setSelectedRegistration(
-                null,
-              );
-
-              setError("");
-            }
-          }}
-        />
-      )}
     </section>
   );
 }
 
-function MembershipReviewDrawer({
-  registration,
-  canVerifyMembership,
-  processing,
-  error,
-  onConfirm,
-  onClose,
+function RegistrationProgress({
+  person,
 }) {
-  useLockBodyScroll(true);
+  if (
+    person.account_status ===
+    "rejected"
+  ) {
+    return (
+      <StatusBadge
+        value="rejected"
+        label="Registration rejected"
+      />
+    );
+  }
+
+  if (
+    !person.email_verified
+  ) {
+    return (
+      <StatusBadge
+        value="pending"
+        label="Email verification pending"
+      />
+    );
+  }
 
   return (
-    <div
-      className="admin-review-drawer-backdrop"
-      role="presentation"
-      onMouseDown={(
-        event,
-      ) => {
-        if (
-          event.target ===
-            event.currentTarget &&
-          !processing
-        ) {
-          onClose();
-        }
-      }}
-    >
-      <aside
-        className="admin-review-drawer"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="mentor-membership-review-title"
-      >
-        <header className="admin-review-drawer-header">
-          <div>
-            <span className="admin-section-eyebrow">
-              MENTOR MEMBERSHIP VERIFICATION
-            </span>
-
-            <h2 id="mentor-membership-review-title">
-              {registration.full_name ||
-                "Applicant"}
-            </h2>
-
-            <p>
-              {registration.email ||
-                ""}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="admin-review-drawer-close"
-            onClick={
-              onClose
-            }
-            disabled={
-              processing
-            }
-            aria-label="Close membership review"
-          >
-            <X size={18} />
-          </button>
-        </header>
-
-        <div className="admin-review-drawer-body">
-          <section className="admin-review-drawer-section">
-            <div className="admin-review-details-grid admin-membership-detail-grid">
-              <ReviewDetail
-                label="Verification method"
-                value={formatMembershipVerificationMethod(
-                  registration.membership_verification_method,
-                )}
-              />
-
-              <ReviewDetail
-                label="Information supplied"
-                value={getMembershipReferenceText(
-                  registration,
-                )}
-              />
-
-              <ReviewDetail
-                label="Mobile number"
-                value={
-                  registration.phone_number ||
-                  "Not provided"
-                }
-              />
-
-              <ReviewDetail
-                label="Email verified"
-                value={
-                  registration.email_verified
-                    ? "Yes"
-                    : "No"
-                }
-              />
-
-              <ReviewDetail
-                label="Account status"
-                value={formatStatusLabel(
-                  registration.account_status,
-                )}
-              />
-
-              <ReviewDetail
-                label="Registered"
-                value={formatDate(
-                  registration.created_at,
-                )}
-              />
-            </div>
-          </section>
-
-          {registration.membership_verification_method ===
-            "manual_admin_review" && (
-            <section className="admin-review-callout">
-              <strong>
-                Manual administrator review
-              </strong>
-
-              <p>
-                No service unit or leader reference was supplied. Confirm the person's TCN Ikeja membership using the administration team's approved records or process.
-              </p>
-            </section>
-          )}
-
-          {error && (
-            <p
-              className="form-error"
-              role="alert"
-            >
-              {error}
-            </p>
-          )}
-
-          {!canVerifyMembership && (
-            <section className="admin-review-callout">
-              <strong>
-                View only
-              </strong>
-
-              <p>
-                Your administrator role can view this information but cannot make the membership decision.
-              </p>
-            </section>
-          )}
-        </div>
-
-        <footer className="admin-review-drawer-footer">
-          {canVerifyMembership ? (
-            <>
-              <button
-                type="button"
-                className="admin-drawer-secondary-danger"
-                onClick={() =>
-                  onConfirm(
-                    "reject",
-                  )
-                }
-                disabled={
-                  processing
-                }
-              >
-                {processing
-                  ? "Please wait..."
-                  : "Reject membership"}
-              </button>
-
-              <button
-                type="button"
-                className="admin-drawer-primary"
-                onClick={() =>
-                  onConfirm(
-                    "verify",
-                  )
-                }
-                disabled={
-                  processing ||
-                  !registration.email_verified
-                }
-              >
-                {processing
-                  ? "Please wait..."
-                  : "Verify membership"}
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="admin-drawer-primary"
-              onClick={
-                onClose
-              }
-            >
-              Close
-            </button>
-          )}
-        </footer>
-      </aside>
-    </div>
+    <StatusBadge
+      value="pending"
+      label="Application not submitted"
+    />
   );
 }
 
@@ -626,6 +381,7 @@ function SubmittedApplications({
   canRecommendApplications,
   canSecondSignoffApplications,
   isFullAccessAdmin,
+  canVerifyMembership,
   adminOperationalRole,
 }) {
   const [
@@ -752,9 +508,7 @@ function SubmittedApplications({
         },
       );
 
-    if (
-      applicationError
-    ) {
+    if (applicationError) {
       console.error(
         "Unable to load mentor applications:",
         applicationError,
@@ -797,9 +551,7 @@ function SubmittedApplications({
       const {
         data: reviewerData,
       } = await supabase
-        .from(
-          "profiles",
-        )
+        .from("profiles")
         .select(
           "id, full_name, email",
         )
@@ -878,140 +630,6 @@ function SubmittedApplications({
     searchTerm,
     statusFilter,
   ]);
-
-  function canTakeAction(
-    application,
-  ) {
-    if (
-      application.status !==
-      "pending"
-    ) {
-      return false;
-    }
-
-    if (
-      !application.onboarding_recommendation
-    ) {
-      return (
-        canRecommendApplications ||
-        isFullAccessAdmin
-      );
-    }
-
-    if (
-      !application.operations_decision
-    ) {
-      return (
-        canSecondSignoffApplications ||
-        isFullAccessAdmin
-      );
-    }
-
-    return false;
-  }
-
-  async function submitReview(
-    action,
-  ) {
-    if (
-      !selectedApplication ||
-      selectedApplication.status !==
-        "pending"
-    ) {
-      return;
-    }
-
-    if (
-      [
-        "recommend_reject",
-        "reject",
-      ].includes(
-        action,
-      ) &&
-      !feedback.trim()
-    ) {
-      setError(
-        "Please provide a reason before continuing.",
-      );
-
-      setReviewMode(
-        action,
-      );
-
-      return;
-    }
-
-    setProcessing(true);
-    setError("");
-    setSuccess("");
-
-    const {
-      error: reviewError,
-    } = await supabase.rpc(
-      "admin_review_mentor_application",
-      {
-        p_application_id:
-          selectedApplication.id,
-
-        p_action:
-          action,
-
-        p_feedback: [
-          "recommend_reject",
-          "reject",
-        ].includes(
-          action,
-        )
-          ? feedback.trim()
-          : null,
-      },
-    );
-
-    if (reviewError) {
-      console.error(
-        "Unable to review mentor application:",
-        reviewError,
-      );
-
-      setError(
-        reviewError.message ||
-          "We could not update this mentor application.",
-      );
-
-      setProcessing(false);
-
-      return;
-    }
-
-    const messages = {
-      recommend_approve:
-        "Approval has been recommended. The application is ready for Operations and Governance sign-off.",
-
-      recommend_reject:
-        "Rejection has been recommended. The application is ready for Operations and Governance sign-off.",
-
-      approve:
-        "The mentor application has received final approval.",
-
-      reject:
-        "The mentor application has been rejected.",
-    };
-
-    setSuccess(
-      messages[action] ||
-        "The application was updated.",
-    );
-
-    setReviewMode("");
-    setFeedback("");
-
-    await loadApplications({
-      keepDrawerOpen:
-        true,
-    });
-
-    setProcessing(false);
-  }
 
   const filteredApplications =
     useMemo(() => {
@@ -1102,6 +720,290 @@ function SubmittedApplications({
         APPLICATION_PAGE_SIZE,
     );
 
+  function canTakeAction(
+    application,
+  ) {
+    if (
+      application.status !==
+      "pending"
+    ) {
+      return false;
+    }
+
+    if (
+      !application.applicant
+        ?.membership_verified &&
+      (
+        canVerifyMembership ||
+        isFullAccessAdmin
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      !application.onboarding_recommendation
+    ) {
+      return (
+        canRecommendApplications ||
+        isFullAccessAdmin
+      );
+    }
+
+    if (
+      !application.operations_decision
+    ) {
+      return (
+        canSecondSignoffApplications ||
+        isFullAccessAdmin
+      );
+    }
+
+    return false;
+  }
+
+  async function verifyMembership() {
+    if (
+      !selectedApplication ||
+      processing
+    ) {
+      return;
+    }
+
+    setProcessing(true);
+    setError("");
+    setSuccess("");
+
+    const {
+      error: membershipError,
+    } = await supabase.rpc(
+      "admin_review_mentor_membership",
+      {
+        p_user_id:
+          selectedApplication.applicant_user_id,
+
+        p_action:
+          "verify",
+      },
+    );
+
+    if (
+      membershipError
+    ) {
+      console.error(
+        "Unable to verify mentor membership:",
+        membershipError,
+      );
+
+      setError(
+        membershipError.message ||
+          "We could not verify this mentor's membership.",
+      );
+
+      setProcessing(false);
+
+      return;
+    }
+
+    setSuccess(
+      "TCN Ikeja membership verified. You can continue the mentor application review.",
+    );
+
+    await loadApplications({
+      keepDrawerOpen:
+        true,
+    });
+
+    setProcessing(false);
+  }
+
+  async function submitReview(
+    action,
+  ) {
+    if (
+      !selectedApplication ||
+      selectedApplication.status !==
+        "pending"
+    ) {
+      return;
+    }
+
+    const recommendationAction =
+      [
+        "recommend_approve",
+        "recommend_reject",
+      ].includes(
+        action,
+      );
+
+    const finalAction =
+      [
+        "approve",
+        "reject",
+      ].includes(
+        action,
+      );
+
+    if (
+      recommendationAction &&
+      !(
+        canRecommendApplications ||
+        isFullAccessAdmin
+      )
+    ) {
+      setError(
+        "Your administrator role cannot record the Mentor Onboarding recommendation.",
+      );
+
+      return;
+    }
+
+    if (
+      finalAction &&
+      !(
+        canSecondSignoffApplications ||
+        isFullAccessAdmin
+      )
+    ) {
+      setError(
+        "Your administrator role cannot record the final Operations and Governance decision.",
+      );
+
+      return;
+    }
+
+    if (
+      action ===
+        "recommend_approve" &&
+      !selectedApplication
+        .applicant
+        ?.membership_verified
+    ) {
+      setError(
+        "Confirm the applicant's TCN Ikeja membership before recommending approval.",
+      );
+
+      return;
+    }
+
+    if (
+      finalAction &&
+      !selectedApplication
+        .onboarding_recommendation
+    ) {
+      setError(
+        "The Mentor Onboarding recommendation must be recorded before the final decision.",
+      );
+
+      return;
+    }
+
+    if (
+      action === "approve" &&
+      !selectedApplication
+        .applicant
+        ?.membership_verified
+    ) {
+      setError(
+        "The applicant's TCN Ikeja membership must be verified before final approval.",
+      );
+
+      return;
+    }
+
+    if (
+      [
+        "recommend_reject",
+        "reject",
+      ].includes(
+        action,
+      ) &&
+      !feedback.trim()
+    ) {
+      setReviewMode(
+        action,
+      );
+
+      setError(
+        "Please provide a clear reason for the rejection.",
+      );
+
+      return;
+    }
+
+    setProcessing(true);
+    setError("");
+    setSuccess("");
+
+    const {
+      error: reviewError,
+    } = await supabase.rpc(
+      "admin_review_mentor_application",
+      {
+        p_application_id:
+          selectedApplication.id,
+
+        p_action:
+          action,
+
+        p_feedback:
+          [
+            "recommend_reject",
+            "reject",
+          ].includes(
+            action,
+          )
+            ? feedback.trim()
+            : null,
+      },
+    );
+
+    if (reviewError) {
+      console.error(
+        "Unable to review mentor application:",
+        reviewError,
+      );
+
+      setError(
+        reviewError.message ||
+          "We could not update this mentor application.",
+      );
+
+      setProcessing(false);
+
+      return;
+    }
+
+    const messages = {
+      recommend_approve:
+        "Approval recommended. The application is ready for Operations and Governance sign-off.",
+
+      recommend_reject:
+        "Rejection recommended. The application is ready for Operations and Governance sign-off.",
+
+      approve:
+        "The mentor application has received final approval.",
+
+      reject:
+        "The mentor application has been rejected.",
+    };
+
+    setSuccess(
+      messages[action] ||
+        "The application was updated.",
+    );
+
+    setReviewMode("");
+    setFeedback("");
+
+    await loadApplications({
+      keepDrawerOpen:
+        true,
+    });
+
+    setProcessing(false);
+  }
+
   if (loading) {
     return (
       <section className="admin-list-section">
@@ -1116,7 +1018,7 @@ function SubmittedApplications({
         <div className="admin-workflow-section-heading">
           <div>
             <span>
-              STAGE 2
+              MENTOR APPLICATIONS
             </span>
 
             <h2>
@@ -1124,7 +1026,7 @@ function SubmittedApplications({
             </h2>
 
             <p>
-              Review completed mentor applications, recommendations and final approval decisions.
+              Mentors submit one application. Membership verification, application review, recommendation and final approval are handled from the same application record.
             </p>
           </div>
         </div>
@@ -1220,7 +1122,7 @@ function SubmittedApplications({
         0 ? (
           <AdminEmptyState
             title="No submitted mentor applications"
-            description="Completed mentor applications will appear here."
+            description="Mentor applications will appear here after the applicant completes and submits the mentor application form."
           />
         ) : filteredApplications.length ===
           0 ? (
@@ -1234,34 +1136,14 @@ function SubmittedApplications({
               <table className="admin-data-table admin-application-table">
                 <thead>
                   <tr>
-                    <th>
-                      Applicant
-                    </th>
-
-                    <th>
-                      Current role
-                    </th>
-
-                    <th>
-                      Experience
-                    </th>
-
-                    <th>
-                      Mentoring areas
-                    </th>
-
-                    <th>
-                      Review stage
-                    </th>
-
-                    <th>
-                      Status
-                    </th>
-
-                    <th>
-                      Submitted
-                    </th>
-
+                    <th>Applicant</th>
+                    <th>Membership</th>
+                    <th>Current role</th>
+                    <th>Experience</th>
+                    <th>Mentoring areas</th>
+                    <th>Review stage</th>
+                    <th>Application status</th>
+                    <th>Submitted</th>
                     <th aria-label="Action" />
                   </tr>
                 </thead>
@@ -1288,6 +1170,23 @@ function SubmittedApplications({
                               ?.email ||
                               ""}
                           </small>
+                        </td>
+
+                        <td>
+                          <StatusBadge
+                            value={
+                              application.applicant
+                                ?.membership_verified
+                                ? "verified"
+                                : "not_verified"
+                            }
+                            label={
+                              application.applicant
+                                ?.membership_verified
+                                ? "Verified"
+                                : "Needs verification"
+                            }
+                          />
                         </td>
 
                         <td>
@@ -1335,6 +1234,12 @@ function SubmittedApplications({
                             value={
                               application.status
                             }
+                            label={
+                              application.status ===
+                              "pending"
+                                ? "Pending review"
+                                : undefined
+                            }
                           />
                         </td>
 
@@ -1362,6 +1267,10 @@ function SubmittedApplications({
                               );
 
                               setError(
+                                "",
+                              );
+
+                              setSuccess(
                                 "",
                               );
                             }}
@@ -1422,19 +1331,11 @@ function SubmittedApplications({
                   <ChevronLeft
                     size={16}
                   />
-
                   Previous
                 </button>
 
                 <span>
-                  Page{" "}
-                  {
-                    safePage
-                  }{" "}
-                  of{" "}
-                  {
-                    totalPages
-                  }
+                  Page {safePage} of {totalPages}
                 </span>
 
                 <button
@@ -1456,7 +1357,6 @@ function SubmittedApplications({
                   }
                 >
                   Next
-
                   <ChevronRight
                     size={16}
                   />
@@ -1499,11 +1399,17 @@ function SubmittedApplications({
           canSecondSignoffApplications={
             canSecondSignoffApplications
           }
+          canVerifyMembership={
+            canVerifyMembership
+          }
           isFullAccessAdmin={
             isFullAccessAdmin
           }
           adminOperationalRole={
             adminOperationalRole
+          }
+          onVerifyMembership={
+            verifyMembership
           }
           onSubmitReview={
             submitReview
@@ -1550,8 +1456,10 @@ function ApplicationReviewDrawer({
   processing,
   canRecommendApplications,
   canSecondSignoffApplications,
+  canVerifyMembership,
   isFullAccessAdmin,
   adminOperationalRole,
+  onVerifyMembership,
   onSubmitReview,
   onClose,
 }) {
@@ -1560,6 +1468,12 @@ function ApplicationReviewDrawer({
   const isPending =
     application.status ===
     "pending";
+
+  const membershipVerified =
+    Boolean(
+      application.applicant
+        ?.membership_verified,
+    );
 
   const onboardingComplete =
     Boolean(
@@ -1577,6 +1491,14 @@ function ApplicationReviewDrawer({
       application.status,
     );
 
+  const canConfirmMembership =
+    isPending &&
+    !membershipVerified &&
+    (
+      canVerifyMembership ||
+      isFullAccessAdmin
+    );
+
   const canMakeOnboardingRecommendation =
     isPending &&
     !onboardingComplete &&
@@ -1587,13 +1509,10 @@ function ApplicationReviewDrawer({
 
   const canMakeFinalDecision =
     isPending &&
+    onboardingComplete &&
     !finalDecisionComplete &&
     (
       canSecondSignoffApplications ||
-      isFullAccessAdmin
-    ) &&
-    (
-      onboardingComplete ||
       isFullAccessAdmin
     );
 
@@ -1679,6 +1598,12 @@ function ApplicationReviewDrawer({
               value={
                 application.status
               }
+              label={
+                application.status ===
+                "pending"
+                  ? "Pending review"
+                  : undefined
+              }
             />
 
             <span>
@@ -1695,7 +1620,7 @@ function ApplicationReviewDrawer({
               </strong>
 
               <p>
-                You can perform either review stage as the platform's full-access administrator.
+                You can complete the membership check, Mentor Onboarding recommendation and Operations and Governance sign-off. The stages still remain sequential so the audit trail stays clear.
               </p>
             </section>
           )}
@@ -1717,10 +1642,19 @@ function ApplicationReviewDrawer({
 
           <section className="admin-review-drawer-section">
             <h3>
-              Membership information
+              Membership and registration
             </h3>
 
             <div className="admin-review-details-grid">
+              <ReviewDetail
+                label="Membership"
+                value={
+                  membershipVerified
+                    ? "Verified"
+                    : "Needs verification"
+                }
+              />
+
               <ReviewDetail
                 label="Verification method"
                 value={formatMembershipVerificationMethod(
@@ -1741,7 +1675,7 @@ function ApplicationReviewDrawer({
               />
 
               <ReviewDetail
-                label="Email verification"
+                label="Email"
                 value={
                   application.applicant
                     ?.email_verified
@@ -1751,15 +1685,46 @@ function ApplicationReviewDrawer({
               />
 
               <ReviewDetail
-                label="Membership"
+                label="Mobile number"
                 value={
                   application.applicant
-                    ?.membership_verified
-                    ? "Verified"
-                    : "Not verified"
+                    ?.phone_number ||
+                  "Not provided"
                 }
               />
+
+              <ReviewDetail
+                label="Submitted"
+                value={formatDate(
+                  application.created_at,
+                )}
+              />
             </div>
+
+            {canConfirmMembership && (
+              <div className="admin-review-actions-box">
+                <p className="admin-review-action-copy">
+                  Confirm the applicant's TCN Ikeja membership as part of this application review. This is not a second application from the mentor.
+                </p>
+
+                <div className="admin-review-inline-actions">
+                  <button
+                    type="button"
+                    className="admin-drawer-primary"
+                    onClick={
+                      onVerifyMembership
+                    }
+                    disabled={
+                      processing
+                    }
+                  >
+                    {processing
+                      ? "Saving..."
+                      : "Confirm membership verified"}
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="admin-review-drawer-section">
@@ -1864,7 +1829,7 @@ function ApplicationReviewDrawer({
 
           <section className="admin-review-stage-card">
             <span>
-              STAGE 1
+              REVIEW 1
             </span>
 
             <h3>
@@ -1886,6 +1851,7 @@ function ApplicationReviewDrawer({
 
                 <p>
                   Reviewed by{" "}
+
                   <strong>
                     {application.onboarding_reviewer
                       ?.full_name ||
@@ -1911,7 +1877,7 @@ function ApplicationReviewDrawer({
               </>
             ) : (
               <p>
-                No recommendation has been recorded yet.
+                Review the submitted mentor information and record the Mentor Onboarding recommendation.
               </p>
             )}
 
@@ -1932,6 +1898,14 @@ function ApplicationReviewDrawer({
                 }
                 rejectLabel="Recommend rejection"
                 approveLabel="Recommend approval"
+                approveDisabled={
+                  !membershipVerified
+                }
+                approveDisabledMessage={
+                  !membershipVerified
+                    ? "Confirm TCN Ikeja membership before recommending approval."
+                    : ""
+                }
                 onCancel={() => {
                   setReviewMode(
                     "",
@@ -1941,11 +1915,15 @@ function ApplicationReviewDrawer({
                     "",
                   );
                 }}
-                onRejectStart={() =>
+                onRejectStart={() => {
                   setReviewMode(
                     "recommend_reject",
-                  )
-                }
+                  );
+
+                  setFeedback(
+                    "",
+                  );
+                }}
                 onReject={() =>
                   onSubmitReview(
                     "recommend_reject",
@@ -1962,7 +1940,7 @@ function ApplicationReviewDrawer({
 
           <section className="admin-review-stage-card">
             <span>
-              STAGE 2
+              REVIEW 2
             </span>
 
             <h3>
@@ -1984,6 +1962,7 @@ function ApplicationReviewDrawer({
 
                 <p>
                   Reviewed by{" "}
+
                   <strong>
                     {application.operations_reviewer
                       ?.full_name ||
@@ -2009,11 +1988,7 @@ function ApplicationReviewDrawer({
               </>
             ) : onboardingComplete ? (
               <p>
-                The application is ready for Operations and Governance sign-off.
-              </p>
-            ) : isFullAccessAdmin ? (
-              <p>
-                No Stage 1 recommendation has been recorded yet. Full-access administrators may still make the final decision.
+                The Mentor Onboarding recommendation is complete. Record the final Operations and Governance decision.
               </p>
             ) : (
               <p>
@@ -2038,6 +2013,14 @@ function ApplicationReviewDrawer({
                 }
                 rejectLabel="Reject application"
                 approveLabel="Final approval"
+                approveDisabled={
+                  !membershipVerified
+                }
+                approveDisabledMessage={
+                  !membershipVerified
+                    ? "Membership must be verified before final approval."
+                    : ""
+                }
                 onCancel={() => {
                   setReviewMode(
                     "",
@@ -2047,11 +2030,15 @@ function ApplicationReviewDrawer({
                     "",
                   );
                 }}
-                onRejectStart={() =>
+                onRejectStart={() => {
                   setReviewMode(
                     "reject",
-                  )
-                }
+                  );
+
+                  setFeedback(
+                    "",
+                  );
+                }}
                 onReject={() =>
                   onSubmitReview(
                     "reject",
@@ -2082,7 +2069,7 @@ function ApplicationReviewDrawer({
           )}
         </div>
 
-        <footer className="admin-review-drawer-footer admin-review-drawer-footer--single">
+        <footer className="admin-review-drawer-footer">
           <button
             type="button"
             className="admin-drawer-secondary"
@@ -2108,6 +2095,8 @@ function ReviewActionBox({
   processing,
   rejectLabel,
   approveLabel,
+  approveDisabled = false,
+  approveDisabledMessage = "",
   onCancel,
   onRejectStart,
   onReject,
@@ -2133,12 +2122,20 @@ function ReviewActionBox({
               )
             }
             rows="4"
-            placeholder="Provide a clear reason."
+            placeholder="Provide a clear reason for this decision."
             disabled={
               processing
             }
           />
         </label>
+      )}
+
+      {approveDisabledMessage && (
+        <p className="admin-review-action-warning">
+          {
+            approveDisabledMessage
+          }
+        </p>
       )}
 
       <div className="admin-review-inline-actions">
@@ -2194,7 +2191,8 @@ function ReviewActionBox({
                 onApprove
               }
               disabled={
-                processing
+                processing ||
+                approveDisabled
               }
             >
               {processing
@@ -2329,42 +2327,6 @@ function AdminEmptyState({
   );
 }
 
-function formatMembershipVerificationMethod(
-  value,
-) {
-  const labels = {
-    service_unit:
-      "Service unit or department",
-
-    leader_reference:
-      "TCN leader reference",
-
-    manual_admin_review:
-      "Manual administrator review",
-  };
-
-  return (
-    labels[value] ||
-    "Not provided"
-  );
-}
-
-function getMembershipReferenceText(
-  person,
-) {
-  if (
-    person.membership_verification_method ===
-    "manual_admin_review"
-  ) {
-    return "Manual administrator review requested";
-  }
-
-  return (
-    person.membership_reference ||
-    "Not provided"
-  );
-}
-
 function getApplicationReviewStageLabel(
   application,
 ) {
@@ -2391,6 +2353,26 @@ function getApplicationReviewStageLabel(
   return "Awaiting Mentor Onboarding review";
 }
 
+function formatMembershipVerificationMethod(
+  value,
+) {
+  const labels = {
+    service_unit:
+      "Service unit or department",
+
+    leader_reference:
+      "TCN leader reference",
+
+    manual_admin_review:
+      "Manual administrator review",
+  };
+
+  return (
+    labels[value] ||
+    "Not provided"
+  );
+}
+
 function formatAdminOperationalRole(
   role,
 ) {
@@ -2409,6 +2391,9 @@ function formatAdminOperationalRole(
 
     trust_safety_case_resolution_lead:
       "Trust, Safety and Case Resolution Lead",
+
+    full_access_admin:
+      "Full Access Admin",
   };
 
   return (
