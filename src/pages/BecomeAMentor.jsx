@@ -1,4 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import {
   BriefcaseBusiness,
   Camera,
@@ -7,6 +12,7 @@ import {
   Languages,
   Trash2,
 } from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
 
 import { supabase } from "../lib/supabase";
@@ -17,6 +23,44 @@ import "./BecomeAMentor.css";
 
 const PHOTO_BUCKET =
   "mentor-profile-photos";
+
+const mentorshipCategories = [
+  "Career development",
+  "Business and entrepreneurship",
+  "Leadership",
+  "Faith and spiritual growth",
+  "Personal development",
+  "Technology",
+];
+
+const meetingFormatOptions = [
+  "Virtual",
+  "In person",
+];
+
+const sessionLengthOptions = [
+  30,
+  45,
+  60,
+];
+
+const initialForm = {
+  jobTitle: "",
+  organisation: "",
+  yearsOfExperience: "",
+  biography: "",
+  expertise: "",
+  categories: [],
+  languages: "English",
+  meetingFormats: [
+    "Virtual",
+  ],
+  sessionLengths: [
+    45,
+  ],
+  maximumActiveMentees:
+    "3",
+};
 
 function getStoragePathFromPublicUrl(
   publicUrl,
@@ -29,7 +73,9 @@ function getStoragePathFromPublicUrl(
     `/storage/v1/object/public/${PHOTO_BUCKET}/`;
 
   const markerIndex =
-    publicUrl.indexOf(marker);
+    publicUrl.indexOf(
+      marker,
+    );
 
   if (markerIndex === -1) {
     return "";
@@ -43,33 +89,10 @@ function getStoragePathFromPublicUrl(
   );
 }
 
-const mentorshipCategories = [
-  "Career development",
-  "Business and entrepreneurship",
-  "Leadership",
-  "Faith and spiritual growth",
-  "Personal development",
-  "Technology",
-];
-
-const meetingFormatOptions = ["Virtual", "In person"];
-const sessionLengthOptions = [30, 45, 60];
-
-const initialForm = {
-  jobTitle: "",
-  organisation: "",
-  yearsOfExperience: "",
-  biography: "",
-  expertise: "",
-  categories: [],
-  languages: "English",
-  meetingFormats: ["Virtual"],
-  sessionLengths: [45],
-  maximumActiveMentees: "3",
-};
-
 function BecomeAMentor() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
+
   const {
     user,
     profile,
@@ -79,14 +102,20 @@ function BecomeAMentor() {
   const photoInputRef =
     useRef(null);
 
-  const [form, setForm] =
-    useState(initialForm);
+  const [
+    form,
+    setForm,
+  ] = useState(
+    initialForm,
+  );
 
-  const [photoUrl, setPhotoUrl] =
-    useState(
-      profile?.profile_photo_url ||
-        "",
-    );
+  const [
+    photoUrl,
+    setPhotoUrl,
+  ] = useState(
+    profile?.profile_photo_url ||
+      "",
+  );
 
   const [
     uploadingPhoto,
@@ -103,18 +132,24 @@ function BecomeAMentor() {
     setCheckingExistingApplication,
   ] = useState(true);
 
-  const [submitting, setSubmitting] =
-    useState(false);
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
 
-  const [error, setError] =
-    useState("");
+  const [
+    error,
+    setError,
+  ] = useState("");
 
   useEffect(() => {
     setPhotoUrl(
       profile?.profile_photo_url ||
         "",
     );
-  }, [profile?.profile_photo_url]);
+  }, [
+    profile?.profile_photo_url,
+  ]);
 
   useEffect(() => {
     let isMounted = true;
@@ -122,7 +157,9 @@ function BecomeAMentor() {
     async function checkExistingApplication() {
       if (!user?.id) {
         if (isMounted) {
-          setCheckingExistingApplication(false);
+          setCheckingExistingApplication(
+            false,
+          );
         }
 
         return;
@@ -130,14 +167,25 @@ function BecomeAMentor() {
 
       const {
         data,
-        error: applicationError,
+        error:
+          applicationError,
       } = await supabase
-        .from("mentor_applications")
-        .select("id, status, created_at")
-        .eq("applicant_user_id", user.id)
-        .order("created_at", {
-          ascending: false,
-        })
+        .from(
+          "mentor_applications",
+        )
+        .select(
+          "id, status, created_at",
+        )
+        .eq(
+          "applicant_user_id",
+          user.id,
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          },
+        )
         .limit(1)
         .maybeSingle();
 
@@ -145,7 +193,9 @@ function BecomeAMentor() {
         return;
       }
 
-      if (applicationError) {
+      if (
+        applicationError
+      ) {
         console.error(
           "Unable to check mentor application:",
           applicationError,
@@ -155,10 +205,18 @@ function BecomeAMentor() {
           "We could not check your mentor application. Please try again.",
         );
 
-        setCheckingExistingApplication(false);
+        setCheckingExistingApplication(
+          false,
+        );
+
         return;
       }
 
+      /*
+        Existing applicants should
+        not create another first
+        application from this page.
+      */
       if (data) {
         navigate(
           "/mentor/application-status",
@@ -170,7 +228,9 @@ function BecomeAMentor() {
         return;
       }
 
-      setCheckingExistingApplication(false);
+      setCheckingExistingApplication(
+        false,
+      );
     }
 
     checkExistingApplication();
@@ -178,16 +238,25 @@ function BecomeAMentor() {
     return () => {
       isMounted = false;
     };
-  }, [navigate, user?.id]);
+  }, [
+    navigate,
+    user?.id,
+  ]);
 
-  function updateForm(event) {
-    const { name, value } =
-      event.target;
+  function updateForm(
+    event,
+  ) {
+    const {
+      name,
+      value,
+    } = event.target;
 
-    setForm((current) => ({
-      ...current,
-      [name]: value,
-    }));
+    setForm(
+      (current) => ({
+        ...current,
+        [name]: value,
+      }),
+    );
 
     setError("");
   }
@@ -196,28 +265,35 @@ function BecomeAMentor() {
     field,
     option,
   ) {
-    setForm((current) => {
-      const currentOptions =
-        current[field];
+    setForm(
+      (current) => {
+        const currentOptions =
+          current[field];
 
-      const optionIsSelected =
-        currentOptions.includes(
-          option,
-        );
+        const optionIsSelected =
+          currentOptions.includes(
+            option,
+          );
 
-      return {
-        ...current,
-        [field]: optionIsSelected
-          ? currentOptions.filter(
-              (item) =>
-                item !== option,
-            )
-          : [
-              ...currentOptions,
-              option,
-            ],
-      };
-    });
+        return {
+          ...current,
+
+          [field]:
+            optionIsSelected
+              ? currentOptions.filter(
+                  (
+                    item,
+                  ) =>
+                    item !==
+                    option,
+                )
+              : [
+                  ...currentOptions,
+                  option,
+                ],
+        };
+      },
+    );
 
     setError("");
   }
@@ -226,33 +302,56 @@ function BecomeAMentor() {
     field,
     option,
   ) {
-    setForm((current) => {
-      const currentOptions =
-        current[field];
+    setForm(
+      (current) => {
+        const currentOptions =
+          current[field];
 
-      const optionIsSelected =
-        currentOptions.includes(
-          option,
-        );
+        const optionIsSelected =
+          currentOptions.includes(
+            option,
+          );
 
-      return {
-        ...current,
-        [field]: optionIsSelected
-          ? currentOptions.filter(
-              (item) =>
-                item !== option,
-            )
-          : [
-              ...currentOptions,
-              option,
-            ].sort(
-              (first, second) =>
-                first - second,
-            ),
-      };
-    });
+        return {
+          ...current,
+
+          [field]:
+            optionIsSelected
+              ? currentOptions.filter(
+                  (
+                    item,
+                  ) =>
+                    item !==
+                    option,
+                )
+              : [
+                  ...currentOptions,
+                  option,
+                ].sort(
+                  (
+                    first,
+                    second,
+                  ) =>
+                    first -
+                    second,
+                ),
+        };
+      },
+    );
 
     setError("");
+  }
+
+  function splitCommaSeparatedValues(
+    value,
+  ) {
+    return value
+      .split(",")
+      .map(
+        (item) =>
+          item.trim(),
+      )
+      .filter(Boolean);
   }
 
   async function uploadPhoto(
@@ -261,7 +360,8 @@ function BecomeAMentor() {
     const file =
       event.target.files?.[0];
 
-    event.target.value = "";
+    event.target.value =
+      "";
 
     if (!file) {
       return;
@@ -283,6 +383,7 @@ function BecomeAMentor() {
       setError(
         "Please choose a JPG, PNG or WebP image.",
       );
+
       return;
     }
 
@@ -293,6 +394,7 @@ function BecomeAMentor() {
       setError(
         "Please choose an image smaller than 5 MB.",
       );
+
       return;
     }
 
@@ -300,10 +402,13 @@ function BecomeAMentor() {
       setError(
         "We could not identify your account. Please sign in again.",
       );
+
       return;
     }
 
-    setUploadingPhoto(true);
+    setUploadingPhoto(
+      true,
+    );
 
     const extension =
       (
@@ -323,9 +428,12 @@ function BecomeAMentor() {
       `${user.id}/mentor-application-${Date.now()}.${extension}`;
 
     const {
-      error: uploadError,
+      error:
+        uploadError,
     } = await supabase.storage
-      .from(PHOTO_BUCKET)
+      .from(
+        PHOTO_BUCKET,
+      )
       .upload(
         filePath,
         file,
@@ -347,7 +455,10 @@ function BecomeAMentor() {
           "We could not upload your profile photo.",
       );
 
-      setUploadingPhoto(false);
+      setUploadingPhoto(
+        false,
+      );
+
       return;
     }
 
@@ -355,7 +466,9 @@ function BecomeAMentor() {
       data:
         publicUrlData,
     } = supabase.storage
-      .from(PHOTO_BUCKET)
+      .from(
+        PHOTO_BUCKET,
+      )
       .getPublicUrl(
         filePath,
       );
@@ -366,20 +479,33 @@ function BecomeAMentor() {
 
     if (!newPhotoUrl) {
       await supabase.storage
-        .from(PHOTO_BUCKET)
-        .remove([filePath]);
+        .from(
+          PHOTO_BUCKET,
+        )
+        .remove([
+          filePath,
+        ]);
 
       setError(
         "The image uploaded, but we could not prepare its link.",
       );
 
-      setUploadingPhoto(false);
+      setUploadingPhoto(
+        false,
+      );
+
       return;
     }
 
     const oldPhotoUrl =
       photoUrl;
 
+    /*
+      Save the image against the
+      member profile so the same
+      photo can later be reused
+      after mentor approval.
+    */
     const {
       error:
         profilePhotoError,
@@ -400,15 +526,22 @@ function BecomeAMentor() {
       );
 
       await supabase.storage
-        .from(PHOTO_BUCKET)
-        .remove([filePath]);
+        .from(
+          PHOTO_BUCKET,
+        )
+        .remove([
+          filePath,
+        ]);
 
       setError(
         profilePhotoError.message ||
           "We could not save your profile photo.",
       );
 
-      setUploadingPhoto(false);
+      setUploadingPhoto(
+        false,
+      );
+
       return;
     }
 
@@ -425,14 +558,19 @@ function BecomeAMentor() {
 
     if (
       oldPath &&
-      oldPath !== filePath
+      oldPath !==
+        filePath
     ) {
       const {
         error:
           oldPhotoDeleteError,
       } = await supabase.storage
-        .from(PHOTO_BUCKET)
-        .remove([oldPath]);
+        .from(
+          PHOTO_BUCKET,
+        )
+        .remove([
+          oldPath,
+        ]);
 
       if (
         oldPhotoDeleteError
@@ -444,7 +582,9 @@ function BecomeAMentor() {
       }
     }
 
-    setUploadingPhoto(false);
+    setUploadingPhoto(
+      false,
+    );
   }
 
   async function deletePhoto() {
@@ -456,13 +596,17 @@ function BecomeAMentor() {
     }
 
     setError("");
-    setDeletingPhoto(true);
+
+    setDeletingPhoto(
+      true,
+    );
 
     const oldPhotoUrl =
       photoUrl;
 
     const {
-      error: clearError,
+      error:
+        clearError,
     } = await supabase.rpc(
       "clear_my_profile_photo_url",
     );
@@ -478,7 +622,10 @@ function BecomeAMentor() {
           "We could not remove your profile photo.",
       );
 
-      setDeletingPhoto(false);
+      setDeletingPhoto(
+        false,
+      );
+
       return;
     }
 
@@ -496,8 +643,12 @@ function BecomeAMentor() {
         error:
           storageDeleteError,
       } = await supabase.storage
-        .from(PHOTO_BUCKET)
-        .remove([oldPath]);
+        .from(
+          PHOTO_BUCKET,
+        )
+        .remove([
+          oldPath,
+        ]);
 
       if (
         storageDeleteError
@@ -509,24 +660,16 @@ function BecomeAMentor() {
       }
     }
 
-    setDeletingPhoto(false);
-  }
-
-  function splitCommaSeparatedValues(
-    value,
-  ) {
-    return value
-      .split(",")
-      .map((item) =>
-        item.trim(),
-      )
-      .filter(Boolean);
+    setDeletingPhoto(
+      false,
+    );
   }
 
   async function handleSubmit(
     event,
   ) {
     event.preventDefault();
+
     setError("");
 
     const expertise =
@@ -539,10 +682,14 @@ function BecomeAMentor() {
         form.languages,
       );
 
+    /*
+      Profile photo is required.
+    */
     if (!photoUrl) {
       setError(
         "Please upload a profile photo before submitting your mentor application.",
       );
+
       return;
     }
 
@@ -553,88 +700,142 @@ function BecomeAMentor() {
       setError(
         "Please wait for your profile photo update to finish.",
       );
+
       return;
     }
 
     if (
-      form.biography.trim().length <
+      !form.jobTitle.trim()
+    ) {
+      setError(
+        "Please enter your current role or occupation.",
+      );
+
+      return;
+    }
+
+    if (
+      form.yearsOfExperience ===
+      ""
+    ) {
+      setError(
+        "Please enter your years of experience.",
+      );
+
+      return;
+    }
+
+    if (
+      form.biography
+        .trim()
+        .length <
       50
     ) {
       setError(
         "Please write a biography containing at least 50 characters.",
       );
-      return;
-    }
 
-    if (expertise.length === 0) {
-      setError(
-        "Please provide at least one area of expertise.",
-      );
       return;
     }
 
     if (
-      form.categories.length === 0
+      expertise.length ===
+      0
+    ) {
+      setError(
+        "Please provide at least one area of expertise.",
+      );
+
+      return;
+    }
+
+    if (
+      form.categories
+        .length ===
+      0
     ) {
       setError(
         "Please select at least one mentorship category.",
       );
-      return;
-    }
 
-    if (languages.length === 0) {
-      setError(
-        "Please provide at least one language.",
-      );
       return;
     }
 
     if (
-      form.meetingFormats.length ===
+      languages.length ===
+      0
+    ) {
+      setError(
+        "Please provide at least one language.",
+      );
+
+      return;
+    }
+
+    if (
+      form.meetingFormats
+        .length ===
       0
     ) {
       setError(
         "Please select at least one meeting format.",
       );
+
       return;
     }
 
     if (
-      form.sessionLengths.length ===
+      form.sessionLengths
+        .length ===
       0
     ) {
       setError(
         "Please select at least one session length.",
       );
+
       return;
     }
 
-    setSubmitting(true);
+    setSubmitting(
+      true,
+    );
 
     const {
-      error: applicationError,
+      error:
+        applicationError,
     } = await supabase.rpc(
       "save_mentor_application",
       {
         p_biography:
           form.biography.trim(),
+
         p_job_title:
           form.jobTitle.trim(),
+
         p_organisation:
           form.organisation.trim() ||
           null,
-        p_expertise: expertise,
+
+        p_expertise:
+          expertise,
+
         p_mentorship_categories:
           form.categories,
-        p_languages: languages,
+
+        p_languages:
+          languages,
+
         p_meeting_formats:
           form.meetingFormats,
+
         p_session_lengths:
           form.sessionLengths,
+
         p_maximum_active_mentees:
           Number(
             form.maximumActiveMentees,
           ),
+
         p_years_of_experience:
           Number(
             form.yearsOfExperience,
@@ -642,9 +843,13 @@ function BecomeAMentor() {
       },
     );
 
-    setSubmitting(false);
+    setSubmitting(
+      false,
+    );
 
-    if (applicationError) {
+    if (
+      applicationError
+    ) {
       console.error(
         "Unable to submit mentor application:",
         applicationError,
@@ -666,7 +871,9 @@ function BecomeAMentor() {
     );
   }
 
-  if (checkingExistingApplication) {
+  if (
+    checkingExistingApplication
+  ) {
     return (
       <DashboardLayout
         title="Become a mentor"
@@ -690,7 +897,9 @@ function BecomeAMentor() {
     >
       <form
         className="mentor-application-form"
-        onSubmit={handleSubmit}
+        onSubmit={
+          handleSubmit
+        }
       >
         <section className="mentor-application-intro">
           <div>
@@ -713,6 +922,8 @@ function BecomeAMentor() {
           </div>
         </section>
 
+        {/* PROFILE PHOTO */}
+
         <section className="mentor-application-section mentor-application-photo-section">
           <div className="mentor-application-section-heading">
             <Camera
@@ -726,10 +937,10 @@ function BecomeAMentor() {
 
               <p>
                 Add a clear and recent
-                photo of yourself. This
-                photo will be used on
-                your mentor profile if
-                your application is
+                photo of yourself.
+                This photo will appear
+                on your mentor profile
+                if your application is
                 approved.
               </p>
             </div>
@@ -738,11 +949,15 @@ function BecomeAMentor() {
           <div className="mentor-application-photo-layout">
             <div className="mentor-application-photo-column">
               <input
-                ref={photoInputRef}
+                ref={
+                  photoInputRef
+                }
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 hidden
-                onChange={uploadPhoto}
+                onChange={
+                  uploadPhoto
+                }
                 disabled={
                   submitting ||
                   uploadingPhoto ||
@@ -759,7 +974,9 @@ function BecomeAMentor() {
               >
                 {photoUrl ? (
                   <img
-                    src={photoUrl}
+                    src={
+                      photoUrl
+                    }
                     alt="Your mentor profile preview"
                   />
                 ) : (
@@ -777,7 +994,8 @@ function BecomeAMentor() {
               </div>
 
               <small className="mentor-application-photo-help">
-                JPG, PNG or WebP. Maximum 5 MB.
+                JPG, PNG or WebP.
+                Maximum 5 MB.
               </small>
             </div>
 
@@ -793,12 +1011,10 @@ function BecomeAMentor() {
 
               <p>
                 Use a clear photo with
-                your face visible. Once
-                your mentor application
-                is approved and your
-                mentor account is
-                created, this same photo
-                will appear on your
+                your face visible. If
+                your application is
+                approved, this photo
+                will be used on your
                 mentor profile and in
                 mentor discovery.
               </p>
@@ -834,7 +1050,9 @@ function BecomeAMentor() {
                   <button
                     type="button"
                     className="mentor-application-photo-remove"
-                    onClick={deletePhoto}
+                    onClick={
+                      deletePhoto
+                    }
                     disabled={
                       submitting ||
                       uploadingPhoto ||
@@ -858,6 +1076,8 @@ function BecomeAMentor() {
           </div>
         </section>
 
+        {/* PROFESSIONAL BACKGROUND */}
+
         <section className="mentor-application-section">
           <div className="mentor-application-section-heading">
             <BriefcaseBusiness
@@ -866,8 +1086,7 @@ function BecomeAMentor() {
 
             <div>
               <h3>
-                Professional
-                background
+                Professional background
               </h3>
 
               <p>
@@ -880,8 +1099,7 @@ function BecomeAMentor() {
 
           <div className="mentor-application-grid">
             <label>
-              Current role or
-              occupation
+              Current role or occupation
 
               <input
                 type="text"
@@ -946,6 +1164,8 @@ function BecomeAMentor() {
           </div>
         </section>
 
+        {/* MENTORING FOCUS */}
+
         <section className="mentor-application-section">
           <div className="mentor-application-section-heading">
             <HeartHandshake
@@ -958,8 +1178,8 @@ function BecomeAMentor() {
               </h3>
 
               <p>
-                Help us understand
-                the guidance you can
+                Help us understand the
+                guidance you can
                 provide.
               </p>
             </div>
@@ -987,11 +1207,11 @@ function BecomeAMentor() {
 
             <small>
               {
-                form.biography.trim()
+                form.biography
+                  .trim()
                   .length
               }
-              /50 minimum
-              characters
+              /50 minimum characters
             </small>
           </label>
 
@@ -1015,8 +1235,8 @@ function BecomeAMentor() {
             />
 
             <small>
-              Separate multiple
-              areas with commas.
+              Separate multiple areas
+              with commas.
             </small>
           </label>
 
@@ -1033,7 +1253,9 @@ function BecomeAMentor() {
 
             <div className="mentor-checkbox-grid">
               {mentorshipCategories.map(
-                (category) => (
+                (
+                  category,
+                ) => (
                   <label
                     key={
                       category
@@ -1067,6 +1289,8 @@ function BecomeAMentor() {
           </fieldset>
         </section>
 
+        {/* AVAILABILITY */}
+
         <section className="mentor-application-section">
           <div className="mentor-application-section-heading">
             <Languages
@@ -1075,8 +1299,7 @@ function BecomeAMentor() {
 
             <div>
               <h3>
-                Availability
-                preferences
+                Availability preferences
               </h3>
 
               <p>
@@ -1120,7 +1343,9 @@ function BecomeAMentor() {
 
               <div className="mentor-checkbox-stack">
                 {meetingFormatOptions.map(
-                  (format) => (
+                  (
+                    format,
+                  ) => (
                     <label
                       key={
                         format
@@ -1155,13 +1380,14 @@ function BecomeAMentor() {
 
             <fieldset className="mentor-option-group compact">
               <legend>
-                Preferred session
-                length
+                Preferred session length
               </legend>
 
               <div className="mentor-checkbox-stack">
                 {sessionLengthOptions.map(
-                  (length) => (
+                  (
+                    length,
+                  ) => (
                     <label
                       key={
                         length
@@ -1196,8 +1422,7 @@ function BecomeAMentor() {
           </div>
 
           <label className="mentor-application-full-field">
-            Maximum number of
-            active mentees
+            Maximum number of active mentees
 
             <div className="mentor-application-select-field">
               <select
@@ -1223,7 +1448,9 @@ function BecomeAMentor() {
                   8,
                   10,
                 ].map(
-                  (number) => (
+                  (
+                    number,
+                  ) => (
                     <option
                       key={
                         number
@@ -1233,8 +1460,7 @@ function BecomeAMentor() {
                       }
                     >
                       {number}{" "}
-                      {number ===
-                      1
+                      {number === 1
                         ? "mentee"
                         : "mentees"}
                     </option>
@@ -1279,7 +1505,9 @@ function BecomeAMentor() {
               )
             }
             disabled={
-              submitting
+              submitting ||
+              uploadingPhoto ||
+              deletingPhoto
             }
           >
             Cancel
