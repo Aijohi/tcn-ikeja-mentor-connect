@@ -56,8 +56,11 @@
   overflow-x: auto;
   scrollbar-width: none;
 }
+
 .hmc-public-mentor-tabs::-webkit-scrollbar,
-.hmc-public-mentor-viewport::-webkit-scrollbar { display: none; }
+.hmc-public-mentor-viewport::-webkit-scrollbar {
+  display: none;
+}
 
 .hmc-public-mentor-tabs button {
   flex: 0 0 auto;
@@ -99,18 +102,23 @@
   background: #fff;
   text-align: center;
 }
+
 .hmc-public-loading p,
 .hmc-public-empty p {
   margin: 0;
   font-size: 13px;
   line-height: 1.65;
 }
-.hmc-public-mentor-state { margin-top: 44px; }
+
+.hmc-public-mentor-state {
+  margin-top: 44px;
+}
 
 /* =========================================================
    DESKTOP: 4 columns x up to 4 rows = 16 mentors per page.
    Cards are intentionally compact, not long.
    ========================================================= */
+
 .hmc-public-mentor-viewport {
   width: 100%;
   margin-top: 42px;
@@ -136,15 +144,19 @@
   box-shadow: 0 18px 38px rgba(0,0,0,.22);
 }
 
+/*
+  Keep the uploaded portrait naturally framed.
+  The previous 5% / 7% focal point pushed some faces out of view.
+*/
 .hmc-public-mentor-photo {
   position: absolute;
-  inset: -12px 0 0;
+  inset: 0;
   z-index: 0;
   width: 100%;
-  height: calc(100% + 12px);
+  height: 100%;
   display: block;
   object-fit: cover;
-  object-position: center 7%;
+  object-position: center center;
 }
 
 .hmc-public-mentor-photo--placeholder {
@@ -153,6 +165,7 @@
   color: #d8dde0;
   background: linear-gradient(145deg, #5f676b, #262b2e);
 }
+
 .hmc-public-mentor-photo--placeholder span {
   font-size: 44px;
   font-weight: 800;
@@ -195,8 +208,7 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .hmc-public-mentor-card-tags {
@@ -205,6 +217,7 @@
   gap: 5px;
   margin-bottom: 7px;
 }
+
 .hmc-public-mentor-card-tags span {
   padding: 4px 7px;
   border: 1px solid rgba(255,255,255,.15);
@@ -223,6 +236,7 @@
   line-height: 1.05;
   letter-spacing: -.03em;
 }
+
 .hmc-public-mentor-role {
   margin: 4px 0 0;
   color: #e0e5e7;
@@ -239,13 +253,19 @@
   padding-top: 8px;
   border-top: 1px solid rgba(255,255,255,.14);
 }
+
 .hmc-public-mentor-stars {
   display: inline-flex;
   align-items: center;
   gap: 1px;
   color: #f5c84c;
 }
-.hmc-public-mentor-stars svg { width: 12px; height: 12px; }
+
+.hmc-public-mentor-stars svg {
+  width: 12px;
+  height: 12px;
+}
+
 .hmc-public-mentor-rating > span {
   color: #d3d9dc;
   font-size: 7.5px;
@@ -257,6 +277,7 @@
   gap: 6px 10px;
   margin-top: 7px;
 }
+
 .hmc-public-mentor-meta span {
   display: inline-flex;
   align-items: center;
@@ -264,7 +285,11 @@
   color: #dde2e4;
   font-size: 7.5px;
 }
-.hmc-public-mentor-meta svg { width: 13px; height: 13px; }
+
+.hmc-public-mentor-meta svg {
+  width: 13px;
+  height: 13px;
+}
 
 /* tertiary action, not a button */
 .hmc-public-mentor-view {
@@ -283,9 +308,18 @@
   font-weight: 750;
   text-decoration: none;
 }
-.hmc-public-mentor-view:hover { color: #ffb08b; }
-.hmc-public-mentor-view svg { transition: transform 160ms ease; }
-.hmc-public-mentor-view:hover svg { transform: translateX(3px); }
+
+.hmc-public-mentor-view:hover {
+  color: #ffb08b;
+}
+
+.hmc-public-mentor-view svg {
+  transition: transform 160ms ease;
+}
+
+.hmc-public-mentor-view:hover svg {
+  transform: translateX(3px);
+}
 
 /* pagination */
 .hmc-public-mentor-pagination {
@@ -295,6 +329,7 @@
   gap: 14px;
   margin-top: 28px;
 }
+
 .hmc-public-mentor-page-arrow {
   display: inline-flex;
   align-items: center;
@@ -312,16 +347,35 @@
   font-weight: 700;
   cursor: pointer;
 }
-.hmc-public-mentor-page-arrow:last-child { justify-self: end; }
-.hmc-public-mentor-page-arrow:disabled { opacity: .32; cursor: not-allowed; }
+
+.hmc-public-mentor-page-arrow:last-child {
+  justify-self: end;
+}
+
+.hmc-public-mentor-page-arrow:disabled {
+  opacity: .32;
+  cursor: not-allowed;
+}
+
 .hmc-public-mentor-page-numbers {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
 }
-.hmc-public-mentor-page-item { display: inline-flex; align-items: center; gap: 7px; }
-.hmc-public-mentor-page-item > i { color: #687379; font-size: 11px; font-style: normal; }
+
+.hmc-public-mentor-page-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.hmc-public-mentor-page-item > i {
+  color: #687379;
+  font-size: 11px;
+  font-style: normal;
+}
+
 .hmc-public-mentor-page-item > button {
   display: grid;
   place-items: center;
@@ -336,20 +390,51 @@
   font-weight: 750;
   cursor: pointer;
 }
+
 .hmc-public-mentor-page-item > button.is-current {
   color: #fff;
   border-color: #b65438;
   background: #4f2b24;
 }
-.hmc-public-mentor-mobile-hint { display: none; }
+
+.hmc-public-mentor-mobile-hint {
+  display: none;
+}
+
+/* =========================================================
+   FIND A MENTOR CTA
+   Keep it centred and compact on every screen size.
+   It must not stretch across the mobile page.
+   ========================================================= */
+
+.hmc-public-mentor-footer-cta {
+  display: flex !important;
+  align-items: center;
+  justify-content: center !important;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.hmc-public-mentor-footer-cta .hmc-pill,
+.hmc-public-mentor-footer-cta .hmc-pill--glass-primary {
+  width: auto !important;
+  min-width: 210px !important;
+  max-width: 250px !important;
+  flex: 0 0 auto !important;
+  margin-inline: auto !important;
+}
 
 /* testimonials already used by the homepage */
-.hmc-testimonials-section { background: #fff; }
+.hmc-testimonials-section {
+  background: #fff;
+}
+
 .hmc-testimonial-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0,1fr));
   gap: 18px;
 }
+
 .hmc-testimonial-card {
   display: flex;
   flex-direction: column;
@@ -361,23 +446,71 @@
   background: #fff;
   box-shadow: 0 10px 28px rgba(16,20,25,.04);
 }
-.hmc-testimonial-quote { color: #ff5303; }
-.hmc-testimonial-stars { display:flex; align-items:center; gap:3px; margin-top:18px; color:#ff5303; }
-.hmc-testimonial-card > p { margin:18px 0 24px; color:#2d353f; font-size:14px; line-height:1.75; }
-.hmc-testimonial-card footer { display:grid; gap:4px; margin-top:auto; padding-top:16px; border-top:1px solid #e4e8ef; }
-.hmc-testimonial-card footer strong { color:#101419; font-size:13px; }
-.hmc-testimonial-card footer span { color:#6f8095; font-size:11px; line-height:1.45; }
+
+.hmc-testimonial-quote {
+  color: #ff5303;
+}
+
+.hmc-testimonial-stars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 18px;
+  color: #ff5303;
+}
+
+.hmc-testimonial-card > p {
+  margin: 18px 0 24px;
+  color: #2d353f;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.hmc-testimonial-card footer {
+  display: grid;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #e4e8ef;
+}
+
+.hmc-testimonial-card footer strong {
+  color: #101419;
+  font-size: 13px;
+}
+
+.hmc-testimonial-card footer span {
+  color: #6f8095;
+  font-size: 11px;
+  line-height: 1.45;
+}
 
 /* tablet: 2 columns, 8 mentors per page */
 @media (max-width: 1000px) {
-  .hmc-public-mentor-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .hmc-public-mentor-card { height: 400px; }
-  .hmc-testimonial-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .hmc-public-mentor-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+
+  .hmc-public-mentor-card {
+    height: 400px;
+  }
+
+  .hmc-testimonial-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
 }
 
-/* mobile: 4 mentors per page, swipe one card at a time */
+/* =========================================================
+   MOBILE
+   4 mentors per page, one main card at a time with a visible
+   piece of the next card as the discovery cue.
+   ========================================================= */
+
 @media (max-width: 680px) {
-  .hmc-public-mentor-section { padding: 58px 0 68px; }
+  .hmc-public-mentor-section {
+    padding: 58px 0 68px;
+  }
+
   .hmc-public-mentor-heading > p {
     margin-bottom: 10px;
     font-size: 9px;
@@ -385,143 +518,32 @@
     line-height: 1.4;
     letter-spacing: .17em;
   }
-  .hmc-public-mentor-heading h2 { font-size: clamp(35px, 11vw, 47px); }
-  .hmc-public-mentor-heading > span { margin-top: 15px; font-size: 12px; line-height:1.65; }
-  .hmc-public-mentor-tabs { gap:8px; margin-top:24px; }
-  .hmc-public-mentor-tabs button { min-height:40px; padding:0 15px; font-size:10px; }
 
-  .hmc-public-mentor-viewport {
-    width: calc(100vw - 28px);
-    margin-top: 36px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-inline: contain;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .hmc-public-mentor-grid {
-    display: flex;
-    gap: 12px;
-    width: max-content;
-    min-width: 100%;
-  }
-  .hmc-public-mentor-card {
-    flex: 0 0 calc(100vw - 68px);
-    width: calc(100vw - 68px);
-    max-width: 380px;
-    height: 430px;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-  }
-  .hmc-public-mentor-photo { object-position: center 5%; }
-  .hmc-public-mentor-content { right:15px; bottom:12px; left:15px; }
-  .hmc-public-mentor-content h3 { font-size:21px; }
-  .hmc-public-mentor-role { font-size:9.5px; }
-  .hmc-public-mentor-card-tags span { font-size:7.5px; }
-  .hmc-public-mentor-rating > span,
-  .hmc-public-mentor-meta span { font-size:8px; }
-  .hmc-public-mentor-view { font-size:9px; }
-
-  .hmc-public-mentor-pagination {
-    grid-template-columns: 1fr auto 1fr;
-    gap: 8px;
-    margin-top: 21px;
-  }
-  .hmc-public-mentor-page-arrow { width:100%; min-width:0; padding:0 10px; }
-  .hmc-public-mentor-page-arrow span { display:none; }
-  .hmc-public-mentor-page-numbers { gap:5px; }
-  .hmc-public-mentor-page-item > button { width:35px; height:35px; }
-  .hmc-public-mentor-mobile-hint {
-    display:block;
-    margin:11px 0 0;
-    color:#8f999e;
-    font-size:9px;
-    text-align:center;
-  }
-  .hmc-testimonial-grid { grid-template-columns:1fr; }
-  .hmc-testimonial-card { min-height:0; padding:20px; }
-}
-
-
-/* Mobile mentor discovery cue: show a piece of the next card instead of instructional copy. */
-.hmc-public-mentor-mobile-hint {
-  display: none !important;
-}
-
-@media (max-width: 680px) {
-  .hmc-public-mentor-viewport {
-    width: calc(100vw - 28px);
-    padding-right: 0;
+  .hmc-public-mentor-heading h2 {
+    font-size: clamp(35px, 11vw, 47px);
   }
 
-  .hmc-public-mentor-card {
-    flex: 0 0 calc(100vw - 68px);
-    width: calc(100vw - 68px);
-    max-width: 390px;
+  .hmc-public-mentor-heading > span {
+    margin-top: 15px;
+    font-size: 12px;
+    line-height: 1.65;
   }
-}
 
-/* =========================================================
-   PRODUCTION OVERRIDES
-   Approved responsive mentor behaviour
-   ========================================================= */
-
-/* Filter tabs: active is burnt orange/brown, never white. */
-.hmc-public-mentor-section .hmc-public-mentor-tabs button {
-  color: #c7cdd2 !important;
-  background: #171b1f !important;
-  border-color: #353b41 !important;
-  font-weight: 500 !important;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-tabs button:hover {
-  color: #ffffff !important;
-  background: #1d2227 !important;
-  border-color: #4b535a !important;
-}
-
-.hmc-public-mentor-section .hmc-public-mentor-tabs button.is-active,
-.hmc-public-mentor-section .hmc-public-mentor-tabs button[aria-selected="true"] {
-  color: #ffffff !important;
-  background: #4f2b24 !important;
-  border-color: #b65438 !important;
-}
-
-/* Mobile single-card navigation controls.
-   Hidden on desktop/tablet. */
-.hmc-public-mentor-mobile-controls {
-  display: none;
-}
-
-/* Keep page pagination visible. */
-.hmc-public-mentor-section .hmc-public-mentor-pagination {
-  display: grid !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* The old swipe instruction is not required. */
-.hmc-public-mentor-mobile-hint {
-  display: none !important;
-}
-
-@media (max-width: 680px) {
-  /* Make the tabs horizontally scrollable without changing their colours. */
-  .hmc-public-mentor-section .hmc-public-mentor-tabs {
+  .hmc-public-mentor-tabs {
     display: flex !important;
     gap: 8px;
+    margin-top: 24px;
     overflow-x: auto;
     padding: 0 0 4px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
 
-  .hmc-public-mentor-section .hmc-public-mentor-tabs::-webkit-scrollbar {
+  .hmc-public-mentor-tabs::-webkit-scrollbar {
     display: none;
   }
 
-  .hmc-public-mentor-section .hmc-public-mentor-tabs button {
+  .hmc-public-mentor-tabs button {
     flex: 0 0 auto;
     min-height: 40px;
     padding: 0 15px;
@@ -529,30 +551,30 @@
     font-weight: 500 !important;
   }
 
-  /* Show one main mentor card while deliberately revealing the next card. */
-  .hmc-public-mentor-section .hmc-public-mentor-viewport {
+  .hmc-public-mentor-viewport {
     width: calc(100vw - 28px) !important;
+    margin-top: 36px;
     overflow-x: auto !important;
     overflow-y: hidden !important;
+    overscroll-behavior-inline: contain;
     scroll-snap-type: x mandatory;
     scroll-padding-left: 0;
-    overscroll-behavior-inline: contain;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
 
-  .hmc-public-mentor-section .hmc-public-mentor-viewport::-webkit-scrollbar {
+  .hmc-public-mentor-viewport::-webkit-scrollbar {
     display: none;
   }
 
-  .hmc-public-mentor-section .hmc-public-mentor-grid {
+  .hmc-public-mentor-grid {
     display: flex !important;
     gap: 12px;
     width: max-content !important;
     min-width: 100%;
   }
 
-  .hmc-public-mentor-section .hmc-public-mentor-card {
+  .hmc-public-mentor-card {
     flex: 0 0 calc(100vw - 72px) !important;
     width: calc(100vw - 72px) !important;
     max-width: 382px;
@@ -561,7 +583,38 @@
     scroll-snap-stop: always;
   }
 
-  /* Actual previous / next mentor arrows for the 4-card mobile page. */
+  /* Keep the same natural portrait focal point on mobile. */
+  .hmc-public-mentor-photo {
+    object-position: center center;
+  }
+
+  .hmc-public-mentor-content {
+    right: 15px;
+    bottom: 12px;
+    left: 15px;
+  }
+
+  .hmc-public-mentor-content h3 {
+    font-size: 21px;
+  }
+
+  .hmc-public-mentor-role {
+    font-size: 9.5px;
+  }
+
+  .hmc-public-mentor-card-tags span {
+    font-size: 7.5px;
+  }
+
+  .hmc-public-mentor-rating > span,
+  .hmc-public-mentor-meta span {
+    font-size: 8px;
+  }
+
+  .hmc-public-mentor-view {
+    font-size: 9px;
+  }
+
   .hmc-public-mentor-mobile-controls {
     display: grid !important;
     grid-template-columns: 42px 1fr 42px;
@@ -599,17 +652,17 @@
     text-align: center;
   }
 
-  /* Page pagination controls groups of 4 mentors.
-     This is separate from the arrows above, which move card by card. */
-  .hmc-public-mentor-section .hmc-public-mentor-pagination {
+  .hmc-public-mentor-pagination {
     display: grid !important;
     grid-template-columns: 42px 1fr 42px !important;
     align-items: center;
     gap: 10px;
     margin-top: 18px;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
-  .hmc-public-mentor-section .hmc-public-mentor-page-arrow {
+  .hmc-public-mentor-page-arrow {
     width: 42px !important;
     min-width: 42px !important;
     height: 42px;
@@ -618,278 +671,102 @@
     border-radius: 50%;
   }
 
-  .hmc-public-mentor-section .hmc-public-mentor-page-arrow:last-child {
+  .hmc-public-mentor-page-arrow:last-child {
     justify-self: end;
   }
 
-  .hmc-public-mentor-section .hmc-public-mentor-page-arrow span {
+  .hmc-public-mentor-page-arrow span {
     display: none !important;
   }
 
-  .hmc-public-mentor-section .hmc-public-mentor-page-numbers {
+  .hmc-public-mentor-page-numbers {
     display: flex !important;
     justify-content: center;
     gap: 6px;
     min-width: 0;
   }
 
-  .hmc-public-mentor-section .hmc-public-mentor-page-item > button {
+  .hmc-public-mentor-page-item > button {
     width: 36px;
     height: 36px;
     font-size: 10px;
     font-weight: 600;
   }
 
-  .hmc-public-mentor-section .hmc-public-mentor-page-item > button.is-current {
+  .hmc-public-mentor-page-item > button.is-current {
     color: #ffffff !important;
     background: #4f2b24 !important;
     border-color: #b65438 !important;
   }
-}
 
-
-/* =========================================================
-   PUBLIC MENTOR VERIFIED BADGE
-   Matches the verified treatment used inside the mentee app.
-   ========================================================= */
-
-.hmc-public-mentor-name-row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-}
-
-.hmc-public-mentor-name-row h3 {
-  min-width: 0;
-}
-
-.hmc-public-mentor-verified {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
-
-  border-radius: 50%;
-
-  color: #ffffff;
-  background: #1686f4;
-
-  box-shadow:
-    0 0 0 2px rgba(255,255,255,.12),
-    0 3px 10px rgba(0,0,0,.22);
-}
-
-.hmc-public-mentor-verified svg {
-  width: 12px;
-  height: 12px;
-  stroke-width: 2.2;
-}
-
-@media (max-width: 680px) {
-  .hmc-public-mentor-name-row {
-    gap: 8px;
+  .hmc-public-mentor-mobile-hint {
+    display: none !important;
   }
 
-  .hmc-public-mentor-verified {
-    width: 19px;
-    height: 19px;
-    flex-basis: 19px;
-  }
-
-  .hmc-public-mentor-verified svg {
-    width: 13px;
-    height: 13px;
-  }
-}
-
-
-/* =========================================================
-   PUBLIC MENTOR CTA + VERIFIED BADGE REFINEMENT
-   ========================================================= */
-
-/* Keep the Find a mentor CTA centred under the pagination. */
-.hmc-public-mentor-footer-cta {
-  display: flex !important;
-  align-items: center;
-  justify-content: center !important;
-
-  width: 100%;
-  margin-top: 24px;
-}
-
-/*
-  Keep the verified mark subtle, closer to the scale people
-  expect from social-profile verification marks.
-*/
-.hmc-public-mentor-name-row {
-  gap: 5px !important;
-}
-
-.hmc-public-mentor-verified {
-  width: 14px !important;
-  height: 14px !important;
-  flex: 0 0 14px !important;
-
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.14),
-    0 2px 6px rgba(0,0,0,.16) !important;
-}
-
-.hmc-public-mentor-verified svg {
-  width: 9px !important;
-  height: 9px !important;
-  stroke-width: 2.1 !important;
-}
-
-@media (max-width: 680px) {
   .hmc-public-mentor-footer-cta {
     justify-content: center !important;
     margin-top: 22px;
   }
 
-  .hmc-public-mentor-name-row {
-    gap: 5px !important;
+  .hmc-public-mentor-footer-cta .hmc-pill,
+  .hmc-public-mentor-footer-cta .hmc-pill--glass-primary {
+    width: 220px !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 64px) !important;
+    flex: 0 0 auto !important;
   }
 
-  .hmc-public-mentor-verified {
-    width: 14px !important;
-    height: 14px !important;
-    flex-basis: 14px !important;
+  .hmc-testimonial-grid {
+    grid-template-columns: 1fr;
   }
 
-  .hmc-public-mentor-verified svg {
-    width: 9px !important;
-    height: 9px !important;
+  .hmc-testimonial-card {
+    min-height: 0;
+    padding: 20px;
   }
 }
 
-
 /* =========================================================
-   VERIFIED BADGE — NAME ALIGNMENT
-   Keep the badge visually centred on the mentor name, not on
-   the full line box.
+   PRODUCTION OVERRIDES
+   Approved responsive mentor behaviour
    ========================================================= */
 
-.hmc-public-mentor-name-row {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-
-  width: fit-content;
-  max-width: 100%;
-
-  line-height: 1 !important;
+/* Filter tabs: active is burnt orange/brown, never white. */
+.hmc-public-mentor-section .hmc-public-mentor-tabs button {
+  color: #c7cdd2 !important;
+  background: #171b1f !important;
+  border-color: #353b41 !important;
+  font-weight: 500 !important;
 }
 
-.hmc-public-mentor-name-row h3 {
-  margin: 0 !important;
-  line-height: 1 !important;
+.hmc-public-mentor-section .hmc-public-mentor-tabs button:hover {
+  color: #ffffff !important;
+  background: #1d2227 !important;
+  border-color: #4b535a !important;
 }
 
-.hmc-public-mentor-verified {
-  position: relative;
-  top: -1px;
-
-  width: 13px !important;
-  height: 13px !important;
-  flex: 0 0 13px !important;
-
-  margin: 0 !important;
-
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.12) !important;
+.hmc-public-mentor-section .hmc-public-mentor-tabs button.is-active,
+.hmc-public-mentor-section .hmc-public-mentor-tabs button[aria-selected="true"] {
+  color: #ffffff !important;
+  background: #4f2b24 !important;
+  border-color: #b65438 !important;
 }
 
-.hmc-public-mentor-verified svg {
-  width: 8px !important;
-  height: 8px !important;
-  stroke-width: 2.15 !important;
+/* Keep page pagination visible. */
+.hmc-public-mentor-section .hmc-public-mentor-pagination {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
-@media (max-width: 680px) {
-  .hmc-public-mentor-name-row {
-    gap: 4px !important;
-  }
-
-  .hmc-public-mentor-verified {
-    top: -1px;
-
-    width: 13px !important;
-    height: 13px !important;
-    flex-basis: 13px !important;
-  }
-
-  .hmc-public-mentor-verified svg {
-    width: 8px !important;
-    height: 8px !important;
-  }
+/* The old swipe instruction is not required. */
+.hmc-public-mentor-mobile-hint {
+  display: none !important;
 }
-
 
 /* =========================================================
-   VERIFIED BADGE — SINGLE ICON ONLY
-   Remove the extra circular container. The BadgeCheck icon
-   itself is the verification mark.
-   ========================================================= */
-
-.hmc-public-mentor-verified {
-  position: relative;
-  top: -1px;
-
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-
-  width: 14px !important;
-  height: 14px !important;
-  flex: 0 0 14px !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  border: 0 !important;
-  border-radius: 0 !important;
-
-  color: #1686f4 !important;
-  background: transparent !important;
-
-  box-shadow: none !important;
-}
-
-.hmc-public-mentor-verified svg {
-  display: block !important;
-
-  width: 14px !important;
-  height: 14px !important;
-
-  color: #1686f4 !important;
-
-  fill: none !important;
-  stroke: currentColor !important;
-  stroke-width: 2.2 !important;
-}
-
-@media (max-width: 680px) {
-  .hmc-public-mentor-verified {
-    width: 14px !important;
-    height: 14px !important;
-    flex-basis: 14px !important;
-  }
-
-  .hmc-public-mentor-verified svg {
-    width: 14px !important;
-    height: 14px !important;
-  }
-}
-
-
-/* =========================================================
-   VERIFIED BADGE — TRUE INLINE NAME ALIGNMENT
-   The name and verification mark now live in the same h3.
+   PUBLIC MENTOR VERIFIED BADGE
+   Single blue BadgeCheck icon inline with the mentor name.
    ========================================================= */
 
 .hmc-public-mentor-content
@@ -897,19 +774,15 @@ h3.hmc-public-mentor-name-row {
   display: inline-flex !important;
   align-items: center !important;
   gap: 4px !important;
-
   width: fit-content !important;
   max-width: 100% !important;
-
   margin: 0 !important;
-
   line-height: 1.05 !important;
   vertical-align: middle !important;
 }
 
 .hmc-public-mentor-name-row > span:first-child {
   min-width: 0;
-
   line-height: inherit;
 }
 
@@ -917,41 +790,30 @@ h3.hmc-public-mentor-name-row {
 .hmc-public-mentor-verified {
   position: static !important;
   top: auto !important;
-
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-
   width: 14px !important;
   height: 14px !important;
   flex: 0 0 14px !important;
-
   margin: 0 !important;
   padding: 0 !important;
-
   line-height: 0 !important;
-
   border: 0 !important;
   border-radius: 0 !important;
-
   color: #1686f4 !important;
   background: transparent !important;
-
   box-shadow: none !important;
-
   transform: none !important;
 }
 
 .hmc-public-mentor-name-row
 .hmc-public-mentor-verified svg {
   display: block !important;
-
   width: 14px !important;
   height: 14px !important;
-
   fill: none !important;
   stroke: currentColor !important;
   stroke-width: 2.2 !important;
-
   transform: none !important;
 }
