@@ -6,8 +6,8 @@
 
 .admin-messages-toolbar {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: flex-end;
   gap: 20px;
   margin-bottom: 18px;
 }
@@ -652,3 +652,53 @@
     width: 100%;
   }
 }
+
+/* =========================================================
+   ADMIN MESSAGES CLEANUP
+   Keep one page heading from DashboardLayout and one border
+   around search fields.
+   ========================================================= */
+
+.admin-messages-toolbar {
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.admin-message-search,
+.admin-message-member-search {
+  overflow: hidden;
+}
+
+.admin-message-search > input,
+.admin-message-member-search > input {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 40px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.admin-message-search > input:hover,
+.admin-message-member-search > input:hover,
+.admin-message-search > input:focus,
+.admin-message-search > input:focus-visible,
+.admin-message-member-search > input:focus,
+.admin-message-member-search > input:focus-visible {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 760px) {
+  .admin-messages-toolbar {
+    align-items: stretch;
+  }
+}
+

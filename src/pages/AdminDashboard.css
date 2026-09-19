@@ -1802,3 +1802,127 @@ body:has(.admin-list-section) .dashboard-content {
   vertical-align: middle;
 }
 
+/* =========================================================
+   PEOPLE PAGE FILTERS
+   ========================================================= */
+
+.admin-people-page {
+  width: 100%;
+}
+
+.admin-people-filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.admin-people-primary-tabs,
+.admin-people-status-tabs {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.admin-people-primary-tabs button,
+.admin-people-status-tabs button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid #d7dee7;
+  border-radius: 8px;
+  color: #4c5867;
+  background: #ffffff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-people-primary-tabs button:hover,
+.admin-people-status-tabs button:hover {
+  border-color: #aeb9c7;
+  background: #f7f8fa;
+}
+
+.admin-people-primary-tabs button.active {
+  border-color: #101419;
+  color: #ffffff;
+  background: #101419;
+}
+
+.admin-people-status-tabs button.active {
+  border-color: #ff5303;
+  color: #c13c00;
+  background: #fff7f2;
+}
+
+.admin-people-status-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-people-status-filter > span {
+  flex: 0 0 auto;
+  color: #6f8095;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-people-list-toolbar {
+  margin-bottom: 18px;
+}
+
+.admin-people-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: min(430px, 100%);
+}
+
+.admin-people-search > svg {
+  position: absolute;
+  left: 13px;
+  z-index: 1;
+  color: #8794a4;
+  pointer-events: none;
+}
+
+.admin-list-toolbar .admin-people-search input {
+  width: 100% !important;
+  padding-left: 39px !important;
+  border: 1px solid #c9d2df !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.admin-list-toolbar .admin-people-search input:focus,
+.admin-list-toolbar .admin-people-search input:focus-visible {
+  border-color: #ff5303 !important;
+  box-shadow: 0 0 0 3px rgba(255, 83, 3, 0.09) !important;
+}
+
+@media (max-width: 760px) {
+  .admin-people-status-filter {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .admin-people-primary-tabs,
+  .admin-people-status-tabs {
+    width: 100%;
+    padding-bottom: 2px;
+  }
+
+  .admin-people-search {
+    width: 100%;
+  }
+}
+

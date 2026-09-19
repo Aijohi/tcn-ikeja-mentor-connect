@@ -649,16 +649,6 @@ function SubmittedApplications({
   return (
     <>
       <section className="admin-list-section admin-submitted-applications-section">
-        <div className="admin-workflow-section-heading">
-          <div>
-            <span>MENTOR APPLICATIONS</span>
-            <h2>Submitted mentor applications</h2>
-            <p>
-              Each application now contains the mentor's membership information and mentoring details in one submission.
-            </p>
-          </div>
-        </div>
-
         <div className="admin-application-toolbar">
           <div className="admin-search-field">
             <Search size={16} aria-hidden="true" />

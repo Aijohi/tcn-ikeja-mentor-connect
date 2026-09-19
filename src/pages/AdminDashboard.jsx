@@ -64,13 +64,13 @@ const pageInformation = {
   people: {
     title: "People",
     description:
-      "View the people who have registered on Mentor Connect.",
+      "View and manage mentees, mentors and administrators on Mentor Connect.",
   },
 
   applications: {
     title: "Mentor applications",
     description:
-      "Review people who have applied to become mentors.",
+      "Review and manage people who have applied to become mentors.",
   },
 
   requests: {
@@ -965,6 +965,8 @@ function OverviewPage() {
 function PeoplePage({ canManageAccounts = false }) {
   const [people, setPeople] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [peopleTypeFilter, setPeopleTypeFilter] = useState("all");
+  const [peopleStatusFilter, setPeopleStatusFilter] = useState("all");
   const [peoplePage, setPeoplePage] = useState(1);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [selectedAction, setSelectedAction] = useState("");
@@ -1067,9 +1069,33 @@ function PeoplePage({ canManageAccounts = false }) {
     setProcessing(false);
   }
 
+  const peopleTypeOptions = [
+    ["all", "All users"],
+    ["mentee", "Mentees"],
+    ["mentor", "Mentors"],
+    ["admin", "Administrators"],
+  ];
+
+  const statusOptions = getPeopleStatusOptions(peopleTypeFilter);
   const searchValue = searchTerm.trim().toLowerCase();
 
   const filteredPeople = people.filter((person) => {
+    const personType = getPeopleTypeFilterValue(person);
+
+    if (
+      peopleTypeFilter !== "all" &&
+      personType !== peopleTypeFilter
+    ) {
+      return false;
+    }
+
+    if (
+      peopleStatusFilter !== "all" &&
+      !matchesPeopleStatusFilter(person, peopleStatusFilter)
+    ) {
+      return false;
+    }
+
     if (!searchValue) {
       return true;
     }
@@ -1090,59 +1116,101 @@ function PeoplePage({ canManageAccounts = false }) {
 
   const totalPeoplePages = Math.max(
     1,
-    Math.ceil(
-      filteredPeople.length /
-        PEOPLE_PAGE_SIZE,
-    ),
+    Math.ceil(filteredPeople.length / PEOPLE_PAGE_SIZE),
   );
 
-  const safePeoplePage = Math.min(
-    peoplePage,
-    totalPeoplePages,
+  const safePeoplePage = Math.min(peoplePage, totalPeoplePages);
+  const firstPeopleIndex = (safePeoplePage - 1) * PEOPLE_PAGE_SIZE;
+
+  const visiblePeople = filteredPeople.slice(
+    firstPeopleIndex,
+    firstPeopleIndex + PEOPLE_PAGE_SIZE,
   );
-
-  const firstPeopleIndex =
-    (safePeoplePage - 1) *
-    PEOPLE_PAGE_SIZE;
-
-  const visiblePeople =
-    filteredPeople.slice(
-      firstPeopleIndex,
-      firstPeopleIndex +
-        PEOPLE_PAGE_SIZE,
-    );
 
   const visiblePeopleStart =
-    filteredPeople.length === 0
-      ? 0
-      : firstPeopleIndex + 1;
+    filteredPeople.length === 0 ? 0 : firstPeopleIndex + 1;
 
-  const visiblePeopleEnd =
-    Math.min(
-      firstPeopleIndex +
-        PEOPLE_PAGE_SIZE,
-      filteredPeople.length,
-    );
+  const visiblePeopleEnd = Math.min(
+    firstPeopleIndex + PEOPLE_PAGE_SIZE,
+    filteredPeople.length,
+  );
+
+  function changePeopleType(nextType) {
+    setPeopleTypeFilter(nextType);
+    setPeopleStatusFilter("all");
+    setPeoplePage(1);
+  }
+
+  function changePeopleStatus(nextStatus) {
+    setPeopleStatusFilter(nextStatus);
+    setPeoplePage(1);
+  }
 
   if (loading) {
     return <AdminLoadingState />;
   }
 
   return (
-    <section className="admin-list-section">
-      <div className="admin-list-toolbar">
-        <input
-          type="search"
-          value={searchTerm}
-          placeholder="Search by name, email or role"
-          aria-label="Search registered people"
-          onChange={(event) => {
-            setSearchTerm(
-              event.target.value,
-            );
-            setPeoplePage(1);
-          }}
-        />
+    <section className="admin-list-section admin-people-page">
+      <div className="admin-people-filter-panel">
+        <div
+          className="admin-people-primary-tabs"
+          role="tablist"
+          aria-label="Filter people by account type"
+        >
+          {peopleTypeOptions.map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={peopleTypeFilter === value}
+              className={peopleTypeFilter === value ? "active" : ""}
+              onClick={() => changePeopleType(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="admin-people-status-filter">
+          <span>Account status</span>
+
+          <div
+            className="admin-people-status-tabs"
+            role="tablist"
+            aria-label="Filter people by account status"
+          >
+            {statusOptions.map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="tab"
+                aria-selected={peopleStatusFilter === value}
+                className={peopleStatusFilter === value ? "active" : ""}
+                onClick={() => changePeopleStatus(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="admin-list-toolbar admin-people-list-toolbar">
+        <label className="admin-people-search">
+          <Search size={16} aria-hidden="true" />
+
+          <input
+            type="search"
+            value={searchTerm}
+            placeholder="Search by name, email or role"
+            aria-label="Search registered people"
+            onChange={(event) => {
+              setSearchTerm(event.target.value);
+              setPeoplePage(1);
+            }}
+          />
+        </label>
 
         <span>
           {filteredPeople.length}{" "}
@@ -1162,83 +1230,79 @@ function PeoplePage({ canManageAccounts = false }) {
       ) : filteredPeople.length === 0 ? (
         <AdminEmptyState
           title="No matching people"
-          description="Try another name, email or role."
+          description="Try another user type, status or search term."
         />
       ) : (
         <div className="admin-mobile-table-shell">
           <div className="admin-table-wrapper admin-responsive-table-desktop">
             <table className="admin-data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email address</th>
-                <th>Account type</th>
-                <th>Account status</th>
-                <th>Membership</th>
-                <th>Registered</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {visiblePeople.map((person) => (
-                <tr key={person.id}>
-                  <td>
-                    <strong>{person.full_name || "Name not provided"}</strong>
-                  </td>
-
-                  <td>{person.email}</td>
-
-                  <td>
-                    <StatusBadge
-                      value={getPersonAccountTypeValue(person)}
-                      label={getPersonAccountType(person)}
-                    />
-                  </td>
-
-                  <td>
-                    <StatusBadge
-                      value={person.account_status}
-                      label={
-                        person.account_status === "pending"
-                          ? "Awaiting verification"
-                          : undefined
-                      }
-                    />
-                  </td>
-
-                  <td>
-                    <StatusBadge
-                      value={
-                        person.membership_verified
-                          ? "verified"
-                          : "not_verified"
-                      }
-                      label={
-                        person.membership_verified
-                          ? "Verified"
-                          : "Not verified"
-                      }
-                    />
-                  </td>
-
-                  <td>{formatDate(person.created_at)}</td>
-
-                  <td>
-                    {canManageAccounts ? (
-                      <MemberActions
-                        person={person}
-                        onAction={openConfirmation}
-                      />
-                    ) : (
-                      <span className="admin-protected-account">
-                        View only
-                      </span>
-                    )}
-                  </td>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email address</th>
+                  <th>Account type</th>
+                  <th>Account status</th>
+                  <th>Membership</th>
+                  <th>Registered</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
+              </thead>
+
+              <tbody>
+                {visiblePeople.map((person) => (
+                  <tr key={person.id}>
+                    <td>
+                      <strong>{person.full_name || "Name not provided"}</strong>
+                    </td>
+
+                    <td>{person.email}</td>
+
+                    <td>
+                      <StatusBadge
+                        value={getPersonAccountTypeValue(person)}
+                        label={getPersonAccountType(person)}
+                      />
+                    </td>
+
+                    <td>
+                      <StatusBadge
+                        value={person.account_status}
+                        label={getPeopleAccountStatusLabel(person)}
+                      />
+                    </td>
+
+                    <td>
+                      <StatusBadge
+                        value={
+                          person.membership_verified
+                            ? "verified"
+                            : "not_verified"
+                        }
+                        label={
+                          person.membership_verified
+                            ? "Verified"
+                            : "Not verified"
+                        }
+                      />
+                    </td>
+
+                    <td>{formatDate(person.created_at)}</td>
+
+                    <td>
+                      {canManageAccounts ? (
+                        <MemberActions
+                          person={person}
+                          onAction={openConfirmation}
+                        />
+                      ) : (
+                        <span className="admin-protected-account">
+                          View only
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
 
@@ -1264,11 +1328,7 @@ function PeoplePage({ canManageAccounts = false }) {
                     <dd>
                       <StatusBadge
                         value={person.account_status}
-                        label={
-                          person.account_status === "pending"
-                            ? "Awaiting verification"
-                            : undefined
-                        }
+                        label={getPeopleAccountStatusLabel(person)}
                       />
                     </dd>
                   </div>
@@ -1315,9 +1375,7 @@ function PeoplePage({ canManageAccounts = false }) {
 
           <div className="admin-table-pagination">
             <p>
-              Showing{" "}
-              {visiblePeopleStart}-
-              {visiblePeopleEnd} of{" "}
+              Showing {visiblePeopleStart}-{visiblePeopleEnd} of{" "}
               {filteredPeople.length}
             </p>
 
@@ -1326,50 +1384,32 @@ function PeoplePage({ canManageAccounts = false }) {
                 type="button"
                 aria-label="Previous people page"
                 onClick={() =>
-                  setPeoplePage(
-                    (currentPage) =>
-                      Math.max(
-                        1,
-                        currentPage - 1,
-                      ),
+                  setPeoplePage((currentPage) =>
+                    Math.max(1, currentPage - 1),
                   )
                 }
-                disabled={
-                  safePeoplePage === 1
-                }
+                disabled={safePeoplePage === 1}
               >
-                <ChevronLeft
-                  size={16}
-                />
+                <ChevronLeft size={16} />
                 Previous
               </button>
 
               <span>
-                Page {safePeoplePage} of{" "}
-                {totalPeoplePages}
+                Page {safePeoplePage} of {totalPeoplePages}
               </span>
 
               <button
                 type="button"
                 aria-label="Next people page"
                 onClick={() =>
-                  setPeoplePage(
-                    (currentPage) =>
-                      Math.min(
-                        totalPeoplePages,
-                        currentPage + 1,
-                      ),
+                  setPeoplePage((currentPage) =>
+                    Math.min(totalPeoplePages, currentPage + 1),
                   )
                 }
-                disabled={
-                  safePeoplePage ===
-                  totalPeoplePages
-                }
+                disabled={safePeoplePage === totalPeoplePages}
               >
                 Next
-                <ChevronRight
-                  size={16}
-                />
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>
@@ -1387,6 +1427,93 @@ function PeoplePage({ canManageAccounts = false }) {
       )}
     </section>
   );
+}
+
+function getPeopleStatusOptions(type) {
+  if (type === "mentee") {
+    return [
+      ["all", "All"],
+      ["pending", "Pending"],
+      ["approved", "Approved"],
+      ["suspended", "Suspended"],
+      ["rejected", "Rejected"],
+      ["removed", "Removed"],
+    ];
+  }
+
+  if (type === "mentor") {
+    return [
+      ["all", "All"],
+      ["pending", "Pending"],
+      ["active", "Active"],
+      ["suspended", "Suspended"],
+      ["rejected", "Rejected"],
+      ["removed", "Removed"],
+    ];
+  }
+
+  if (type === "admin") {
+    return [
+      ["all", "All"],
+      ["active", "Active"],
+      ["suspended", "Suspended"],
+      ["removed", "Removed"],
+    ];
+  }
+
+  return [
+    ["all", "All"],
+    ["pending", "Pending"],
+    ["active", "Active"],
+    ["suspended", "Suspended"],
+    ["rejected", "Rejected"],
+    ["removed", "Removed"],
+  ];
+}
+
+function getPeopleTypeFilterValue(person) {
+  if (["admin", "safeguarding_lead"].includes(person.role)) {
+    return "admin";
+  }
+
+  if (person.role === "mentor" || person.signup_intent === "mentor") {
+    return "mentor";
+  }
+
+  return "mentee";
+}
+
+function matchesPeopleStatusFilter(person, filter) {
+  const status = String(person.account_status || "").toLowerCase();
+
+  if (filter === "approved") {
+    return status === "active";
+  }
+
+  if (filter === "removed") {
+    return status === "removed";
+  }
+
+  return status === filter;
+}
+
+function getPeopleAccountStatusLabel(person) {
+  const status = String(person.account_status || "").toLowerCase();
+  const type = getPeopleTypeFilterValue(person);
+
+  if (status === "pending") {
+    return "Awaiting verification";
+  }
+
+  if (status === "active" && type === "mentee") {
+    return "Approved";
+  }
+
+  if (status === "removed") {
+    return "Removed";
+  }
+
+  return undefined;
 }
 
 function getPersonAccountType(person) {
@@ -4507,16 +4634,6 @@ function MessagesPage({ canSendMessages = false }) {
     <>
       <section className="admin-messages-page">
         <div className="admin-messages-toolbar">
-          <div>
-            <span className="admin-section-eyebrow">
-              ADMINISTRATIVE MESSAGING
-            </span>
-
-            <p>
-              Contact a mentor or mentee without entering their private mentorship conversation.
-            </p>
-          </div>
-
           {canSendMessages && (
             <button
               type="button"

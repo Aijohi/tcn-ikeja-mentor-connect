@@ -1,6 +1,8 @@
 import {
   AlertTriangle,
   ArrowLeft,
+  Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -11,6 +13,7 @@ import {
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -87,6 +90,25 @@ const OUTCOME_OPTIONS = [
   ["removal", "Removal"],
   ["external_referral", "External referral"],
   ["reinstatement", "Reinstatement"],
+];
+
+const EVIDENCE_TYPE_OPTIONS = [
+  ["reference", "Reference"],
+  ["link", "Link"],
+  ["message_reference", "Message reference"],
+  ["session_reference", "Session reference"],
+  ["request_reference", "Request reference"],
+];
+
+const STATUS_FILTER_OPTIONS = [
+  ["open", "Open cases"],
+  ["all", "All statuses"],
+  ...STATUS_OPTIONS,
+];
+
+const PRIORITY_FILTER_OPTIONS = [
+  ["all", "All priorities"],
+  ...PRIORITY_OPTIONS,
 ];
 
 function AdminSafetyCases({
@@ -513,43 +535,21 @@ function SafetyCaseList({
                   Category
                 </span>
 
-                <select
-                  value={
-                    newCase.category
+                <SafetySelect
+                  value={newCase.category}
+                  options={[
+                    ["", "Select category"],
+                    ...CATEGORY_OPTIONS,
+                  ]}
+                  ariaLabel="Category"
+                  disabled={creating}
+                  onChange={(value) =>
+                    setNewCase((current) => ({
+                      ...current,
+                      category: value,
+                    }))
                   }
-                  required
-                  disabled={
-                    creating
-                  }
-                  onChange={(event) =>
-                    setNewCase(
-                      (current) => ({
-                        ...current,
-                        category:
-                          event.target
-                            .value,
-                      }),
-                    )
-                  }
-                >
-                  <option value="">
-                    Select category
-                  </option>
-
-                  {CATEGORY_OPTIONS.map(
-                    ([
-                      value,
-                      label,
-                    ]) => (
-                      <option
-                        key={value}
-                        value={value}
-                      >
-                        {label}
-                      </option>
-                    ),
-                  )}
-                </select>
+                />
               </label>
 
               <label>
@@ -557,38 +557,18 @@ function SafetyCaseList({
                   Priority
                 </span>
 
-                <select
-                  value={
-                    newCase.priority
+                <SafetySelect
+                  value={newCase.priority}
+                  options={PRIORITY_OPTIONS}
+                  ariaLabel="Priority"
+                  disabled={creating}
+                  onChange={(value) =>
+                    setNewCase((current) => ({
+                      ...current,
+                      priority: value,
+                    }))
                   }
-                  disabled={
-                    creating
-                  }
-                  onChange={(event) =>
-                    setNewCase(
-                      (current) => ({
-                        ...current,
-                        priority:
-                          event.target
-                            .value,
-                      }),
-                    )
-                  }
-                >
-                  {PRIORITY_OPTIONS.map(
-                    ([
-                      value,
-                      label,
-                    ]) => (
-                      <option
-                        key={value}
-                        value={value}
-                      >
-                        {label}
-                      </option>
-                    ),
-                  )}
-                </select>
+                />
               </label>
             </div>
 
@@ -696,64 +676,19 @@ function SafetyCaseList({
           />
         </label>
 
-        <select
+        <SafetySelect
           value={statusFilter}
-          aria-label="Filter by case status"
-          onChange={(event) =>
-            setStatusFilter(
-              event.target.value,
-            )
-          }
-        >
-          <option value="open">
-            Open cases
-          </option>
-          <option value="all">
-            All statuses
-          </option>
+          options={STATUS_FILTER_OPTIONS}
+          ariaLabel="Filter by case status"
+          onChange={setStatusFilter}
+        />
 
-          {STATUS_OPTIONS.map(
-            ([
-              value,
-              label,
-            ]) => (
-              <option
-                key={value}
-                value={value}
-              >
-                {label}
-              </option>
-            ),
-          )}
-        </select>
-
-        <select
+        <SafetySelect
           value={priorityFilter}
-          aria-label="Filter by case priority"
-          onChange={(event) =>
-            setPriorityFilter(
-              event.target.value,
-            )
-          }
-        >
-          <option value="all">
-            All priorities
-          </option>
-
-          {PRIORITY_OPTIONS.map(
-            ([
-              value,
-              label,
-            ]) => (
-              <option
-                key={value}
-                value={value}
-              >
-                {label}
-              </option>
-            ),
-          )}
-        </select>
+          options={PRIORITY_FILTER_OPTIONS}
+          ariaLabel="Filter by case priority"
+          onChange={setPriorityFilter}
+        />
       </div>
 
       <div className="admin-safety-results">
@@ -1695,38 +1630,18 @@ function SafetyCaseDetails({
                   addEvidence
                 }
               >
-                <select
-                  value={
-                    evidenceForm.evidenceType
-                  }
+                <SafetySelect
+                  value={evidenceForm.evidenceType}
+                  options={EVIDENCE_TYPE_OPTIONS}
+                  ariaLabel="Evidence type"
                   disabled={saving}
-                  onChange={(event) =>
-                    setEvidenceForm(
-                      (current) => ({
-                        ...current,
-                        evidenceType:
-                          event.target
-                            .value,
-                      }),
-                    )
+                  onChange={(value) =>
+                    setEvidenceForm((current) => ({
+                      ...current,
+                      evidenceType: value,
+                    }))
                   }
-                >
-                  <option value="reference">
-                    Reference
-                  </option>
-                  <option value="link">
-                    Link
-                  </option>
-                  <option value="message_reference">
-                    Message reference
-                  </option>
-                  <option value="session_reference">
-                    Session reference
-                  </option>
-                  <option value="request_reference">
-                    Request reference
-                  </option>
-                </select>
+                />
 
                 <input
                   type="text"
@@ -1846,39 +1761,18 @@ function SafetyCaseDetails({
                 Priority
               </span>
 
-              <select
-                value={
-                  form.priority
+              <SafetySelect
+                value={form.priority}
+                options={PRIORITY_OPTIONS}
+                ariaLabel="Case priority"
+                disabled={!canManage || saving}
+                onChange={(value) =>
+                  setForm((current) => ({
+                    ...current,
+                    priority: value,
+                  }))
                 }
-                disabled={
-                  !canManage ||
-                  saving
-                }
-                onChange={(event) =>
-                  setForm(
-                    (current) => ({
-                      ...current,
-                      priority:
-                        event.target
-                          .value,
-                    }),
-                  )
-                }
-              >
-                {PRIORITY_OPTIONS.map(
-                  ([
-                    value,
-                    label,
-                  ]) => (
-                    <option
-                      key={value}
-                      value={value}
-                    >
-                      {label}
-                    </option>
-                  ),
-                )}
-              </select>
+              />
             </label>
 
             <label>
@@ -1886,39 +1780,18 @@ function SafetyCaseDetails({
                 Status
               </span>
 
-              <select
-                value={
-                  form.status
+              <SafetySelect
+                value={form.status}
+                options={STATUS_OPTIONS}
+                ariaLabel="Case status"
+                disabled={!canManage || saving}
+                onChange={(value) =>
+                  setForm((current) => ({
+                    ...current,
+                    status: value,
+                  }))
                 }
-                disabled={
-                  !canManage ||
-                  saving
-                }
-                onChange={(event) =>
-                  setForm(
-                    (current) => ({
-                      ...current,
-                      status:
-                        event.target
-                          .value,
-                    }),
-                  )
-                }
-              >
-                {STATUS_OPTIONS.map(
-                  ([
-                    value,
-                    label,
-                  ]) => (
-                    <option
-                      key={value}
-                      value={value}
-                    >
-                      {label}
-                    </option>
-                  ),
-                )}
-              </select>
+              />
             </label>
 
             <label>
@@ -1954,42 +1827,18 @@ function SafetyCaseDetails({
                 Outcome
               </span>
 
-              <select
-                value={
-                  form.outcome
+              <SafetySelect
+                value={form.outcome}
+                options={OUTCOME_OPTIONS}
+                ariaLabel="Case outcome"
+                disabled={!canManage || saving}
+                onChange={(value) =>
+                  setForm((current) => ({
+                    ...current,
+                    outcome: value,
+                  }))
                 }
-                disabled={
-                  !canManage ||
-                  saving
-                }
-                onChange={(event) =>
-                  setForm(
-                    (current) => ({
-                      ...current,
-                      outcome:
-                        event.target
-                          .value,
-                    }),
-                  )
-                }
-              >
-                {OUTCOME_OPTIONS.map(
-                  ([
-                    value,
-                    label,
-                  ]) => (
-                    <option
-                      key={
-                        value ||
-                        "none"
-                      }
-                      value={value}
-                    >
-                      {label}
-                    </option>
-                  ),
-                )}
-              </select>
+              />
             </label>
 
             <label>
@@ -2057,6 +1906,105 @@ function SafetyCaseDetails({
         </aside>
       </div>
     </section>
+  );
+}
+
+
+function SafetySelect({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+  disabled = false,
+}) {
+  const containerRef = useRef(null);
+  const [open, setOpen] = useState(false);
+
+  const selectedOption =
+    options.find(([optionValue]) => optionValue === value) ?? options[0];
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    function handleOutsideClick(event) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (disabled) {
+      setOpen(false);
+    }
+  }, [disabled]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={`admin-safety-select${open ? " is-open" : ""}`}
+    >
+      <button
+        type="button"
+        className="admin-safety-select-trigger"
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        disabled={disabled}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>{selectedOption?.[1] || "Select option"}</span>
+        <ChevronDown size={16} aria-hidden="true" />
+      </button>
+
+      {open && (
+        <div
+          className="admin-safety-select-menu"
+          role="listbox"
+          aria-label={ariaLabel}
+        >
+          {options.map(([optionValue, label]) => {
+            const selected = optionValue === value;
+
+            return (
+              <button
+                key={optionValue || "empty"}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                className={selected ? "selected" : ""}
+                onClick={() => {
+                  onChange(optionValue);
+                  setOpen(false);
+                }}
+              >
+                <span>{label}</span>
+                {selected && <Check size={15} aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
