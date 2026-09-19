@@ -28,14 +28,17 @@
   margin: 0;
   color: #101419;
   font-size: 22px;
+  line-height: 1.3;
   letter-spacing: -0.025em;
+  text-align: left;
 }
 
 .admin-workflow-section-heading p {
   margin: 7px 0 0;
   color: #697782;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.6;
+  text-align: left;
 }
 
 .admin-workflow-section-heading > strong {
@@ -45,7 +48,7 @@
   border-radius: 999px;
   color: #5b6872;
   background: #f8f9fa;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -55,28 +58,524 @@
   line-height: 1.5;
 }
 
-.admin-membership-review-modal {
-  width: min(760px, calc(100% - 32px));
-  max-height: calc(100dvh - 40px);
-  overflow-y: auto;
-  padding: 26px;
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.25);
+/* =========================================================
+   SIDE REVIEW DRAWER
+========================================================= */
+
+.admin-review-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(16, 20, 25, 0.46);
+  backdrop-filter: blur(1px);
 }
 
-.admin-membership-detail-grid {
-  margin-top: 20px;
+.admin-review-drawer {
+  width: min(680px, 92vw);
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow:
+    -20px 0 60px
+      rgba(16, 24, 40, 0.18);
+  animation:
+    admin-review-drawer-enter
+    180ms ease-out;
 }
+
+@keyframes admin-review-drawer-enter {
+  from {
+    transform:
+      translateX(24px);
+    opacity: 0;
+  }
+
+  to {
+    transform:
+      translateX(0);
+    opacity: 1;
+  }
+}
+
+.admin-review-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 26px 20px;
+  border-bottom:
+    1px solid #e7eaee;
+  background: #ffffff;
+}
+
+.admin-review-drawer-header h2 {
+  margin: 4px 0 0;
+  color: #101419;
+  font-size: 24px;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  text-align: left;
+}
+
+.admin-review-drawer-header p {
+  margin: 5px 0 0;
+  color: #697782;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.admin-review-drawer-person {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-review-drawer-person img,
+.admin-review-drawer-avatar {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  border-radius: 14px;
+}
+
+.admin-review-drawer-person img {
+  display: block;
+  object-fit: cover;
+  object-position:
+    center 22%;
+}
+
+.admin-review-drawer-avatar {
+  display: grid;
+  place-items: center;
+  color: #ff5303;
+  background: #fff1eb;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.admin-review-drawer-close {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  flex: 0 0 36px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #e1e6eb;
+  border-radius: 9px;
+  color: #4f5d6a;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.admin-review-drawer-close:hover:not(
+    :disabled
+  ) {
+  border-color: #cbd3dc;
+  background: #f8f9fa;
+}
+
+.admin-review-drawer-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-review-drawer-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 26px 34px;
+  overscroll-behavior: contain;
+}
+
+.admin-review-drawer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 26px;
+  border-top:
+    1px solid #e7eaee;
+  background: #ffffff;
+}
+
+.admin-review-drawer-footer--single {
+  justify-content: flex-end;
+}
+
+.admin-review-drawer-section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom:
+    1px solid #edf0f3;
+}
+
+.admin-review-drawer-section:last-child {
+  margin-bottom: 0;
+}
+
+.admin-review-drawer-section h3 {
+  margin: 0 0 13px;
+  color: #1d252d;
+  font-size: 14px;
+  font-weight: 750;
+  text-align: left;
+}
+
+.admin-review-details-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-review-detail {
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid #e7eaee;
+  border-radius: 11px;
+  background: #fbfcfd;
+  text-align: left;
+}
+
+.admin-review-detail span {
+  display: block;
+  margin-bottom: 5px;
+  color: #7b8794;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-review-detail strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #202830;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.admin-review-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 20px;
+}
+
+.admin-review-status-row > span:not(
+    .admin-status-badge
+  ) {
+  color: #687582;
+  font-size: 11px;
+}
+
+.admin-review-callout {
+  margin-bottom: 20px;
+  padding: 14px 15px;
+  border: 1px solid #e4e8ed;
+  border-radius: 11px;
+  background: #fafbfc;
+  text-align: left;
+}
+
+.admin-review-callout strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #252e37;
+  font-size: 12px;
+}
+
+.admin-review-callout p {
+  margin: 0;
+  color: #667481;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.admin-review-biography {
+  margin: 0;
+  color: #566472;
+  font-size: 12px;
+  line-height: 1.75;
+  text-align: left;
+}
+
+.admin-review-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.admin-review-chip-list span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 29px;
+  padding: 5px 9px;
+  border: 1px solid #e3e7eb;
+  border-radius: 999px;
+  color: #475563;
+  background: #ffffff;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.admin-review-stage-card {
+  margin-bottom: 16px;
+  padding: 17px;
+  border: 1px solid #e3e7eb;
+  border-radius: 13px;
+  background: #ffffff;
+  text-align: left;
+}
+
+.admin-review-stage-card > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #ff5303;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.admin-review-stage-card h3 {
+  margin: 0 0 10px;
+  color: #1e2730;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.admin-review-stage-card p {
+  margin: 7px 0 0;
+  color: #667481;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.admin-review-stage-card p strong {
+  color: #29343e;
+}
+
+/* =========================================================
+   ACTIONS INSIDE DRAWER
+========================================================= */
+
+.admin-review-actions-box {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top:
+    1px solid #eceff2;
+}
+
+.admin-rejection-field {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 12px;
+  color: #27313a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-rejection-field textarea {
+  width: 100%;
+  min-height: 100px;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #ccd4dc;
+  border-radius: 10px;
+  color: #1b242c;
+  background: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+
+.admin-rejection-field textarea:focus {
+  border-color: #ff5303;
+  box-shadow:
+    0 0 0 3px
+      rgba(255, 83, 3, 0.1);
+}
+
+.admin-review-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.admin-drawer-primary,
+.admin-drawer-secondary,
+.admin-drawer-secondary-danger,
+.admin-drawer-danger {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.admin-drawer-primary {
+  border: 1px solid #ff5303;
+  color: #ffffff;
+  background: #ff5303;
+}
+
+.admin-drawer-primary:hover:not(
+    :disabled
+  ) {
+  background: #e94b00;
+}
+
+.admin-drawer-secondary {
+  border: 1px solid #d7dde3;
+  color: #45525f;
+  background: #ffffff;
+}
+
+.admin-drawer-secondary:hover:not(
+    :disabled
+  ) {
+  background: #f8f9fa;
+}
+
+.admin-drawer-secondary-danger {
+  border: 1px solid #e4c5c2;
+  color: #b42318;
+  background: #ffffff;
+}
+
+.admin-drawer-secondary-danger:hover:not(
+    :disabled
+  ) {
+  background: #fff7f6;
+}
+
+.admin-drawer-danger {
+  border: 1px solid #b42318;
+  color: #ffffff;
+  background: #b42318;
+}
+
+.admin-drawer-primary:disabled,
+.admin-drawer-secondary:disabled,
+.admin-drawer-secondary-danger:disabled,
+.admin-drawer-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   EXISTING TABLE SUPPORT
+========================================================= */
+
+.admin-submitted-applications-section {
+  min-width: 0;
+}
+
+.admin-application-areas-cell {
+  max-width: 230px;
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.admin-application-table-shell {
+  min-width: 0;
+}
+
+.admin-membership-queue-table td,
+.admin-membership-queue-table th,
+.admin-application-table td,
+.admin-application-table th {
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  .admin-review-drawer {
+    width: min(
+      620px,
+      94vw
+    );
+  }
+
+  .admin-review-details-grid {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
 
 @media (max-width: 760px) {
   .admin-workflow-section-heading {
     flex-direction: column;
+    gap: 12px;
   }
 
-  .admin-membership-review-modal {
-    width: calc(100% - 20px);
-    max-height: calc(100dvh - 20px);
-    padding: 20px;
+  .admin-workflow-section-heading > strong {
+    align-self: flex-start;
+  }
+
+  .admin-review-drawer {
+    width: 100%;
+    max-width: none;
+  }
+
+  .admin-review-drawer-header {
+    padding:
+      19px 16px 16px;
+  }
+
+  .admin-review-drawer-header h2 {
+    font-size: 20px;
+  }
+
+  .admin-review-drawer-body {
+    padding:
+      18px 16px 28px;
+  }
+
+  .admin-review-drawer-footer {
+    padding:
+      13px 16px;
+  }
+
+  .admin-review-drawer-person img,
+  .admin-review-drawer-avatar {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+    border-radius: 12px;
+  }
+
+  .admin-review-inline-actions,
+  .admin-review-drawer-footer {
+    flex-direction: column-reverse;
+  }
+
+  .admin-review-inline-actions button,
+  .admin-review-drawer-footer button {
+    width: 100%;
   }
 }

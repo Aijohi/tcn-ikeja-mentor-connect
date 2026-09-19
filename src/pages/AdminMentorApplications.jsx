@@ -18,6 +18,25 @@ import "./AdminLaunchFixes.css";
 
 const APPLICATION_PAGE_SIZE = 10;
 
+function useLockBodyScroll(active) {
+  useEffect(() => {
+    if (!active) {
+      return undefined;
+    }
+
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow =
+      "hidden";
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+    };
+  }, [active]);
+}
+
 function AdminMentorApplications({
   canRecommendApplications = false,
   canSecondSignoffApplications = false,
@@ -90,8 +109,7 @@ function MentorMembershipQueue({
 
     const {
       data,
-      error:
-        registrationError,
+      error: registrationError,
     } = await supabase
       .from("profiles")
       .select(`
@@ -105,18 +123,24 @@ function MentorMembershipQueue({
         membership_verification_method,
         membership_reference,
         email_verified,
+        onboarding_completed,
         created_at
       `)
       .eq(
         "signup_intent",
         "mentor",
       )
-      .in(
+      .eq(
         "account_status",
-        [
-          "pending",
-          "rejected",
-        ],
+        "pending",
+      )
+      .eq(
+        "email_verified",
+        true,
+      )
+      .eq(
+        "onboarding_completed",
+        true,
       )
       .or(
         "membership_verified.eq.false,membership_verified.is.null",
@@ -128,10 +152,9 @@ function MentorMembershipQueue({
         },
       );
 
-    if (
-      registrationError
-    ) {
+    if (registrationError) {
       console.error(
+        "Unable to load mentor membership verification requests:",
         registrationError,
       );
 
@@ -140,6 +163,7 @@ function MentorMembershipQueue({
       );
 
       setLoading(false);
+
       return;
     }
 
@@ -169,8 +193,7 @@ function MentorMembershipQueue({
     setSuccess("");
 
     const {
-      error:
-        reviewError,
+      error: reviewError,
     } = await supabase.rpc(
       "admin_review_mentor_membership",
       {
@@ -184,6 +207,7 @@ function MentorMembershipQueue({
 
     if (reviewError) {
       console.error(
+        "Unable to review mentor membership:",
         reviewError,
       );
 
@@ -193,12 +217,13 @@ function MentorMembershipQueue({
       );
 
       setProcessing(false);
+
       return;
     }
 
     setSuccess(
       action === "verify"
-        ? "The mentor membership has been verified. The member can now continue to the mentor application."
+        ? "The mentor membership has been verified."
         : "The mentor membership has been rejected.",
     );
 
@@ -224,12 +249,15 @@ function MentorMembershipQueue({
           </h2>
 
           <p>
-            Review the information supplied during mentor registration before allowing the person to continue to the mentor application.
+            Review completed mentor registrations before the applicant moves through the mentor approval process.
           </p>
         </div>
 
         <strong>
-          {registrations.length} awaiting review
+          {registrations.length}{" "}
+          {registrations.length === 1
+            ? "awaiting review"
+            : "awaiting review"}
         </strong>
       </div>
 
@@ -241,7 +269,10 @@ function MentorMembershipQueue({
 
       {error &&
         !selectedRegistration && (
-          <p className="form-error">
+          <p
+            className="form-error"
+            role="alert"
+          >
             {error}
           </p>
         )}
@@ -252,7 +283,7 @@ function MentorMembershipQueue({
         0 ? (
         <AdminEmptyState
           title="No mentor membership requests"
-          description="New mentor registrations that need membership verification will appear here."
+          description="Mentors will appear here after they verify their email and complete the required mentor onboarding information."
         />
       ) : (
         <div className="admin-table-wrapper admin-table-wrapper--flush">
@@ -319,16 +350,8 @@ function MentorMembershipQueue({
 
                     <td>
                       <StatusBadge
-                        value={
-                          registration.email_verified
-                            ? "verified"
-                            : "not_verified"
-                        }
-                        label={
-                          registration.email_verified
-                            ? "Verified"
-                            : "Not verified"
-                        }
+                        value="verified"
+                        label="Verified"
                       />
                     </td>
 
@@ -362,7 +385,7 @@ function MentorMembershipQueue({
       )}
 
       {selectedRegistration && (
-        <MembershipReviewModal
+        <MembershipReviewDrawer
           registration={
             selectedRegistration
           }
@@ -379,7 +402,9 @@ function MentorMembershipQueue({
             reviewMembership
           }
           onClose={() => {
-            if (!processing) {
+            if (
+              !processing
+            ) {
               setSelectedRegistration(
                 null,
               );
@@ -393,7 +418,7 @@ function MentorMembershipQueue({
   );
 }
 
-function MembershipReviewModal({
+function MembershipReviewDrawer({
   registration,
   canVerifyMembership,
   processing,
@@ -401,9 +426,11 @@ function MembershipReviewModal({
   onConfirm,
   onClose,
 }) {
+  useLockBodyScroll(true);
+
   return (
     <div
-      className="admin-modal-backdrop"
+      className="admin-review-drawer-backdrop"
       role="presentation"
       onMouseDown={(
         event,
@@ -417,13 +444,13 @@ function MembershipReviewModal({
         }
       }}
     >
-      <section
-        className="admin-membership-review-modal"
+      <aside
+        className="admin-review-drawer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="mentor-membership-review-title"
       >
-        <div className="admin-review-modal-header">
+        <header className="admin-review-drawer-header">
           <div>
             <span className="admin-section-eyebrow">
               MENTOR MEMBERSHIP VERIFICATION
@@ -442,7 +469,7 @@ function MembershipReviewModal({
 
           <button
             type="button"
-            className="admin-modal-close-button"
+            className="admin-review-drawer-close"
             onClick={
               onClose
             }
@@ -453,123 +480,144 @@ function MembershipReviewModal({
           >
             <X size={18} />
           </button>
+        </header>
+
+        <div className="admin-review-drawer-body">
+          <section className="admin-review-drawer-section">
+            <div className="admin-review-details-grid admin-membership-detail-grid">
+              <ReviewDetail
+                label="Verification method"
+                value={formatMembershipVerificationMethod(
+                  registration.membership_verification_method,
+                )}
+              />
+
+              <ReviewDetail
+                label="Information supplied"
+                value={getMembershipReferenceText(
+                  registration,
+                )}
+              />
+
+              <ReviewDetail
+                label="Mobile number"
+                value={
+                  registration.phone_number ||
+                  "Not provided"
+                }
+              />
+
+              <ReviewDetail
+                label="Email verified"
+                value={
+                  registration.email_verified
+                    ? "Yes"
+                    : "No"
+                }
+              />
+
+              <ReviewDetail
+                label="Account status"
+                value={formatStatusLabel(
+                  registration.account_status,
+                )}
+              />
+
+              <ReviewDetail
+                label="Registered"
+                value={formatDate(
+                  registration.created_at,
+                )}
+              />
+            </div>
+          </section>
+
+          {registration.membership_verification_method ===
+            "manual_admin_review" && (
+            <section className="admin-review-callout">
+              <strong>
+                Manual administrator review
+              </strong>
+
+              <p>
+                No service unit or leader reference was supplied. Confirm the person's TCN Ikeja membership using the administration team's approved records or process.
+              </p>
+            </section>
+          )}
+
+          {error && (
+            <p
+              className="form-error"
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
+
+          {!canVerifyMembership && (
+            <section className="admin-review-callout">
+              <strong>
+                View only
+              </strong>
+
+              <p>
+                Your administrator role can view this information but cannot make the membership decision.
+              </p>
+            </section>
+          )}
         </div>
 
-        <div className="admin-review-details-grid admin-membership-detail-grid">
-          <ReviewDetail
-            label="Verification method"
-            value={formatMembershipVerificationMethod(
-              registration.membership_verification_method,
-            )}
-          />
+        <footer className="admin-review-drawer-footer">
+          {canVerifyMembership ? (
+            <>
+              <button
+                type="button"
+                className="admin-drawer-secondary-danger"
+                onClick={() =>
+                  onConfirm(
+                    "reject",
+                  )
+                }
+                disabled={
+                  processing
+                }
+              >
+                {processing
+                  ? "Please wait..."
+                  : "Reject membership"}
+              </button>
 
-          <ReviewDetail
-            label="Information supplied"
-            value={getMembershipReferenceText(
-              registration,
-            )}
-          />
-
-          <ReviewDetail
-            label="Mobile number"
-            value={
-              registration.phone_number ||
-              "Not provided"
-            }
-          />
-
-          <ReviewDetail
-            label="Email verified"
-            value={
-              registration.email_verified
-                ? "Yes"
-                : "No"
-            }
-          />
-
-          <ReviewDetail
-            label="Account status"
-            value={formatStatusLabel(
-              registration.account_status,
-            )}
-          />
-
-          <ReviewDetail
-            label="Registered"
-            value={formatDate(
-              registration.created_at,
-            )}
-          />
-        </div>
-
-        {registration.membership_verification_method ===
-          "manual_admin_review" && (
-          <div className="admin-review-existing-feedback">
-            <strong>
-              Manual administrator review
-            </strong>
-
-            <p>
-              No service unit or leader reference was supplied. Confirm the person&apos;s TCN Ikeja membership using the records or process available to the administration team before approving.
-            </p>
-          </div>
-        )}
-
-        {error && (
-          <p className="form-error">
-            {error}
-          </p>
-        )}
-
-        {canVerifyMembership ? (
-          <div className="admin-review-modal-actions">
+              <button
+                type="button"
+                className="admin-drawer-primary"
+                onClick={() =>
+                  onConfirm(
+                    "verify",
+                  )
+                }
+                disabled={
+                  processing ||
+                  !registration.email_verified
+                }
+              >
+                {processing
+                  ? "Please wait..."
+                  : "Verify membership"}
+              </button>
+            </>
+          ) : (
             <button
               type="button"
-              className="admin-modal-cancel-button admin-reject-application-button"
-              onClick={() =>
-                onConfirm(
-                  "reject",
-                )
-              }
-              disabled={
-                processing
+              className="admin-drawer-primary"
+              onClick={
+                onClose
               }
             >
-              {processing
-                ? "Please wait..."
-                : "Reject membership"}
+              Close
             </button>
-
-            <button
-              type="button"
-              className="admin-modal-confirm-button admin-approve-application-button"
-              onClick={() =>
-                onConfirm(
-                  "verify",
-                )
-              }
-              disabled={
-                processing ||
-                !registration.email_verified
-              }
-            >
-              {processing
-                ? "Please wait..."
-                : "Verify membership"}
-            </button>
-          </div>
-        ) : (
-          <div className="admin-review-existing-feedback">
-            <strong>
-              View only
-            </strong>
-
-            <p>
-              Your administrator role can view this information but cannot make the membership decision.
-            </p>
-          </div>
-        )}
-      </section>
+          )}
+        </footer>
+      </aside>
     </div>
   );
 }
@@ -636,9 +684,11 @@ function SubmittedApplications({
   ] = useState("");
 
   async function loadApplications({
-    keepModalOpen = false,
+    keepDrawerOpen = false,
   } = {}) {
-    if (!keepModalOpen) {
+    if (
+      !keepDrawerOpen
+    ) {
       setLoading(true);
     }
 
@@ -646,8 +696,7 @@ function SubmittedApplications({
 
     const {
       data,
-      error:
-        applicationError,
+      error: applicationError,
     } = await supabase
       .from(
         "mentor_applications",
@@ -692,7 +741,8 @@ function SubmittedApplications({
           membership_verified,
           email_verified,
           membership_verification_method,
-          membership_reference
+          membership_reference,
+          profile_photo_url
         )
       `)
       .order(
@@ -706,6 +756,7 @@ function SubmittedApplications({
       applicationError
     ) {
       console.error(
+        "Unable to load mentor applications:",
         applicationError,
       );
 
@@ -714,6 +765,7 @@ function SubmittedApplications({
       );
 
       setLoading(false);
+
       return;
     }
 
@@ -743,10 +795,11 @@ function SubmittedApplications({
       0
     ) {
       const {
-        data:
-          reviewerData,
+        data: reviewerData,
       } = await supabase
-        .from("profiles")
+        .from(
+          "profiles",
+        )
         .select(
           "id, full_name, email",
         )
@@ -781,12 +834,14 @@ function SubmittedApplications({
           onboarding_reviewer:
             reviewerMap.get(
               application.onboarding_reviewed_by,
-            ) ?? null,
+            ) ??
+            null,
 
           operations_reviewer:
             reviewerMap.get(
               application.operations_reviewed_by,
-            ) ?? null,
+            ) ??
+            null,
         }),
       );
 
@@ -795,7 +850,7 @@ function SubmittedApplications({
     );
 
     if (
-      keepModalOpen &&
+      keepDrawerOpen &&
       selectedApplication
     ) {
       setSelectedApplication(
@@ -805,7 +860,8 @@ function SubmittedApplications({
           ) =>
             application.id ===
             selectedApplication.id,
-        ) ?? null,
+        ) ??
+          null,
       );
     }
 
@@ -836,13 +892,19 @@ function SubmittedApplications({
     if (
       !application.onboarding_recommendation
     ) {
-      return canRecommendApplications;
+      return (
+        canRecommendApplications ||
+        isFullAccessAdmin
+      );
     }
 
     if (
       !application.operations_decision
     ) {
-      return canSecondSignoffApplications;
+      return (
+        canSecondSignoffApplications ||
+        isFullAccessAdmin
+      );
     }
 
     return false;
@@ -884,8 +946,7 @@ function SubmittedApplications({
     setSuccess("");
 
     const {
-      error:
-        reviewError,
+      error: reviewError,
     } = await supabase.rpc(
       "admin_review_mentor_application",
       {
@@ -908,6 +969,7 @@ function SubmittedApplications({
 
     if (reviewError) {
       console.error(
+        "Unable to review mentor application:",
         reviewError,
       );
 
@@ -917,6 +979,7 @@ function SubmittedApplications({
       );
 
       setProcessing(false);
+
       return;
     }
 
@@ -943,7 +1006,7 @@ function SubmittedApplications({
     setFeedback("");
 
     await loadApplications({
-      keepModalOpen:
+      keepDrawerOpen:
         true,
     });
 
@@ -1053,7 +1116,7 @@ function SubmittedApplications({
         <div className="admin-workflow-section-heading">
           <div>
             <span>
-              MENTOR APPLICATIONS
+              STAGE 2
             </span>
 
             <h2>
@@ -1061,7 +1124,7 @@ function SubmittedApplications({
             </h2>
 
             <p>
-              Each application contains the mentor&apos;s membership information and mentoring details in one submission.
+              Review completed mentor applications, recommendations and final approval decisions.
             </p>
           </div>
         </div>
@@ -1084,8 +1147,7 @@ function SubmittedApplications({
                 event,
               ) =>
                 setSearchTerm(
-                  event.target
-                    .value,
+                  event.target.value,
                 )
               }
             />
@@ -1146,7 +1208,10 @@ function SubmittedApplications({
 
         {error &&
           !selectedApplication && (
-            <p className="form-error">
+            <p
+              className="form-error"
+              role="alert"
+            >
               {error}
             </p>
           )}
@@ -1155,7 +1220,7 @@ function SubmittedApplications({
         0 ? (
           <AdminEmptyState
             title="No submitted mentor applications"
-            description="New mentor applications will appear here after a mentor submits the application form."
+            description="Completed mentor applications will appear here."
           />
         ) : filteredApplications.length ===
           0 ? (
@@ -1403,7 +1468,7 @@ function SubmittedApplications({
       </section>
 
       {selectedApplication && (
-        <ApplicationReviewModal
+        <ApplicationReviewDrawer
           application={
             selectedApplication
           }
@@ -1474,7 +1539,7 @@ function SubmittedApplications({
   );
 }
 
-function ApplicationReviewModal({
+function ApplicationReviewDrawer({
   application,
   reviewMode,
   setReviewMode,
@@ -1490,6 +1555,8 @@ function ApplicationReviewModal({
   onSubmitReview,
   onClose,
 }) {
+  useLockBodyScroll(true);
+
   const isPending =
     application.status ===
     "pending";
@@ -1513,12 +1580,18 @@ function ApplicationReviewModal({
   const canMakeOnboardingRecommendation =
     isPending &&
     !onboardingComplete &&
-    canRecommendApplications;
+    (
+      canRecommendApplications ||
+      isFullAccessAdmin
+    );
 
   const canMakeFinalDecision =
     isPending &&
     !finalDecisionComplete &&
-    canSecondSignoffApplications &&
+    (
+      canSecondSignoffApplications ||
+      isFullAccessAdmin
+    ) &&
     (
       onboardingComplete ||
       isFullAccessAdmin
@@ -1526,7 +1599,7 @@ function ApplicationReviewModal({
 
   return (
     <div
-      className="admin-modal-backdrop"
+      className="admin-review-drawer-backdrop"
       role="presentation"
       onMouseDown={(
         event,
@@ -1540,34 +1613,54 @@ function ApplicationReviewModal({
         }
       }}
     >
-      <section
-        className="admin-application-review-modal"
+      <aside
+        className="admin-review-drawer admin-application-review-drawer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="mentor-application-review-title"
       >
-        <div className="admin-review-modal-header">
-          <div>
-            <span className="admin-section-eyebrow">
-              MENTOR APPLICATION
-            </span>
+        <header className="admin-review-drawer-header">
+          <div className="admin-review-drawer-person">
+            {application.applicant
+              ?.profile_photo_url ? (
+              <img
+                src={
+                  application.applicant
+                    .profile_photo_url
+                }
+                alt=""
+              />
+            ) : (
+              <span className="admin-review-drawer-avatar">
+                {getInitials(
+                  application.applicant
+                    ?.full_name,
+                )}
+              </span>
+            )}
 
-            <h2 id="mentor-application-review-title">
-              {application.applicant
-                ?.full_name ||
-                "Applicant"}
-            </h2>
+            <div>
+              <span className="admin-section-eyebrow">
+                MENTOR APPLICATION
+              </span>
 
-            <p>
-              {application.applicant
-                ?.email ||
-                ""}
-            </p>
+              <h2 id="mentor-application-review-title">
+                {application.applicant
+                  ?.full_name ||
+                  "Applicant"}
+              </h2>
+
+              <p>
+                {application.applicant
+                  ?.email ||
+                  ""}
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
-            className="admin-modal-close-button"
+            className="admin-review-drawer-close"
             onClick={
               onClose
             }
@@ -1578,428 +1671,437 @@ function ApplicationReviewModal({
           >
             <X size={18} />
           </button>
-        </div>
+        </header>
 
-        <div className="admin-review-status-row">
-          <StatusBadge
-            value={
-              application.status
-            }
-          />
+        <div className="admin-review-drawer-body">
+          <div className="admin-review-status-row">
+            <StatusBadge
+              value={
+                application.status
+              }
+            />
 
-          <span>
-            {getApplicationReviewStageLabel(
-              application,
-            )}{" "}
-            · Submitted{" "}
-            {formatDate(
-              application.created_at,
-            )}
-          </span>
-        </div>
-
-        {isFullAccessAdmin && (
-          <div className="admin-review-existing-feedback">
-            <strong>
-              Full Access Admin
-            </strong>
-
-            <p>
-              You can perform either review stage. Your access is not restricted by an operational role.
-            </p>
+            <span>
+              {getApplicationReviewStageLabel(
+                application,
+              )}
+            </span>
           </div>
-        )}
 
-        {!isFullAccessAdmin &&
-          adminOperationalRole && (
-            <div className="admin-review-existing-feedback">
+          {isFullAccessAdmin && (
+            <section className="admin-review-callout">
               <strong>
-                Your administrator role
+                Full Access Admin
               </strong>
 
               <p>
-                {formatAdminOperationalRole(
-                  adminOperationalRole,
-                )}
+                You can perform either review stage as the platform's full-access administrator.
               </p>
-            </div>
+            </section>
           )}
 
-        <div className="admin-review-existing-feedback">
-          <strong>
-            Membership verification information
-          </strong>
+          {!isFullAccessAdmin &&
+            adminOperationalRole && (
+              <section className="admin-review-callout">
+                <strong>
+                  Your administrator role
+                </strong>
 
-          <p>
-            Method:{" "}
-            {formatMembershipVerificationMethod(
-              application.membership_verification_method ||
-                application.applicant
-                  ?.membership_verification_method,
+                <p>
+                  {formatAdminOperationalRole(
+                    adminOperationalRole,
+                  )}
+                </p>
+              </section>
             )}
-          </p>
 
-          <p>
-            Information supplied:{" "}
-            {application.membership_reference ||
-              application.applicant
-                ?.membership_reference ||
-              (
-                (
+          <section className="admin-review-drawer-section">
+            <h3>
+              Membership information
+            </h3>
+
+            <div className="admin-review-details-grid">
+              <ReviewDetail
+                label="Verification method"
+                value={formatMembershipVerificationMethod(
                   application.membership_verification_method ||
+                    application.applicant
+                      ?.membership_verification_method,
+                )}
+              />
+
+              <ReviewDetail
+                label="Information supplied"
+                value={
+                  application.membership_reference ||
                   application.applicant
-                    ?.membership_verification_method
-                ) ===
-                "manual_admin_review"
-                  ? "Manual administration review requested"
-                  : "Not provided"
-              )}
-          </p>
-
-          <p>
-            Email:{" "}
-            {application.applicant
-              ?.email ||
-              "Not provided"}
-
-            {application.applicant
-              ?.email_verified ===
-            false
-              ? " · Email not yet verified"
-              : application.applicant
-                    ?.email_verified ===
-                  true
-                ? " · Email verified"
-                : ""}
-          </p>
-        </div>
-
-        <div className="admin-review-details-grid">
-          <ReviewDetail
-            label="Current role"
-            value={
-              application.job_title ||
-              "Not provided"
-            }
-          />
-
-          <ReviewDetail
-            label="Organisation"
-            value={
-              application.organisation ||
-              "Not provided"
-            }
-          />
-
-          <ReviewDetail
-            label="Experience"
-            value={`${application.years_of_experience ?? 0} years`}
-          />
-
-          <ReviewDetail
-            label="Maximum active mentees"
-            value={
-              application.maximum_active_mentees ??
-              "Not provided"
-            }
-          />
-
-          <ReviewDetail
-            label="Meeting format"
-            value={(
-              application.meeting_formats ??
-              []
-            ).join(
-              ", ",
-            )}
-          />
-
-          <ReviewDetail
-            label="Session length"
-            value={(
-              application.session_lengths ??
-              []
-            )
-              .map(
-                (
-                  length,
-                ) =>
-                  Number(
-                    length,
-                  ) === 60
-                    ? "1 hour"
-                    : `${length} minutes`,
-              )
-              .join(
-                ", ",
-              )}
-          />
-        </div>
-
-        <ReviewList
-          label="Areas of expertise"
-          items={
-            application.expertise
-          }
-        />
-
-        <ReviewList
-          label="Mentorship categories"
-          items={
-            application.mentorship_categories
-          }
-        />
-
-        <ReviewList
-          label="Languages"
-          items={
-            application.languages
-          }
-        />
-
-        <div className="admin-review-long-copy">
-          <span>
-            BIOGRAPHY
-          </span>
-
-          <p>
-            {application.biography ||
-              "Not provided"}
-          </p>
-        </div>
-
-        <div className="admin-review-existing-feedback">
-          <strong>
-            Stage 1 · Mentor Onboarding recommendation
-          </strong>
-
-          {onboardingComplete ? (
-            <>
-              <p>
-                Recommendation:{" "}
-
-                <strong>
-                  {application.onboarding_recommendation ===
-                  "approve"
-                    ? "Recommend approval"
-                    : "Recommend rejection"}
-                </strong>
-              </p>
-
-              <p>
-                Reviewed by{" "}
-                {application.onboarding_reviewer
-                  ?.full_name ||
-                  application.onboarding_reviewer
-                    ?.email ||
-                  "Administrator"}
-
-                {application.onboarding_reviewed_at
-                  ? ` on ${formatDate(
-                      application.onboarding_reviewed_at,
-                    )}`
-                  : ""}
-                .
-              </p>
-
-              {application.onboarding_feedback && (
-                <p>
-                  {
-                    application.onboarding_feedback
-                  }
-                </p>
-              )}
-            </>
-          ) : (
-            <p>
-              No recommendation has been recorded yet.
-            </p>
-          )}
-        </div>
-
-        {canMakeOnboardingRecommendation && (
-          <ReviewActionBox
-            title="Record the Mentor Onboarding recommendation"
-            rejectionMode={
-              reviewMode ===
-              "recommend_reject"
-            }
-            feedback={
-              feedback
-            }
-            setFeedback={
-              setFeedback
-            }
-            processing={
-              processing
-            }
-            rejectLabel="Recommend rejection"
-            approveLabel="Recommend approval"
-            onCancel={() => {
-              setReviewMode(
-                "",
-              );
-
-              setFeedback(
-                "",
-              );
-            }}
-            onRejectStart={() =>
-              setReviewMode(
-                "recommend_reject",
-              )
-            }
-            onReject={() =>
-              onSubmitReview(
-                "recommend_reject",
-              )
-            }
-            onApprove={() =>
-              onSubmitReview(
-                "recommend_approve",
-              )
-            }
-          />
-        )}
-
-        <div className="admin-review-existing-feedback">
-          <strong>
-            Stage 2 · Operations and Governance decision
-          </strong>
-
-          {finalDecisionComplete ? (
-            <>
-              <p>
-                Final decision:{" "}
-
-                <strong>
-                  {application.status ===
-                  "approved"
-                    ? "Approved"
-                    : "Rejected"}
-                </strong>
-              </p>
-
-              <p>
-                Reviewed by{" "}
-                {application.operations_reviewer
-                  ?.full_name ||
-                  application.operations_reviewer
-                    ?.email ||
-                  "Administrator"}
-
-                {application.operations_reviewed_at
-                  ? ` on ${formatDate(
-                      application.operations_reviewed_at,
-                    )}`
-                  : ""}
-                .
-              </p>
-
-              {(application.operations_feedback ||
-                application.admin_feedback) && (
-                <p>
-                  {application.operations_feedback ||
-                    application.admin_feedback}
-                </p>
-              )}
-            </>
-          ) : onboardingComplete ? (
-            <p>
-              The application is ready for Operations and Governance sign-off.
-            </p>
-          ) : isFullAccessAdmin ? (
-            <p>
-              No onboarding recommendation has been recorded. As a Full Access Admin, you may still make the final decision.
-            </p>
-          ) : (
-            <p>
-              Waiting for the Mentor Onboarding recommendation.
-            </p>
-          )}
-        </div>
-
-        {canMakeFinalDecision && (
-          <ReviewActionBox
-            title="Record the final decision"
-            rejectionMode={
-              reviewMode ===
-              "reject"
-            }
-            feedback={
-              feedback
-            }
-            setFeedback={
-              setFeedback
-            }
-            processing={
-              processing
-            }
-            rejectLabel="Reject"
-            approveLabel="Final approval"
-            onCancel={() => {
-              setReviewMode(
-                "",
-              );
-
-              setFeedback(
-                "",
-              );
-            }}
-            onRejectStart={() =>
-              setReviewMode(
-                "reject",
-              )
-            }
-            onReject={() =>
-              onSubmitReview(
-                "reject",
-              )
-            }
-            onApprove={() =>
-              onSubmitReview(
-                "approve",
-              )
-            }
-          />
-        )}
-
-        {success && (
-          <p className="admin-success-message">
-            {success}
-          </p>
-        )}
-
-        {error && (
-          <p className="form-error">
-            {error}
-          </p>
-        )}
-
-        {!canMakeOnboardingRecommendation &&
-          !canMakeFinalDecision && (
-            <div className="admin-review-modal-actions">
-              <button
-                type="button"
-                className="admin-modal-confirm-button"
-                onClick={
-                  onClose
+                    ?.membership_reference ||
+                  "Not provided"
                 }
-                disabled={
+              />
+
+              <ReviewDetail
+                label="Email verification"
+                value={
+                  application.applicant
+                    ?.email_verified
+                    ? "Verified"
+                    : "Not verified"
+                }
+              />
+
+              <ReviewDetail
+                label="Membership"
+                value={
+                  application.applicant
+                    ?.membership_verified
+                    ? "Verified"
+                    : "Not verified"
+                }
+              />
+            </div>
+          </section>
+
+          <section className="admin-review-drawer-section">
+            <h3>
+              Professional information
+            </h3>
+
+            <div className="admin-review-details-grid">
+              <ReviewDetail
+                label="Current role"
+                value={
+                  application.job_title ||
+                  "Not provided"
+                }
+              />
+
+              <ReviewDetail
+                label="Organisation"
+                value={
+                  application.organisation ||
+                  "Not provided"
+                }
+              />
+
+              <ReviewDetail
+                label="Experience"
+                value={`${application.years_of_experience ?? 0} years`}
+              />
+
+              <ReviewDetail
+                label="Maximum active mentees"
+                value={
+                  application.maximum_active_mentees ??
+                  "Not provided"
+                }
+              />
+
+              <ReviewDetail
+                label="Meeting format"
+                value={(
+                  application.meeting_formats ??
+                  []
+                ).join(
+                  ", ",
+                )}
+              />
+
+              <ReviewDetail
+                label="Session length"
+                value={(
+                  application.session_lengths ??
+                  []
+                )
+                  .map(
+                    (
+                      length,
+                    ) =>
+                      Number(
+                        length,
+                      ) === 60
+                        ? "1 hour"
+                        : `${length} minutes`,
+                  )
+                  .join(
+                    ", ",
+                  )}
+              />
+            </div>
+          </section>
+
+          <ReviewList
+            label="Areas of expertise"
+            items={
+              application.expertise
+            }
+          />
+
+          <ReviewList
+            label="Mentorship categories"
+            items={
+              application.mentorship_categories
+            }
+          />
+
+          <ReviewList
+            label="Languages"
+            items={
+              application.languages
+            }
+          />
+
+          <section className="admin-review-drawer-section">
+            <h3>
+              Biography
+            </h3>
+
+            <p className="admin-review-biography">
+              {application.biography ||
+                "Not provided"}
+            </p>
+          </section>
+
+          <section className="admin-review-stage-card">
+            <span>
+              STAGE 1
+            </span>
+
+            <h3>
+              Mentor Onboarding recommendation
+            </h3>
+
+            {onboardingComplete ? (
+              <>
+                <p>
+                  Recommendation:{" "}
+
+                  <strong>
+                    {application.onboarding_recommendation ===
+                    "approve"
+                      ? "Recommend approval"
+                      : "Recommend rejection"}
+                  </strong>
+                </p>
+
+                <p>
+                  Reviewed by{" "}
+                  <strong>
+                    {application.onboarding_reviewer
+                      ?.full_name ||
+                      application.onboarding_reviewer
+                        ?.email ||
+                      "Administrator"}
+                  </strong>
+
+                  {application.onboarding_reviewed_at
+                    ? ` on ${formatDate(
+                        application.onboarding_reviewed_at,
+                      )}.`
+                    : "."}
+                </p>
+
+                {application.onboarding_feedback && (
+                  <p>
+                    {
+                      application.onboarding_feedback
+                    }
+                  </p>
+                )}
+              </>
+            ) : (
+              <p>
+                No recommendation has been recorded yet.
+              </p>
+            )}
+
+            {canMakeOnboardingRecommendation && (
+              <ReviewActionBox
+                rejectionMode={
+                  reviewMode ===
+                  "recommend_reject"
+                }
+                feedback={
+                  feedback
+                }
+                setFeedback={
+                  setFeedback
+                }
+                processing={
                   processing
                 }
-              >
-                Close
-              </button>
-            </div>
+                rejectLabel="Recommend rejection"
+                approveLabel="Recommend approval"
+                onCancel={() => {
+                  setReviewMode(
+                    "",
+                  );
+
+                  setFeedback(
+                    "",
+                  );
+                }}
+                onRejectStart={() =>
+                  setReviewMode(
+                    "recommend_reject",
+                  )
+                }
+                onReject={() =>
+                  onSubmitReview(
+                    "recommend_reject",
+                  )
+                }
+                onApprove={() =>
+                  onSubmitReview(
+                    "recommend_approve",
+                  )
+                }
+              />
+            )}
+          </section>
+
+          <section className="admin-review-stage-card">
+            <span>
+              STAGE 2
+            </span>
+
+            <h3>
+              Operations and Governance decision
+            </h3>
+
+            {finalDecisionComplete ? (
+              <>
+                <p>
+                  Final decision:{" "}
+
+                  <strong>
+                    {application.status ===
+                    "approved"
+                      ? "Approved"
+                      : "Rejected"}
+                  </strong>
+                </p>
+
+                <p>
+                  Reviewed by{" "}
+                  <strong>
+                    {application.operations_reviewer
+                      ?.full_name ||
+                      application.operations_reviewer
+                        ?.email ||
+                      "Administrator"}
+                  </strong>
+
+                  {application.operations_reviewed_at
+                    ? ` on ${formatDate(
+                        application.operations_reviewed_at,
+                      )}.`
+                    : "."}
+                </p>
+
+                {(application.operations_feedback ||
+                  application.admin_feedback) && (
+                  <p>
+                    {application.operations_feedback ||
+                      application.admin_feedback}
+                  </p>
+                )}
+              </>
+            ) : onboardingComplete ? (
+              <p>
+                The application is ready for Operations and Governance sign-off.
+              </p>
+            ) : isFullAccessAdmin ? (
+              <p>
+                No Stage 1 recommendation has been recorded yet. Full-access administrators may still make the final decision.
+              </p>
+            ) : (
+              <p>
+                Waiting for the Mentor Onboarding recommendation.
+              </p>
+            )}
+
+            {canMakeFinalDecision && (
+              <ReviewActionBox
+                rejectionMode={
+                  reviewMode ===
+                  "reject"
+                }
+                feedback={
+                  feedback
+                }
+                setFeedback={
+                  setFeedback
+                }
+                processing={
+                  processing
+                }
+                rejectLabel="Reject application"
+                approveLabel="Final approval"
+                onCancel={() => {
+                  setReviewMode(
+                    "",
+                  );
+
+                  setFeedback(
+                    "",
+                  );
+                }}
+                onRejectStart={() =>
+                  setReviewMode(
+                    "reject",
+                  )
+                }
+                onReject={() =>
+                  onSubmitReview(
+                    "reject",
+                  )
+                }
+                onApprove={() =>
+                  onSubmitReview(
+                    "approve",
+                  )
+                }
+              />
+            )}
+          </section>
+
+          {success && (
+            <p className="admin-success-message">
+              {success}
+            </p>
           )}
-      </section>
+
+          {error && (
+            <p
+              className="form-error"
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
+        </div>
+
+        <footer className="admin-review-drawer-footer admin-review-drawer-footer--single">
+          <button
+            type="button"
+            className="admin-drawer-secondary"
+            onClick={
+              onClose
+            }
+            disabled={
+              processing
+            }
+          >
+            Close
+          </button>
+        </footer>
+      </aside>
     </div>
   );
 }
 
 function ReviewActionBox({
-  title,
   rejectionMode,
   feedback,
   setFeedback,
@@ -2012,15 +2114,11 @@ function ReviewActionBox({
   onApprove,
 }) {
   return (
-    <div className="admin-review-existing-feedback">
-      <strong>
-        {title}
-      </strong>
-
+    <div className="admin-review-actions-box">
       {rejectionMode && (
         <label className="admin-rejection-field">
           <span>
-            Reason
+            Reason for rejection
           </span>
 
           <textarea
@@ -2031,8 +2129,7 @@ function ReviewActionBox({
               event,
             ) =>
               setFeedback(
-                event.target
-                  .value,
+                event.target.value,
               )
             }
             rows="4"
@@ -2044,12 +2141,12 @@ function ReviewActionBox({
         </label>
       )}
 
-      <div className="admin-review-modal-actions">
+      <div className="admin-review-inline-actions">
         {rejectionMode ? (
           <>
             <button
               type="button"
-              className="admin-modal-cancel-button"
+              className="admin-drawer-secondary"
               onClick={
                 onCancel
               }
@@ -2062,7 +2159,7 @@ function ReviewActionBox({
 
             <button
               type="button"
-              className="admin-modal-confirm-button danger"
+              className="admin-drawer-danger"
               onClick={
                 onReject
               }
@@ -2079,7 +2176,7 @@ function ReviewActionBox({
           <>
             <button
               type="button"
-              className="admin-modal-cancel-button admin-reject-application-button"
+              className="admin-drawer-secondary-danger"
               onClick={
                 onRejectStart
               }
@@ -2092,7 +2189,7 @@ function ReviewActionBox({
 
             <button
               type="button"
-              className="admin-modal-confirm-button admin-approve-application-button"
+              className="admin-drawer-primary"
               onClick={
                 onApprove
               }
@@ -2134,34 +2231,34 @@ function ReviewList({
   items = [],
 }) {
   return (
-    <div className="admin-review-list">
-      <span>
+    <section className="admin-review-drawer-section">
+      <h3>
         {label}
-      </span>
+      </h3>
 
-      {items.length >
+      {items?.length >
       0 ? (
-        <div>
+        <div className="admin-review-chip-list">
           {items.map(
             (
               item,
             ) => (
-              <small
+              <span
                 key={
                   item
                 }
               >
                 {item}
-              </small>
+              </span>
             ),
           )}
         </div>
       ) : (
-        <p>
+        <p className="admin-review-biography">
           Not provided
         </p>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -2178,12 +2275,6 @@ function StatusBadge({
       "-",
     );
 
-  const text =
-    label ||
-    formatStatusLabel(
-      value,
-    );
-
   return (
     <span
       className={`admin-status-badge status-${normalizedValue}`}
@@ -2194,7 +2285,10 @@ function StatusBadge({
       />
 
       <span>
-        {text}
+        {label ||
+          formatStatusLabel(
+            value,
+          )}
       </span>
     </span>
   );
@@ -2364,6 +2458,30 @@ function formatDate(
       value,
     ),
   );
+}
+
+function getInitials(
+  name,
+) {
+  return String(
+    name ||
+      "MC",
+  )
+    .split(" ")
+    .filter(Boolean)
+    .slice(
+      0,
+      2,
+    )
+    .map(
+      (
+        part,
+      ) =>
+        part
+          .charAt(0)
+          .toUpperCase(),
+    )
+    .join("");
 }
 
 export default AdminMentorApplications;
