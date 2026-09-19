@@ -2877,12 +2877,28 @@ function RequestsPage() {
       setLoading(true);
       setError("");
 
-      const {
-        data,
-        error: requestError,
-      } = await supabase.rpc(
-        "get_admin_mentorship_requests",
-      );
+      const { data, error: requestError } = await supabase
+        .from("mentorship_requests")
+        .select(
+          `
+            id,
+            mentoring_area,
+            goal_statement,
+            status,
+            created_at,
+            mentee:profiles!mentorship_requests_mentee_id_fkey (
+              full_name,
+              email
+            ),
+            mentor:profiles!mentorship_requests_mentor_id_fkey (
+              full_name,
+              email
+            )
+          `,
+        )
+        .order("created_at", {
+          ascending: false,
+        });
 
       if (!isMounted) {
         return;
@@ -3194,24 +3210,72 @@ function RequestDetailsPage({
       setLoading(true);
       setError("");
 
-      const {
-        data: requestData,
-        error: requestError,
-      } = await supabase.rpc(
-        "get_admin_mentorship_request",
-        {
-          p_request_id:
-            requestId,
-        },
-      );
+      const detailedSelection = `
+        id,
+        mentee_id,
+        mentor_id,
+        mentoring_area,
+        goal_statement,
+        reason_for_choosing_mentor,
+        preferred_times,
+        status,
+        decline_reason,
+        declined_at,
+        referral_reason,
+        referred_at,
+        withdrawal_reason,
+        created_at,
+        updated_at,
+        mentee:profiles!mentorship_requests_mentee_id_fkey (
+          full_name,
+          email
+        ),
+        mentor:profiles!mentorship_requests_mentor_id_fkey (
+          full_name,
+          email
+        )
+      `;
 
-      const result = {
-        data:
-          requestData ??
-          null,
-        error:
-          requestError,
-      };
+      let result = await supabase
+        .from("mentorship_requests")
+        .select(detailedSelection)
+        .eq("id", requestId)
+        .maybeSingle();
+
+      /*
+        Older databases may not have every request-history column yet.
+        Fall back to the core request fields instead of breaking the page.
+      */
+      if (result.error) {
+        console.warn(
+          "Detailed request fields were unavailable. Falling back to core fields.",
+          result.error,
+        );
+
+        result = await supabase
+          .from("mentorship_requests")
+          .select(
+            `
+              id,
+              mentee_id,
+              mentor_id,
+              mentoring_area,
+              goal_statement,
+              status,
+              created_at,
+              mentee:profiles!mentorship_requests_mentee_id_fkey (
+                full_name,
+                email
+              ),
+              mentor:profiles!mentorship_requests_mentor_id_fkey (
+                full_name,
+                email
+              )
+            `,
+          )
+          .eq("id", requestId)
+          .maybeSingle();
+      }
 
       if (!isMounted) {
         return;
@@ -3235,13 +3299,28 @@ function RequestDetailsPage({
       const {
         data: referralRows,
         error: referralHistoryError,
-      } = await supabase.rpc(
-        "get_admin_mentorship_request_referrals",
-        {
-          p_request_id:
-            requestId,
-        },
-      );
+      } = await supabase
+        .from("mentorship_request_referrals")
+        .select(`
+          id,
+          request_id,
+          from_mentor_id,
+          to_mentor_id,
+          reason,
+          created_at,
+          from_mentor:profiles!mentorship_request_referrals_from_mentor_id_fkey (
+            full_name,
+            email
+          ),
+          to_mentor:profiles!mentorship_request_referrals_to_mentor_id_fkey (
+            full_name,
+            email
+          )
+        `)
+        .eq("request_id", requestId)
+        .order("created_at", {
+          ascending: true,
+        });
 
       if (!referralHistoryError) {
         setReferralHistory(referralRows ?? []);
