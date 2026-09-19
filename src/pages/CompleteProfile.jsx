@@ -2,12 +2,15 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
 import {
+  Camera,
   ChevronDown,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
 
 import {
@@ -23,6 +26,9 @@ import {
 } from "../lib/supabase";
 
 import "./CompleteProfile.css";
+
+const PHOTO_BUCKET =
+  "mentor-profile-photos";
 
 const mentorshipCategories = [
   "Career development",
@@ -70,21 +76,59 @@ const initialForm = {
   expertise: "",
   categories: [],
   languages: "English",
-  meetingFormats: ["Virtual"],
+  meetingFormats: [
+    "Virtual",
+  ],
   sessionLength: 30,
   maximumActiveMentees: "3",
 };
 
-function convertTextToArray(value) {
-  return String(value || "")
+function convertTextToArray(
+  value,
+) {
+  return String(
+    value || "",
+  )
     .split(",")
-    .map((item) => item.trim())
+    .map((item) =>
+      item.trim(),
+    )
     .filter(Boolean);
+}
+
+function getStoragePathFromPublicUrl(
+  publicUrl,
+) {
+  if (!publicUrl) {
+    return "";
+  }
+
+  const marker =
+    `/storage/v1/object/public/${PHOTO_BUCKET}/`;
+
+  const markerIndex =
+    publicUrl.indexOf(
+      marker,
+    );
+
+  if (markerIndex === -1) {
+    return "";
+  }
+
+  return decodeURIComponent(
+    publicUrl.slice(
+      markerIndex +
+        marker.length,
+    ),
+  );
 }
 
 function CompleteProfile() {
   const navigate =
     useNavigate();
+
+  const photoInputRef =
+    useRef(null);
 
   const {
     user,
@@ -101,6 +145,25 @@ function CompleteProfile() {
   ] = useState(
     initialForm,
   );
+
+  const [
+    photoUrl,
+    setPhotoUrl,
+  ] = useState(
+    profile
+      ?.profile_photo_url ||
+      "",
+  );
+
+  const [
+    uploadingPhoto,
+    setUploadingPhoto,
+  ] = useState(false);
+
+  const [
+    deletingPhoto,
+    setDeletingPhoto,
+  ] = useState(false);
 
   const [
     submitting,
@@ -121,6 +184,14 @@ function CompleteProfile() {
     accountIntent ===
     "mentor";
 
+  const photoBusy =
+    uploadingPhoto ||
+    deletingPhoto;
+
+  const busy =
+    submitting ||
+    photoBusy;
+
   const continueAfterSubmission =
     useCallback(
       () => {
@@ -140,6 +211,17 @@ function CompleteProfile() {
     );
 
   useEffect(() => {
+    setPhotoUrl(
+      profile
+        ?.profile_photo_url ||
+        "",
+    );
+  }, [
+    profile
+      ?.profile_photo_url,
+  ]);
+
+  useEffect(() => {
     if (
       loading ||
       !user
@@ -150,6 +232,7 @@ function CompleteProfile() {
     setForm(
       (current) => ({
         ...current,
+
         fullName:
           profile
             ?.full_name ||
@@ -160,14 +243,17 @@ function CompleteProfile() {
             .user_metadata
             ?.name ||
           "",
+
         phoneNumber:
           profile
             ?.phone_number ||
           "",
+
         membershipVerificationMethod:
           profile
             ?.membership_verification_method ||
           "",
+
         membershipReference:
           profile
             ?.membership_reference ||
@@ -253,7 +339,9 @@ function CompleteProfile() {
     setForm(
       (current) => ({
         ...current,
+
         [name]: value,
+
         ...(name ===
         "membershipVerificationMethod"
           ? {
@@ -283,10 +371,12 @@ function CompleteProfile() {
 
         return {
           ...current,
+
           [field]: selected
             ? currentOptions.filter(
                 (item) =>
-                  item !== option,
+                  item !==
+                  option,
               )
             : [
                 ...currentOptions,
@@ -299,10 +389,319 @@ function CompleteProfile() {
     setError("");
   }
 
+  async function uploadPhoto(
+    event,
+  ) {
+    const file =
+      event.target
+        .files?.[0];
+
+    event.target.value =
+      "";
+
+    if (!file) {
+      return;
+    }
+
+    setError("");
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (
+      !allowedTypes.includes(
+        file.type,
+      )
+    ) {
+      setError(
+        "Please choose a JPG, PNG or WebP image.",
+      );
+
+      return;
+    }
+
+    if (
+      file.size >
+      5 * 1024 * 1024
+    ) {
+      setError(
+        "Please choose an image smaller than 5 MB.",
+      );
+
+      return;
+    }
+
+    if (!user?.id) {
+      setError(
+        "We could not identify your account. Please sign in again.",
+      );
+
+      return;
+    }
+
+    setUploadingPhoto(
+      true,
+    );
+
+    const extension =
+      (
+        file.name
+          .split(".")
+          .pop() ||
+        "jpg"
+      )
+        .toLowerCase()
+        .replace(
+          /[^a-z0-9]/g,
+          "",
+        ) ||
+      "jpg";
+
+    const filePath =
+      `${user.id}/mentor-onboarding-${Date.now()}.${extension}`;
+
+    const {
+      error:
+        uploadError,
+    } = await supabase.storage
+      .from(
+        PHOTO_BUCKET,
+      )
+      .upload(
+        filePath,
+        file,
+        {
+          upsert: false,
+          cacheControl:
+            "3600",
+        },
+      );
+
+    if (uploadError) {
+      console.error(
+        "Unable to upload mentor profile photo:",
+        uploadError,
+      );
+
+      setError(
+        uploadError.message ||
+          "We could not upload your profile photo.",
+      );
+
+      setUploadingPhoto(
+        false,
+      );
+
+      return;
+    }
+
+    const {
+      data:
+        publicUrlData,
+    } = supabase.storage
+      .from(
+        PHOTO_BUCKET,
+      )
+      .getPublicUrl(
+        filePath,
+      );
+
+    const newPhotoUrl =
+      publicUrlData
+        ?.publicUrl;
+
+    if (!newPhotoUrl) {
+      await supabase.storage
+        .from(
+          PHOTO_BUCKET,
+        )
+        .remove([
+          filePath,
+        ]);
+
+      setError(
+        "Your photo uploaded, but we could not prepare its link. Please try again.",
+      );
+
+      setUploadingPhoto(
+        false,
+      );
+
+      return;
+    }
+
+    const previousPhotoUrl =
+      photoUrl;
+
+    const {
+      error:
+        profilePhotoError,
+    } = await supabase.rpc(
+      "set_my_profile_photo_url",
+      {
+        p_profile_photo_url:
+          newPhotoUrl,
+      },
+    );
+
+    if (
+      profilePhotoError
+    ) {
+      console.error(
+        "Unable to save mentor profile photo:",
+        profilePhotoError,
+      );
+
+      await supabase.storage
+        .from(
+          PHOTO_BUCKET,
+        )
+        .remove([
+          filePath,
+        ]);
+
+      setError(
+        profilePhotoError.message ||
+          "We could not save your profile photo.",
+      );
+
+      setUploadingPhoto(
+        false,
+      );
+
+      return;
+    }
+
+    setPhotoUrl(
+      newPhotoUrl,
+    );
+
+    await refreshProfile?.();
+
+    const previousPath =
+      getStoragePathFromPublicUrl(
+        previousPhotoUrl,
+      );
+
+    if (
+      previousPath &&
+      previousPath !==
+        filePath
+    ) {
+      const {
+        error:
+          previousPhotoDeleteError,
+      } =
+        await supabase.storage
+          .from(
+            PHOTO_BUCKET,
+          )
+          .remove([
+            previousPath,
+          ]);
+
+      if (
+        previousPhotoDeleteError
+      ) {
+        console.warn(
+          "The new photo was saved, but the previous image could not be removed:",
+          previousPhotoDeleteError,
+        );
+      }
+    }
+
+    setUploadingPhoto(
+      false,
+    );
+  }
+
+  async function deletePhoto() {
+    if (
+      !photoUrl ||
+      deletingPhoto
+    ) {
+      return;
+    }
+
+    setError("");
+
+    setDeletingPhoto(
+      true,
+    );
+
+    const previousPhotoUrl =
+      photoUrl;
+
+    const {
+      error:
+        clearError,
+    } = await supabase.rpc(
+      "clear_my_profile_photo_url",
+    );
+
+    if (clearError) {
+      console.error(
+        "Unable to remove mentor profile photo:",
+        clearError,
+      );
+
+      setError(
+        clearError.message ||
+          "We could not remove your profile photo.",
+      );
+
+      setDeletingPhoto(
+        false,
+      );
+
+      return;
+    }
+
+    setPhotoUrl("");
+
+    await refreshProfile?.();
+
+    const previousPath =
+      getStoragePathFromPublicUrl(
+        previousPhotoUrl,
+      );
+
+    if (previousPath) {
+      const {
+        error:
+          storageDeleteError,
+      } =
+        await supabase.storage
+          .from(
+            PHOTO_BUCKET,
+          )
+          .remove([
+            previousPath,
+          ]);
+
+      if (
+        storageDeleteError
+      ) {
+        console.warn(
+          "The profile photo reference was removed, but the storage file could not be deleted:",
+          storageDeleteError,
+        );
+      }
+    }
+
+    setDeletingPhoto(
+      false,
+    );
+  }
+
   async function handleSubmit(
     event,
   ) {
     event.preventDefault();
+
     setError("");
 
     const expertise =
@@ -315,6 +714,28 @@ function CompleteProfile() {
         form.languages,
       );
 
+    if (!photoUrl) {
+      setError(
+        "Please upload a profile photo before submitting your mentor application.",
+      );
+
+      photoInputRef.current
+        ?.scrollIntoView?.({
+          behavior: "smooth",
+          block: "center",
+        });
+
+      return;
+    }
+
+    if (photoBusy) {
+      setError(
+        "Please wait for your profile photo update to finish.",
+      );
+
+      return;
+    }
+
     if (
       !form
         .membershipVerificationMethod
@@ -322,6 +743,7 @@ function CompleteProfile() {
       setError(
         "Please select how your TCN Ikeja membership can be verified.",
       );
+
       return;
     }
 
@@ -334,6 +756,7 @@ function CompleteProfile() {
       setError(
         "Please provide the requested membership information.",
       );
+
       return;
     }
 
@@ -345,13 +768,17 @@ function CompleteProfile() {
       setError(
         "Please write a biography containing at least 50 characters.",
       );
+
       return;
     }
 
-    if (!form.jobTitle.trim()) {
+    if (
+      !form.jobTitle.trim()
+    ) {
       setError(
         "Please enter your current role or occupation.",
       );
+
       return;
     }
 
@@ -362,27 +789,40 @@ function CompleteProfile() {
       setError(
         "Please enter your years of experience.",
       );
+
       return;
     }
 
-    if (expertise.length === 0) {
+    if (
+      expertise.length ===
+      0
+    ) {
       setError(
         "Please provide at least one area of expertise.",
       );
+
       return;
     }
 
-    if (form.categories.length === 0) {
+    if (
+      form.categories.length ===
+      0
+    ) {
       setError(
         "Please select at least one mentorship area.",
       );
+
       return;
     }
 
-    if (languages.length === 0) {
+    if (
+      languages.length ===
+      0
+    ) {
       setError(
         "Please provide at least one language.",
       );
+
       return;
     }
 
@@ -393,10 +833,13 @@ function CompleteProfile() {
       setError(
         "Please select at least one meeting format.",
       );
+
       return;
     }
 
-    setSubmitting(true);
+    setSubmitting(
+      true,
+    );
 
     const {
       error:
@@ -406,36 +849,49 @@ function CompleteProfile() {
       {
         p_full_name:
           form.fullName.trim(),
+
         p_phone_number:
           form.phoneNumber.trim(),
+
         p_membership_verification_method:
           form.membershipVerificationMethod,
+
         p_membership_reference:
           form.membershipReference.trim() ||
           null,
+
         p_biography:
           form.biography.trim(),
+
         p_job_title:
           form.jobTitle.trim(),
+
         p_organisation:
           form.organisation.trim() ||
           null,
+
         p_expertise:
           expertise,
+
         p_mentorship_categories:
           form.categories,
+
         p_languages:
           languages,
+
         p_meeting_formats:
           form.meetingFormats,
+
         p_session_length:
           Number(
             form.sessionLength,
           ),
+
         p_maximum_active_mentees:
           Number(
             form.maximumActiveMentees,
           ),
+
         p_years_of_experience:
           Number(
             form.yearsOfExperience,
@@ -443,7 +899,9 @@ function CompleteProfile() {
       },
     );
 
-    if (submissionError) {
+    if (
+      submissionError
+    ) {
       console.error(
         "Unable to submit mentor application:",
         submissionError,
@@ -454,13 +912,19 @@ function CompleteProfile() {
           "We could not submit your mentor application. Please try again.",
       );
 
-      setSubmitting(false);
+      setSubmitting(
+        false,
+      );
+
       return;
     }
 
     await refreshProfile?.();
 
-    setSubmitting(false);
+    setSubmitting(
+      false,
+    );
+
     continueAfterSubmission();
   }
 
@@ -471,6 +935,7 @@ function CompleteProfile() {
     return (
       <main className="page-message">
         <div className="loader" />
+
         <p>
           Preparing your account...
         </p>
@@ -501,13 +966,19 @@ function CompleteProfile() {
             handleSubmit
           }
         >
+          {/* 1. DETAILS AND MEMBERSHIP */}
+
           <section className="mentor-onboarding-card">
             <div className="mentor-onboarding-card-heading">
-              <span>1</span>
+              <span>
+                1
+              </span>
+
               <div>
                 <h2>
                   Your details and membership
                 </h2>
+
                 <p>
                   Tell us who you are and how the team can confirm your TCN Ikeja membership.
                 </p>
@@ -517,6 +988,7 @@ function CompleteProfile() {
             <div className="mentor-onboarding-grid">
               <label>
                 Full name
+
                 <input
                   type="text"
                   name="fullName"
@@ -528,7 +1000,7 @@ function CompleteProfile() {
                   }
                   autoComplete="name"
                   disabled={
-                    submitting
+                    busy
                   }
                   required
                 />
@@ -536,6 +1008,7 @@ function CompleteProfile() {
 
               <label>
                 Email address
+
                 <input
                   type="email"
                   value={
@@ -549,6 +1022,7 @@ function CompleteProfile() {
 
               <label>
                 Mobile number
+
                 <input
                   type="tel"
                   name="phoneNumber"
@@ -561,7 +1035,7 @@ function CompleteProfile() {
                   placeholder="For example, +234 801 234 5678"
                   autoComplete="tel"
                   disabled={
-                    submitting
+                    busy
                   }
                   required
                 />
@@ -569,6 +1043,7 @@ function CompleteProfile() {
 
               <label>
                 How should we verify your membership?
+
                 <div className="mentor-onboarding-select-field">
                   <select
                     name="membershipVerificationMethod"
@@ -579,7 +1054,7 @@ function CompleteProfile() {
                       updateForm
                     }
                     disabled={
-                      submitting
+                      busy
                     }
                     required
                   >
@@ -589,12 +1064,15 @@ function CompleteProfile() {
                     >
                       Select an option
                     </option>
+
                     <option value="service_unit">
                       My service unit or department
                     </option>
+
                     <option value="leader_reference">
                       A TCN leader who knows me
                     </option>
+
                     <option value="manual_admin_review">
                       Administration team review
                     </option>
@@ -610,7 +1088,8 @@ function CompleteProfile() {
 
             {needsMembershipReference && (
               <label>
-                {form.membershipVerificationMethod ===
+                {form
+                  .membershipVerificationMethod ===
                 "service_unit"
                   ? "Service unit or department"
                   : "TCN leader's full name"}
@@ -625,13 +1104,14 @@ function CompleteProfile() {
                     updateForm
                   }
                   placeholder={
-                    form.membershipVerificationMethod ===
+                    form
+                      .membershipVerificationMethod ===
                     "service_unit"
                       ? "Enter your service unit or department"
                       : "Enter the leader's full name"
                   }
                   disabled={
-                    submitting
+                    busy
                   }
                   required
                 />
@@ -639,13 +1119,163 @@ function CompleteProfile() {
             )}
           </section>
 
+          {/* 2. REQUIRED PROFILE PHOTO */}
+
+          <section className="mentor-onboarding-card mentor-onboarding-photo-card">
+            <div className="mentor-onboarding-card-heading">
+              <span>
+                2
+              </span>
+
+              <div>
+                <h2>
+                  Profile photo
+                </h2>
+
+                <p>
+                  Upload a clear and recent photo of yourself. A profile photo is required before your mentor application can be submitted.
+                </p>
+              </div>
+            </div>
+
+            <div className="mentor-onboarding-photo-layout">
+              <div className="mentor-onboarding-photo-preview-column">
+                <input
+                  ref={
+                    photoInputRef
+                  }
+                  className="mentor-onboarding-photo-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={
+                    uploadPhoto
+                  }
+                  disabled={
+                    busy
+                  }
+                />
+
+                <div
+                  className={`mentor-onboarding-photo-preview ${
+                    photoUrl
+                      ? "has-photo"
+                      : ""
+                  }`}
+                >
+                  {photoUrl ? (
+                    <img
+                      src={
+                        photoUrl
+                      }
+                      alt="Your mentor profile preview"
+                    />
+                  ) : (
+                    <div className="mentor-onboarding-photo-empty">
+                      <Camera
+                        size={30}
+                        strokeWidth={1.8}
+                        aria-hidden="true"
+                      />
+
+                      <span>
+                        No photo uploaded
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <small className="mentor-onboarding-photo-file-help">
+                  JPG, PNG or WebP. Maximum file size 5 MB.
+                </small>
+              </div>
+
+              <div className="mentor-onboarding-photo-details">
+                <span className="mentor-onboarding-photo-required">
+                  REQUIRED
+                </span>
+
+                <h3>
+                  Help mentees recognise you.
+                </h3>
+
+                <p>
+                  Choose a clear photo where your face is visible. If your application is approved, this image will be used on your mentor profile and mentor discovery pages.
+                </p>
+
+                <div className="mentor-onboarding-photo-actions">
+                  <button
+                    type="button"
+                    className="mentor-onboarding-photo-upload-button"
+                    onClick={() =>
+                      photoInputRef
+                        .current
+                        ?.click()
+                    }
+                    disabled={
+                      busy
+                    }
+                  >
+                    <Camera
+                      size={17}
+                      aria-hidden="true"
+                    />
+
+                    <span>
+                      {uploadingPhoto
+                        ? "Uploading..."
+                        : photoUrl
+                          ? "Replace photo"
+                          : "Upload photo"}
+                    </span>
+                  </button>
+
+                  {photoUrl && (
+                    <button
+                      type="button"
+                      className="mentor-onboarding-photo-remove-button"
+                      onClick={
+                        deletePhoto
+                      }
+                      disabled={
+                        busy
+                      }
+                    >
+                      <Trash2
+                        size={17}
+                        aria-hidden="true"
+                      />
+
+                      <span>
+                        {deletingPhoto
+                          ? "Removing..."
+                          : "Remove photo"}
+                      </span>
+                    </button>
+                  )}
+                </div>
+
+                {!photoUrl && (
+                  <p className="mentor-onboarding-photo-warning">
+                    You must upload a profile photo before you can submit this application.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* 3. EXPERIENCE */}
+
           <section className="mentor-onboarding-card">
             <div className="mentor-onboarding-card-heading">
-              <span>2</span>
+              <span>
+                3
+              </span>
+
               <div>
                 <h2>
                   Your experience
                 </h2>
+
                 <p>
                   Help the review team understand your background and what you can support mentees with.
                 </p>
@@ -655,6 +1285,7 @@ function CompleteProfile() {
             <div className="mentor-onboarding-grid">
               <label>
                 Current role or occupation
+
                 <input
                   type="text"
                   name="jobTitle"
@@ -666,7 +1297,7 @@ function CompleteProfile() {
                   }
                   placeholder="For example, Product designer"
                   disabled={
-                    submitting
+                    busy
                   }
                   required
                 />
@@ -674,6 +1305,7 @@ function CompleteProfile() {
 
               <label>
                 Organisation
+
                 <input
                   type="text"
                   name="organisation"
@@ -685,13 +1317,14 @@ function CompleteProfile() {
                   }
                   placeholder="Optional"
                   disabled={
-                    submitting
+                    busy
                   }
                 />
               </label>
 
               <label>
                 Years of experience
+
                 <input
                   type="number"
                   name="yearsOfExperience"
@@ -705,7 +1338,7 @@ function CompleteProfile() {
                   max="70"
                   placeholder="For example, 5"
                   disabled={
-                    submitting
+                    busy
                   }
                   required
                 />
@@ -713,6 +1346,7 @@ function CompleteProfile() {
 
               <label>
                 Languages
+
                 <input
                   type="text"
                   name="languages"
@@ -724,10 +1358,11 @@ function CompleteProfile() {
                   }
                   placeholder="English, Yoruba"
                   disabled={
-                    submitting
+                    busy
                   }
                   required
                 />
+
                 <small>
                   Separate multiple languages with commas.
                 </small>
@@ -736,6 +1371,7 @@ function CompleteProfile() {
 
             <label>
               Short biography
+
               <textarea
                 name="biography"
                 value={
@@ -748,17 +1384,24 @@ function CompleteProfile() {
                 minLength={50}
                 placeholder="Briefly introduce yourself, your experience and the kind of guidance you can offer."
                 disabled={
-                  submitting
+                  busy
                 }
                 required
               />
+
               <small>
-                {form.biography.trim().length}/50 minimum characters
+                {
+                  form.biography
+                    .trim()
+                    .length
+                }
+                /50 minimum characters
               </small>
             </label>
 
             <label>
               Areas of expertise
+
               <input
                 type="text"
                 name="expertise"
@@ -770,10 +1413,11 @@ function CompleteProfile() {
                 }
                 placeholder="Product design, leadership, career growth"
                 disabled={
-                  submitting
+                  busy
                 }
                 required
               />
+
               <small>
                 Separate each area with a comma.
               </small>
@@ -786,7 +1430,9 @@ function CompleteProfile() {
 
               <div className="mentor-onboarding-option-grid mentor-onboarding-option-grid--categories">
                 {mentorshipCategories.map(
-                  (category) => (
+                  (
+                    category,
+                  ) => (
                     <label
                       key={
                         category
@@ -806,9 +1452,10 @@ function CompleteProfile() {
                           )
                         }
                         disabled={
-                          submitting
+                          busy
                         }
                       />
+
                       <span>
                         {category}
                       </span>
@@ -819,13 +1466,19 @@ function CompleteProfile() {
             </fieldset>
           </section>
 
+          {/* 4. MENTORING PREFERENCES */}
+
           <section className="mentor-onboarding-card">
             <div className="mentor-onboarding-card-heading">
-              <span>3</span>
+              <span>
+                4
+              </span>
+
               <div>
                 <h2>
                   Mentoring preferences
                 </h2>
+
                 <p>
                   Choose how you would prefer to conduct sessions. You can change these preferences after approval.
                 </p>
@@ -839,7 +1492,9 @@ function CompleteProfile() {
 
               <div className="mentor-onboarding-option-grid">
                 {meetingFormatOptions.map(
-                  (format) => (
+                  (
+                    format,
+                  ) => (
                     <label
                       key={
                         format
@@ -859,9 +1514,10 @@ function CompleteProfile() {
                           )
                         }
                         disabled={
-                          submitting
+                          busy
                         }
                       />
+
                       <span>
                         {format}
                       </span>
@@ -878,7 +1534,9 @@ function CompleteProfile() {
 
               <div className="mentor-onboarding-option-grid mentor-onboarding-radio-grid">
                 {sessionLengthOptions.map(
-                  (option) => (
+                  (
+                    option,
+                  ) => (
                     <label
                       key={
                         option.value
@@ -898,23 +1556,31 @@ function CompleteProfile() {
                         }
                         onChange={(
                           event,
-                        ) =>
+                        ) => {
                           setForm(
                             (current) => ({
                               ...current,
+
                               sessionLength:
                                 Number(
-                                  event.target.value,
+                                  event
+                                    .target
+                                    .value,
                                 ),
                             }),
-                          )
-                        }
+                          );
+
+                          setError("");
+                        }}
                         disabled={
-                          submitting
+                          busy
                         }
                       />
+
                       <span>
-                        {option.label}
+                        {
+                          option.label
+                        }
                       </span>
                     </label>
                   ),
@@ -924,6 +1590,7 @@ function CompleteProfile() {
 
             <label>
               Maximum number of active mentees
+
               <div className="mentor-onboarding-select-field">
                 <select
                   name="maximumActiveMentees"
@@ -934,20 +1601,39 @@ function CompleteProfile() {
                     updateForm
                   }
                   disabled={
-                    submitting
+                    busy
                   }
                 >
-                  {[1, 2, 3, 4, 5, 6, 8, 10].map(
-                    (number) => (
+                  {[
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    8,
+                    10,
+                  ].map(
+                    (
+                      number,
+                    ) => (
                       <option
-                        key={number}
-                        value={number}
+                        key={
+                          number
+                        }
+                        value={
+                          number
+                        }
                       >
-                        {number} {number === 1 ? "mentee" : "mentees"}
+                        {number}{" "}
+                        {number === 1
+                          ? "mentee"
+                          : "mentees"}
                       </option>
                     ),
                   )}
                 </select>
+
                 <ChevronDown
                   size={18}
                   aria-hidden="true"
@@ -961,8 +1647,9 @@ function CompleteProfile() {
               size={19}
               aria-hidden="true"
             />
+
             <p>
-              This is your only mentor application submission step. The administration team will review your membership information and mentor details together.
+              This is your only mentor application submission step. The administration team will review your membership information, profile photo and mentor details together.
             </p>
           </div>
 
@@ -980,12 +1667,17 @@ function CompleteProfile() {
               type="submit"
               className="primary-button"
               disabled={
-                submitting
+                busy ||
+                !photoUrl
               }
             >
               {submitting
                 ? "Submitting application..."
-                : "Submit mentor application"}
+                : uploadingPhoto
+                  ? "Uploading photo..."
+                  : deletingPhoto
+                    ? "Updating photo..."
+                    : "Submit mentor application"}
             </button>
           </div>
         </form>
