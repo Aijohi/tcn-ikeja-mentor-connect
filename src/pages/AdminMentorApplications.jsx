@@ -41,7 +41,6 @@ function AdminMentorApplications({
   canRecommendApplications = false,
   canSecondSignoffApplications = false,
   isFullAccessAdmin = false,
-  canVerifyMembership = false,
   adminOperationalRole = "",
 }) {
   return (
@@ -58,9 +57,6 @@ function AdminMentorApplications({
         isFullAccessAdmin={
           isFullAccessAdmin
         }
-        canVerifyMembership={
-          canVerifyMembership
-        }
         adminOperationalRole={
           adminOperationalRole
         }
@@ -68,6 +64,12 @@ function AdminMentorApplications({
     </div>
   );
 }
+
+/* =========================================================
+   MENTOR INTEREST
+   Only appears when somebody selected "I want to mentor"
+   but has not submitted the mentor application yet.
+========================================================= */
 
 function MentorInterestList() {
   const [
@@ -105,7 +107,6 @@ function MentorInterestList() {
           role,
           account_status,
           email_verified,
-          onboarding_completed,
           created_at
         `)
         .eq(
@@ -179,7 +180,7 @@ function MentorInterestList() {
 
       if (applicationError) {
         console.error(
-          "Unable to check mentor applications:",
+          "Unable to check submitted mentor applications:",
           applicationError,
         );
 
@@ -240,7 +241,10 @@ function MentorInterestList() {
     );
   }
 
-  if (registrations.length === 0) {
+  if (
+    registrations.length ===
+    0
+  ) {
     return null;
   }
 
@@ -257,7 +261,7 @@ function MentorInterestList() {
           </h2>
 
           <p>
-            These people selected “I want to mentor” but have not submitted the mentor application yet. This section only appears when someone is still at that stage.
+            These people selected “I want to mentor” but have not submitted the mentor application yet.
           </p>
         </div>
 
@@ -270,112 +274,84 @@ function MentorInterestList() {
       </div>
 
       <div className="admin-table-wrapper admin-table-wrapper--flush">
-          <table className="admin-data-table admin-mentor-interest-table">
-            <thead>
-              <tr>
-                <th>
-                  Person
-                </th>
+        <table className="admin-data-table admin-mentor-interest-table">
+          <thead>
+            <tr>
+              <th>
+                Person
+              </th>
 
-                <th>
-                  Email
-                </th>
+              <th>
+                Email
+              </th>
 
-                <th>
-                  Progress
-                </th>
+              <th>
+                Progress
+              </th>
 
-                <th>
-                  Registered
-                </th>
-              </tr>
-            </thead>
+              <th>
+                Registered
+              </th>
+            </tr>
+          </thead>
 
-            <tbody>
-              {registrations.map(
-                (
-                  person,
-                ) => (
-                  <tr
-                    key={
-                      person.id
+          <tbody>
+            {registrations.map(
+              (
+                person,
+              ) => (
+                <tr
+                  key={
+                    person.id
+                  }
+                >
+                  <td>
+                    <strong>
+                      {person.full_name ||
+                        "Name not provided"}
+                    </strong>
+                  </td>
+
+                  <td>
+                    {
+                      person.email
                     }
-                  >
-                    <td>
-                      <strong>
-                        {person.full_name ||
-                          "Name not provided"}
-                      </strong>
-                    </td>
+                  </td>
 
-                    <td>
-                      {
-                        person.email
+                  <td>
+                    <StatusBadge
+                      value="pending"
+                      label={
+                        person.email_verified
+                          ? "Application not submitted"
+                          : "Email verification pending"
                       }
-                    </td>
+                    />
+                  </td>
 
-                    <td>
-                      <RegistrationProgress
-                        person={
-                          person
-                        }
-                      />
-                    </td>
-
-                    <td>
-                      {formatDate(
-                        person.created_at,
-                      )}
-                    </td>
-                  </tr>
-                ),
-              )}
-            </tbody>
-          </table>
-        </div>
+                  <td>
+                    {formatDate(
+                      person.created_at,
+                    )}
+                  </td>
+                </tr>
+              ),
+            )}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }
 
-function RegistrationProgress({
-  person,
-}) {
-  if (
-    person.account_status ===
-    "rejected"
-  ) {
-    return (
-      <StatusBadge
-        value="rejected"
-        label="Registration rejected"
-      />
-    );
-  }
-
-  if (
-    !person.email_verified
-  ) {
-    return (
-      <StatusBadge
-        value="pending"
-        label="Email verification pending"
-      />
-    );
-  }
-
-  return (
-    <StatusBadge
-      value="pending"
-      label="Application not submitted"
-    />
-  );
-}
+/* =========================================================
+   SUBMITTED APPLICATIONS
+========================================================= */
 
 function SubmittedApplications({
   canRecommendApplications,
   canSecondSignoffApplications,
   isFullAccessAdmin,
-  canVerifyMembership,
   adminOperationalRole,
 }) {
   const [
@@ -404,13 +380,13 @@ function SubmittedApplications({
   ] = useState(null);
 
   const [
-    reviewMode,
-    setReviewMode,
-  ] = useState("");
+    rejectionOpen,
+    setRejectionOpen,
+  ] = useState(false);
 
   const [
-    feedback,
-    setFeedback,
+    rejectionReason,
+    setRejectionReason,
   ] = useState("");
 
   const [
@@ -432,6 +408,11 @@ function SubmittedApplications({
     success,
     setSuccess,
   ] = useState("");
+
+  const canDecideApplications =
+    isFullAccessAdmin ||
+    canRecommendApplications ||
+    canSecondSignoffApplications;
 
   async function loadApplications({
     keepModalOpen = false,
@@ -457,7 +438,6 @@ function SubmittedApplications({
         biography,
         job_title,
         organisation,
-        expertise,
         mentorship_categories,
         languages,
         meeting_formats,
@@ -472,14 +452,6 @@ function SubmittedApplications({
         reviewed_by,
         approved_at,
         mentor_account_id,
-        onboarding_recommendation,
-        onboarding_feedback,
-        onboarding_reviewed_at,
-        onboarding_reviewed_by,
-        operations_decision,
-        operations_feedback,
-        operations_reviewed_at,
-        operations_reviewed_by,
         created_at,
         updated_at,
         applicant:profiles!mentor_applications_applicant_user_id_fkey (
@@ -502,7 +474,9 @@ function SubmittedApplications({
         },
       );
 
-    if (applicationError) {
+    if (
+      applicationError
+    ) {
       console.error(
         "Unable to load mentor applications:",
         applicationError,
@@ -513,7 +487,6 @@ function SubmittedApplications({
       );
 
       setLoading(false);
-
       return;
     }
 
@@ -523,13 +496,11 @@ function SubmittedApplications({
     const reviewerIds = [
       ...new Set(
         rawApplications
-          .flatMap(
+          .map(
             (
               application,
-            ) => [
-              application.onboarding_reviewed_by,
-              application.operations_reviewed_by,
-            ],
+            ) =>
+              application.reviewed_by,
           )
           .filter(Boolean),
       ),
@@ -577,15 +548,9 @@ function SubmittedApplications({
         ) => ({
           ...application,
 
-          onboarding_reviewer:
+          reviewer:
             reviewerMap.get(
-              application.onboarding_reviewed_by,
-            ) ??
-            null,
-
-          operations_reviewer:
-            reviewerMap.get(
-              application.operations_reviewed_by,
+              application.reviewed_by,
             ) ??
             null,
         }),
@@ -625,9 +590,132 @@ function SubmittedApplications({
     statusFilter,
   ]);
 
+  function openReview(
+    application,
+  ) {
+    setSelectedApplication(
+      application,
+    );
+
+    setError("");
+    setSuccess("");
+    setRejectionOpen(false);
+    setRejectionReason("");
+  }
+
+  function closeReview() {
+    if (processing) {
+      return;
+    }
+
+    setSelectedApplication(
+      null,
+    );
+
+    setError("");
+    setSuccess("");
+    setRejectionOpen(false);
+    setRejectionReason("");
+  }
+
+  async function submitDecision(
+    action,
+    reason = null,
+  ) {
+    if (
+      !selectedApplication ||
+      selectedApplication.status !==
+        "pending" ||
+      processing
+    ) {
+      return;
+    }
+
+    if (
+      !canDecideApplications
+    ) {
+      setError(
+        "Your administrator role can view this application but cannot make the mentor decision.",
+      );
+
+      return;
+    }
+
+    if (
+      action === "reject" &&
+      !String(
+        reason ||
+          "",
+      ).trim()
+    ) {
+      setError(
+        "Please provide a reason for declining this mentor application.",
+      );
+
+      return;
+    }
+
+    setProcessing(true);
+    setError("");
+    setSuccess("");
+
+    const {
+      error: decisionError,
+    } = await supabase.rpc(
+      "admin_decide_mentor_application",
+      {
+        p_application_id:
+          selectedApplication.id,
+
+        p_decision:
+          action,
+
+        p_reason:
+          action === "reject"
+            ? String(
+                reason,
+              ).trim()
+            : null,
+      },
+    );
+
+    if (
+      decisionError
+    ) {
+      console.error(
+        "Unable to review mentor application:",
+        decisionError,
+      );
+
+      setError(
+        decisionError.message ||
+          "We could not save this mentor decision.",
+      );
+
+      setProcessing(false);
+      return;
+    }
+
+    setSuccess(
+      action === "approve"
+        ? "The mentor application has been approved."
+        : "The mentor application has been declined.",
+    );
+
+    setRejectionOpen(false);
+    setRejectionReason("");
+
+    await loadApplications({
+      keepModalOpen:
+        true,
+    });
+
+    setProcessing(false);
+  }
+
   const filteredApplications =
     useMemo(() => {
-      const searchValue =
+      const query =
         searchTerm
           .trim()
           .toLowerCase();
@@ -645,9 +733,7 @@ function SubmittedApplications({
             return false;
           }
 
-          if (
-            !searchValue
-          ) {
+          if (!query) {
             return true;
           }
 
@@ -673,7 +759,7 @@ function SubmittedApplications({
             .join(" ")
             .toLowerCase()
             .includes(
-              searchValue,
+              query,
             );
         },
       );
@@ -709,198 +795,6 @@ function SubmittedApplications({
         APPLICATION_PAGE_SIZE,
     );
 
-  function canTakeAction(
-    application,
-  ) {
-    if (
-      application.status !==
-      "pending"
-    ) {
-      return false;
-    }
-
-    if (
-      !application.onboarding_recommendation
-    ) {
-      return (
-        canRecommendApplications ||
-        isFullAccessAdmin
-      );
-    }
-
-    if (
-      !application.operations_decision
-    ) {
-      return (
-        canSecondSignoffApplications ||
-        isFullAccessAdmin
-      );
-    }
-
-    return false;
-  }
-
-  async function submitReview(
-    action,
-  ) {
-    if (
-      !selectedApplication ||
-      selectedApplication.status !==
-        "pending"
-    ) {
-      return;
-    }
-
-    const recommendationAction =
-      [
-        "recommend_approve",
-        "recommend_reject",
-      ].includes(
-        action,
-      );
-
-    const finalAction =
-      [
-        "approve",
-        "reject",
-      ].includes(
-        action,
-      );
-
-    if (
-      recommendationAction &&
-      !(
-        canRecommendApplications ||
-        isFullAccessAdmin
-      )
-    ) {
-      setError(
-        "Your administrator role cannot record the Mentor Onboarding recommendation.",
-      );
-
-      return;
-    }
-
-    if (
-      finalAction &&
-      !(
-        canSecondSignoffApplications ||
-        isFullAccessAdmin
-      )
-    ) {
-      setError(
-        "Your administrator role cannot record the final Operations and Governance decision.",
-      );
-
-      return;
-    }
-
-    if (
-      finalAction &&
-      !selectedApplication
-        .onboarding_recommendation &&
-      !isFullAccessAdmin
-    ) {
-      setError(
-        "The Mentor Onboarding recommendation must be recorded before the final Operations and Governance decision.",
-      );
-
-      return;
-    }
-
-    if (
-      [
-        "recommend_reject",
-        "reject",
-      ].includes(
-        action,
-      ) &&
-      !feedback.trim()
-    ) {
-      setReviewMode(
-        action,
-      );
-
-      setError(
-        "Please provide a clear reason for the rejection.",
-      );
-
-      return;
-    }
-
-    setProcessing(true);
-    setError("");
-    setSuccess("");
-
-    const {
-      error: reviewError,
-    } = await supabase.rpc(
-      "admin_review_mentor_application",
-      {
-        p_application_id:
-          selectedApplication.id,
-
-        p_action:
-          action,
-
-        p_feedback:
-          [
-            "recommend_reject",
-            "reject",
-          ].includes(
-            action,
-          )
-            ? feedback.trim()
-            : null,
-      },
-    );
-
-    if (reviewError) {
-      console.error(
-        "Unable to review mentor application:",
-        reviewError,
-      );
-
-      setError(
-        reviewError.message ||
-          "We could not update this mentor application.",
-      );
-
-      setProcessing(false);
-
-      return;
-    }
-
-    const messages = {
-      recommend_approve:
-        "Approval recommended. The application is ready for Operations and Governance sign-off.",
-
-      recommend_reject:
-        "Rejection recommended. The application is ready for Operations and Governance sign-off.",
-
-      approve:
-        "The mentor application has received final approval.",
-
-      reject:
-        "The mentor application has been rejected.",
-    };
-
-    setSuccess(
-      messages[action] ||
-        "The application was updated.",
-    );
-
-    setReviewMode("");
-    setFeedback("");
-
-    await loadApplications({
-      keepModalOpen:
-        true,
-    });
-
-    setProcessing(false);
-  }
-
   if (loading) {
     return (
       <section className="admin-list-section">
@@ -912,18 +806,14 @@ function SubmittedApplications({
   return (
     <>
       <section className="admin-list-section admin-submitted-applications-section">
-        <div className="admin-workflow-section-heading">
+        <div className="admin-workflow-section-heading admin-workflow-section-heading--no-kicker">
           <div>
-            <span>
-              MENTOR APPLICATIONS
-            </span>
-
             <h2>
               Submitted mentor applications
             </h2>
 
             <p>
-              Submitted mentor applications appear here. Review the mentor’s details, confirm the membership check, record the Mentor Onboarding recommendation, and complete the Operations and Governance decision.
+              Review each mentor’s submitted information and approve or decline the application.
             </p>
           </div>
         </div>
@@ -968,7 +858,7 @@ function SubmittedApplications({
               ],
               [
                 "rejected",
-                "Rejected",
+                "Declined",
               ],
             ].map(
               ([
@@ -1019,7 +909,7 @@ function SubmittedApplications({
         0 ? (
           <AdminEmptyState
             title="No submitted mentor applications"
-            description="Mentor applications will appear here after the applicant completes and submits the mentor application form."
+            description="Mentor applications will appear here after applicants complete and submit the form."
           />
         ) : filteredApplications.length ===
           0 ? (
@@ -1033,14 +923,30 @@ function SubmittedApplications({
               <table className="admin-data-table admin-application-table">
                 <thead>
                   <tr>
-                    <th>Applicant</th>
-                    <th>Membership check</th>
-                    <th>Current role</th>
-                    <th>Experience</th>
-                    <th>Mentoring areas</th>
-                    <th>Review stage</th>
-                    <th>Decision status</th>
-                    <th>Submitted</th>
+                    <th>
+                      Applicant
+                    </th>
+
+                    <th>
+                      Current role
+                    </th>
+
+                    <th>
+                      Experience
+                    </th>
+
+                    <th>
+                      Mentoring areas
+                    </th>
+
+                    <th>
+                      Status
+                    </th>
+
+                    <th>
+                      Submitted
+                    </th>
+
                     <th aria-label="Action" />
                   </tr>
                 </thead>
@@ -1067,23 +973,6 @@ function SubmittedApplications({
                               ?.email ||
                               ""}
                           </small>
-                        </td>
-
-                        <td>
-                          <StatusBadge
-                            value={
-                              application.applicant
-                                ?.membership_verified
-                                ? "verified"
-                                : "not_verified"
-                            }
-                            label={
-                              application.applicant
-                                ?.membership_verified
-                                ? "Verified"
-                                : "Not verified"
-                            }
-                          />
                         </td>
 
                         <td>
@@ -1121,12 +1010,6 @@ function SubmittedApplications({
                         </td>
 
                         <td>
-                          {getApplicationReviewStageLabel(
-                            application,
-                          )}
-                        </td>
-
-                        <td>
                           <StatusBadge
                             value={
                               application.status
@@ -1135,7 +1018,10 @@ function SubmittedApplications({
                               application.status ===
                               "pending"
                                 ? "Pending review"
-                                : undefined
+                                : application.status ===
+                                    "rejected"
+                                  ? "Declined"
+                                  : undefined
                             }
                           />
                         </td>
@@ -1150,31 +1036,14 @@ function SubmittedApplications({
                           <button
                             type="button"
                             className="admin-review-button"
-                            onClick={() => {
-                              setSelectedApplication(
+                            onClick={() =>
+                              openReview(
                                 application,
-                              );
-
-                              setReviewMode(
-                                "",
-                              );
-
-                              setFeedback(
-                                "",
-                              );
-
-                              setError(
-                                "",
-                              );
-
-                              setSuccess(
-                                "",
-                              );
-                            }}
+                              )
+                            }
                           >
-                            {canTakeAction(
-                              application,
-                            )
+                            {application.status ===
+                            "pending"
                               ? "Review"
                               : "View"}
                           </button>
@@ -1228,11 +1097,19 @@ function SubmittedApplications({
                   <ChevronLeft
                     size={16}
                   />
+
                   Previous
                 </button>
 
                 <span>
-                  Page {safePage} of {totalPages}
+                  Page{" "}
+                  {
+                    safePage
+                  }{" "}
+                  of{" "}
+                  {
+                    totalPages
+                  }
                 </span>
 
                 <button
@@ -1254,6 +1131,7 @@ function SubmittedApplications({
                   }
                 >
                   Next
+
                   <ChevronRight
                     size={16}
                   />
@@ -1269,17 +1147,17 @@ function SubmittedApplications({
           application={
             selectedApplication
           }
-          reviewMode={
-            reviewMode
+          canDecideApplications={
+            canDecideApplications
           }
-          setReviewMode={
-            setReviewMode
+          adminOperationalRole={
+            adminOperationalRole
           }
-          feedback={
-            feedback
+          isFullAccessAdmin={
+            isFullAccessAdmin
           }
-          setFeedback={
-            setFeedback
+          processing={
+            processing
           }
           error={
             error
@@ -1287,69 +1165,81 @@ function SubmittedApplications({
           success={
             success
           }
-          processing={
-            processing
+          onApprove={() =>
+            submitDecision(
+              "approve",
+            )
           }
-          canRecommendApplications={
-            canRecommendApplications
-          }
-          canSecondSignoffApplications={
-            canSecondSignoffApplications
-          }
-          isFullAccessAdmin={
-            isFullAccessAdmin
-          }
-          adminOperationalRole={
-            adminOperationalRole
-          }
-          onSubmitReview={
-            submitReview
-          }
-          onClose={() => {
-            if (
-              !processing
-            ) {
-              setSelectedApplication(
-                null,
-              );
-
-              setReviewMode(
-                "",
-              );
-
-              setFeedback(
-                "",
-              );
-
-              setError(
-                "",
-              );
-
-              setSuccess(
-                "",
-              );
-            }
+          onDecline={() => {
+            setError("");
+            setRejectionReason("");
+            setRejectionOpen(
+              true,
+            );
           }}
+          onClose={
+            closeReview
+          }
         />
       )}
+
+      {selectedApplication &&
+        rejectionOpen && (
+          <DeclineApplicationModal
+            application={
+              selectedApplication
+            }
+            reason={
+              rejectionReason
+            }
+            setReason={
+              setRejectionReason
+            }
+            processing={
+              processing
+            }
+            error={
+              error
+            }
+            onCancel={() => {
+              if (
+                !processing
+              ) {
+                setRejectionOpen(
+                  false,
+                );
+                setRejectionReason(
+                  "",
+                );
+                setError("");
+              }
+            }}
+            onConfirm={() =>
+              submitDecision(
+                "reject",
+                rejectionReason,
+              )
+            }
+          />
+        )}
     </>
   );
 }
 
+/* =========================================================
+   APPLICATION REVIEW MODAL
+========================================================= */
+
 function ApplicationReviewModal({
   application,
-  reviewMode,
-  setReviewMode,
-  feedback,
-  setFeedback,
+  canDecideApplications,
+  adminOperationalRole,
+  isFullAccessAdmin,
+  processing,
   error,
   success,
-  processing,
-  canRecommendApplications,
-  canSecondSignoffApplications,
-  isFullAccessAdmin,
-  adminOperationalRole,
-  onSubmitReview,
+  onApprove,
+  onDecline,
   onClose,
 }) {
   useLockBodyScroll(true);
@@ -1357,49 +1247,6 @@ function ApplicationReviewModal({
   const isPending =
     application.status ===
     "pending";
-
-  const onboardingComplete =
-    Boolean(
-      application.onboarding_recommendation,
-    );
-
-  const finalDecisionComplete =
-    Boolean(
-      application.operations_decision,
-    ) ||
-    [
-      "approved",
-      "rejected",
-    ].includes(
-      application.status,
-    );
-
-  /*
-    This restores the mentor review experience used before
-    the separate membership-verification action was added.
-
-    Full-access administrators can see both review action groups.
-    Scoped administrators only see actions allowed by their role.
-  */
-  const canMakeOnboardingRecommendation =
-    isPending &&
-    !onboardingComplete &&
-    (
-      canRecommendApplications ||
-      isFullAccessAdmin
-    );
-
-  const canMakeFinalDecision =
-    isPending &&
-    !finalDecisionComplete &&
-    (
-      canSecondSignoffApplications ||
-      isFullAccessAdmin
-    ) &&
-    (
-      onboardingComplete ||
-      isFullAccessAdmin
-    );
 
   return (
     <div
@@ -1417,7 +1264,7 @@ function ApplicationReviewModal({
         }
       }}
     >
-      <aside
+      <section
         className="admin-mentor-review-modal"
         role="dialog"
         aria-modal="true"
@@ -1487,15 +1334,15 @@ function ApplicationReviewModal({
                 application.status ===
                 "pending"
                   ? "Pending review"
-                  : undefined
+                  : application.status ===
+                      "rejected"
+                    ? "Declined"
+                    : undefined
               }
             />
 
             <span>
-              {getApplicationReviewStageLabel(
-                application,
-              )}{" "}
-              · Submitted{" "}
+              Submitted{" "}
               {formatDate(
                 application.created_at,
               )}
@@ -1509,7 +1356,7 @@ function ApplicationReviewModal({
               </strong>
 
               <p>
-                You can perform either review stage. Your access is not restricted by an operational role.
+                You can review and make the final decision on this mentor application.
               </p>
             </section>
           )}
@@ -1531,7 +1378,7 @@ function ApplicationReviewModal({
 
           <section className="admin-mentor-review-section">
             <h3>
-              Membership verification information
+              Membership information
             </h3>
 
             <div className="admin-mentor-review-details-grid">
@@ -1557,18 +1404,9 @@ function ApplicationReviewModal({
                         ?.membership_verification_method
                     ) ===
                     "manual_admin_review"
-                      ? "Manual administration review requested"
+                      ? "Manual administrator review requested"
                       : "Not provided"
                   )
-                }
-              />
-
-              <ReviewDetail
-                label="Email"
-                value={
-                  application.applicant
-                    ?.email ||
-                  "Not provided"
                 }
               />
 
@@ -1576,12 +1414,18 @@ function ApplicationReviewModal({
                 label="Email verification"
                 value={
                   application.applicant
-                    ?.email_verified === true
+                    ?.email_verified
                     ? "Verified"
-                    : application.applicant
-                        ?.email_verified === false
-                      ? "Not verified"
-                      : "Not available"
+                    : "Not verified"
+                }
+              />
+
+              <ReviewDetail
+                label="Mobile number"
+                value={
+                  application.applicant
+                    ?.phone_number ||
+                  "Not provided"
                 }
               />
             </div>
@@ -1680,219 +1524,54 @@ function ApplicationReviewModal({
             </p>
           </section>
 
-          <section className="admin-mentor-review-stage-card">
-            <span>
-              STAGE 1
-            </span>
+          {!isPending && (
+            <section className="admin-mentor-decision-summary">
+              <span>
+                DECISION
+              </span>
 
-            <h3>
-              Mentor Onboarding recommendation
-            </h3>
+              <h3>
+                {application.status ===
+                "approved"
+                  ? "Application approved"
+                  : "Application declined"}
+              </h3>
 
-            {onboardingComplete ? (
-              <>
-                <p>
-                  Recommendation:{" "}
+              <p>
+                Reviewed by{" "}
 
-                  <strong>
-                    {application.onboarding_recommendation ===
-                    "approve"
-                      ? "Recommend approval"
-                      : "Recommend rejection"}
-                  </strong>
-                </p>
+                <strong>
+                  {application.reviewer
+                    ?.full_name ||
+                    application.reviewer
+                      ?.email ||
+                    "Administrator"}
+                </strong>
 
-                <p>
-                  Reviewed by{" "}
+                {application.reviewed_at
+                  ? ` on ${formatDate(
+                      application.reviewed_at,
+                    )}.`
+                  : "."}
+              </p>
 
-                  <strong>
-                    {application.onboarding_reviewer
-                      ?.full_name ||
-                      application.onboarding_reviewer
-                        ?.email ||
-                      "Administrator"}
-                  </strong>
+              {application.status ===
+                "rejected" &&
+                application.admin_feedback && (
+                  <div className="admin-mentor-decline-reason">
+                    <span>
+                      Reason
+                    </span>
 
-                  {application.onboarding_reviewed_at
-                    ? ` on ${formatDate(
-                        application.onboarding_reviewed_at,
-                      )}.`
-                    : "."}
-                </p>
-
-                {application.onboarding_feedback && (
-                  <p>
-                    {
-                      application.onboarding_feedback
-                    }
-                  </p>
+                    <p>
+                      {
+                        application.admin_feedback
+                      }
+                    </p>
+                  </div>
                 )}
-              </>
-            ) : (
-              <p>
-                No recommendation has been recorded yet.
-              </p>
-            )}
-
-            {canMakeOnboardingRecommendation && (
-              <ReviewActionBox
-                rejectionMode={
-                  reviewMode ===
-                  "recommend_reject"
-                }
-                feedback={
-                  feedback
-                }
-                setFeedback={
-                  setFeedback
-                }
-                processing={
-                  processing
-                }
-                rejectLabel="Recommend rejection"
-                approveLabel="Recommend approval"
-                onCancel={() => {
-                  setReviewMode(
-                    "",
-                  );
-
-                  setFeedback(
-                    "",
-                  );
-                }}
-                onRejectStart={() => {
-                  setReviewMode(
-                    "recommend_reject",
-                  );
-
-                  setFeedback(
-                    "",
-                  );
-                }}
-                onReject={() =>
-                  onSubmitReview(
-                    "recommend_reject",
-                  )
-                }
-                onApprove={() =>
-                  onSubmitReview(
-                    "recommend_approve",
-                  )
-                }
-              />
-            )}
-          </section>
-
-          <section className="admin-mentor-review-stage-card">
-            <span>
-              STAGE 2
-            </span>
-
-            <h3>
-              Operations and Governance decision
-            </h3>
-
-            {finalDecisionComplete ? (
-              <>
-                <p>
-                  Final decision:{" "}
-
-                  <strong>
-                    {application.status ===
-                    "approved"
-                      ? "Approved"
-                      : "Rejected"}
-                  </strong>
-                </p>
-
-                <p>
-                  Reviewed by{" "}
-
-                  <strong>
-                    {application.operations_reviewer
-                      ?.full_name ||
-                      application.operations_reviewer
-                        ?.email ||
-                      "Administrator"}
-                  </strong>
-
-                  {application.operations_reviewed_at
-                    ? ` on ${formatDate(
-                        application.operations_reviewed_at,
-                      )}.`
-                    : "."}
-                </p>
-
-                {(application.operations_feedback ||
-                  application.admin_feedback) && (
-                  <p>
-                    {application.operations_feedback ||
-                      application.admin_feedback}
-                  </p>
-                )}
-              </>
-            ) : onboardingComplete ? (
-              <p>
-                The application is ready for Operations and Governance sign-off.
-              </p>
-            ) : isFullAccessAdmin ? (
-              <p>
-                No onboarding recommendation has been recorded. As a Full Access Admin, you can still see the final-decision actions.
-              </p>
-            ) : (
-              <p>
-                Waiting for the Mentor Onboarding recommendation.
-              </p>
-            )}
-
-            {canMakeFinalDecision && (
-              <ReviewActionBox
-                rejectionMode={
-                  reviewMode ===
-                  "reject"
-                }
-                feedback={
-                  feedback
-                }
-                setFeedback={
-                  setFeedback
-                }
-                processing={
-                  processing
-                }
-                rejectLabel="Reject"
-                approveLabel="Final approval"
-                onCancel={() => {
-                  setReviewMode(
-                    "",
-                  );
-
-                  setFeedback(
-                    "",
-                  );
-                }}
-                onRejectStart={() => {
-                  setReviewMode(
-                    "reject",
-                  );
-
-                  setFeedback(
-                    "",
-                  );
-                }}
-                onReject={() =>
-                  onSubmitReview(
-                    "reject",
-                  )
-                }
-                onApprove={() =>
-                  onSubmitReview(
-                    "approve",
-                  )
-                }
-              />
-            )}
-          </section>
+            </section>
+          )}
 
           {success && (
             <p className="admin-success-message">
@@ -1908,6 +1587,19 @@ function ApplicationReviewModal({
               {error}
             </p>
           )}
+
+          {isPending &&
+            !canDecideApplications && (
+              <section className="admin-mentor-review-callout">
+                <strong>
+                  View only
+                </strong>
+
+                <p>
+                  Your administrator role can review this information but cannot approve or decline mentor applications.
+                </p>
+              </section>
+            )}
         </div>
 
         <footer className="admin-mentor-review-footer">
@@ -1923,126 +1615,169 @@ function ApplicationReviewModal({
           >
             Close
           </button>
+
+          {isPending &&
+            canDecideApplications && (
+              <div className="admin-mentor-review-footer-actions">
+                <button
+                  type="button"
+                  className="admin-drawer-secondary-danger"
+                  onClick={
+                    onDecline
+                  }
+                  disabled={
+                    processing
+                  }
+                >
+                  Decline
+                </button>
+
+                <button
+                  type="button"
+                  className="admin-drawer-primary"
+                  onClick={
+                    onApprove
+                  }
+                  disabled={
+                    processing
+                  }
+                >
+                  {processing
+                    ? "Saving..."
+                    : "Approve"}
+                </button>
+              </div>
+            )}
         </footer>
-      </aside>
+      </section>
     </div>
   );
 }
 
-function ReviewActionBox({
-  rejectionMode,
-  feedback,
-  setFeedback,
+/* =========================================================
+   DECLINE REASON MODAL
+========================================================= */
+
+function DeclineApplicationModal({
+  application,
+  reason,
+  setReason,
   processing,
-  rejectLabel,
-  approveLabel,
-  approveDisabled = false,
-  approveDisabledMessage = "",
+  error,
   onCancel,
-  onRejectStart,
-  onReject,
-  onApprove,
+  onConfirm,
 }) {
   return (
-    <div className="admin-mentor-review-actions-box">
-      {rejectionMode && (
-        <label className="admin-rejection-field">
-          <span>
-            Reason for rejection
-          </span>
+    <div
+      className="admin-decline-modal-backdrop"
+      role="presentation"
+    >
+      <section
+        className="admin-decline-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="decline-mentor-title"
+      >
+        <header>
+          <div>
+            <span>
+              DECLINE APPLICATION
+            </span>
 
-          <textarea
-            value={
-              feedback
+            <h2 id="decline-mentor-title">
+              Give a reason
+            </h2>
+
+            <p>
+              Tell{" "}
+              {application.applicant
+                ?.full_name ||
+                "the applicant"}{" "}
+              why this mentor application was not approved.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={
+              onCancel
             }
-            onChange={(
-              event,
-            ) =>
-              setFeedback(
-                event.target.value,
-              )
-            }
-            rows="4"
-            placeholder="Provide a clear reason for this decision."
             disabled={
               processing
             }
-          />
-        </label>
-      )}
+            aria-label="Close decline modal"
+          >
+            <X size={18} />
+          </button>
+        </header>
 
-      {approveDisabledMessage && (
-        <p className="admin-mentor-review-action-warning">
-          {
-            approveDisabledMessage
-          }
-        </p>
-      )}
+        <div className="admin-decline-modal-body">
+          <label>
+            <span>
+              Reason for declining
+            </span>
 
-      <div className="admin-mentor-review-inline-actions">
-        {rejectionMode ? (
-          <>
-            <button
-              type="button"
-              className="admin-drawer-secondary"
-              onClick={
-                onCancel
+            <textarea
+              value={
+                reason
               }
+              onChange={(
+                event,
+              ) =>
+                setReason(
+                  event.target.value,
+                )
+              }
+              rows="5"
+              placeholder="Provide a clear and respectful reason."
               disabled={
                 processing
               }
-            >
-              Cancel
-            </button>
+              autoFocus
+            />
+          </label>
 
-            <button
-              type="button"
-              className="admin-drawer-danger"
-              onClick={
-                onReject
-              }
-              disabled={
-                processing
-              }
+          {error && (
+            <p
+              className="form-error"
+              role="alert"
             >
-              {processing
-                ? "Saving..."
-                : rejectLabel}
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              className="admin-drawer-secondary-danger"
-              onClick={
-                onRejectStart
-              }
-              disabled={
-                processing
-              }
-            >
-              {rejectLabel}
-            </button>
+              {error}
+            </p>
+          )}
+        </div>
 
-            <button
-              type="button"
-              className="admin-drawer-primary"
-              onClick={
-                onApprove
-              }
-              disabled={
-                processing ||
-                approveDisabled
-              }
-            >
-              {processing
-                ? "Saving..."
-                : approveLabel}
-            </button>
-          </>
-        )}
-      </div>
+        <footer>
+          <button
+            type="button"
+            className="admin-drawer-secondary"
+            onClick={
+              onCancel
+            }
+            disabled={
+              processing
+            }
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            className="admin-drawer-danger"
+            onClick={
+              onConfirm
+            }
+            disabled={
+              processing ||
+              !reason.trim()
+            }
+          >
+            {processing
+              ? "Declining..."
+              : "Decline application"}
+          </button>
+        </footer>
+      </section>
     </div>
   );
 }
@@ -2168,32 +1903,6 @@ function AdminEmptyState({
   );
 }
 
-function getApplicationReviewStageLabel(
-  application,
-) {
-  if (
-    application.status ===
-    "approved"
-  ) {
-    return "Completed · Approved";
-  }
-
-  if (
-    application.status ===
-    "rejected"
-  ) {
-    return "Completed · Rejected";
-  }
-
-  if (
-    application.onboarding_recommendation
-  ) {
-    return "Operations & Governance sign-off";
-  }
-
-  return "Mentor Onboarding review";
-}
-
 function formatMembershipVerificationMethod(
   value,
 ) {
@@ -2232,9 +1941,6 @@ function formatAdminOperationalRole(
 
     trust_safety_case_resolution_lead:
       "Trust, Safety and Case Resolution Lead",
-
-    full_access_admin:
-      "Full Access Admin",
   };
 
   return (

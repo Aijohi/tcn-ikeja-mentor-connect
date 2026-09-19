@@ -11,6 +11,10 @@
   margin-bottom: 22px;
 }
 
+.admin-workflow-section-heading--no-kicker {
+  margin-bottom: 20px;
+}
+
 .admin-workflow-section-heading > div {
   max-width: 760px;
 }
@@ -76,7 +80,7 @@
 }
 
 /* =========================================================
-   TRUE CENTRE MODAL
+   CENTRE MENTOR REVIEW MODAL
 ========================================================= */
 
 .admin-mentor-review-backdrop {
@@ -195,11 +199,6 @@
   background: #f8f9fa;
 }
 
-.admin-mentor-review-close:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .admin-mentor-review-body {
   min-height: 0;
   overflow-y: auto;
@@ -212,8 +211,8 @@
 .admin-mentor-review-footer {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 12px;
 
   padding: 16px 28px;
 
@@ -221,14 +220,16 @@
   background: #ffffff;
 }
 
+.admin-mentor-review-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .admin-mentor-review-section {
   margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1px solid #edf0f3;
-}
-
-.admin-mentor-review-section:last-child {
-  margin-bottom: 0;
 }
 
 .admin-mentor-review-section h3 {
@@ -284,7 +285,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 9px;
-
   margin-bottom: 20px;
 }
 
@@ -350,8 +350,8 @@
   font-weight: 650;
 }
 
-.admin-mentor-review-stage-card {
-  margin-bottom: 16px;
+.admin-mentor-decision-summary {
+  margin-bottom: 18px;
   padding: 17px;
 
   border: 1px solid #e3e7eb;
@@ -361,7 +361,7 @@
   text-align: left;
 }
 
-.admin-mentor-review-stage-card > span {
+.admin-mentor-decision-summary > span {
   display: block;
   margin-bottom: 5px;
 
@@ -372,53 +372,139 @@
   letter-spacing: 0.1em;
 }
 
-.admin-mentor-review-stage-card h3 {
-  margin: 0 0 10px;
+.admin-mentor-decision-summary h3 {
+  margin: 0 0 8px;
   color: #1e2730;
   font-size: 14px;
-  line-height: 1.4;
 }
 
-.admin-mentor-review-stage-card p {
-  margin: 7px 0 0;
+.admin-mentor-decision-summary p {
+  margin: 6px 0 0;
   color: #667481;
   font-size: 11px;
   line-height: 1.65;
 }
 
-.admin-mentor-review-stage-card p strong {
-  color: #29343e;
-}
-
-.admin-mentor-review-actions-box {
-  margin-top: 16px;
-  padding-top: 16px;
+.admin-mentor-decline-reason {
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid #eceff2;
 }
 
-.admin-mentor-review-action-warning {
-  margin: 0 0 10px;
-  color: #b54708;
-  font-size: 11px;
-  font-weight: 650;
-  line-height: 1.5;
+.admin-mentor-decline-reason span {
+  display: block;
+  margin-bottom: 4px;
+  color: #7b8794;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.admin-rejection-field {
+/* =========================================================
+   DECLINE REASON MODAL
+========================================================= */
+
+.admin-decline-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(16, 20, 25, 0.58);
+}
+
+.admin-decline-modal {
+  width: min(520px, calc(100vw - 40px));
+
+  overflow: hidden;
+
+  border: 1px solid #e3e7eb;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 24px 70px
+    rgba(16, 24, 40, 0.26);
+}
+
+.admin-decline-modal header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+
+  padding: 22px 22px 18px;
+
+  border-bottom: 1px solid #e7eaee;
+}
+
+.admin-decline-modal header > div > span {
+  display: block;
+  margin-bottom: 5px;
+
+  color: #b42318;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.admin-decline-modal header h2 {
+  margin: 0;
+  color: #101419;
+  font-size: 20px;
+}
+
+.admin-decline-modal header p {
+  margin: 6px 0 0;
+  color: #697782;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.admin-decline-modal header button {
+  width: 34px;
+  height: 34px;
   display: grid;
-  gap: 7px;
-  margin-bottom: 12px;
+  flex: 0 0 34px;
+  place-items: center;
 
+  padding: 0;
+
+  border: 1px solid #e1e6eb;
+  border-radius: 9px;
+
+  color: #4f5d6a;
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+.admin-decline-modal-body {
+  padding: 20px 22px;
+}
+
+.admin-decline-modal-body label {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-decline-modal-body label > span {
   color: #27313a;
-
   font-size: 11px;
   font-weight: 700;
 }
 
-.admin-rejection-field textarea {
+.admin-decline-modal-body textarea {
   width: 100%;
-  min-height: 100px;
-
+  min-height: 120px;
   box-sizing: border-box;
 
   padding: 11px 12px;
@@ -437,21 +523,27 @@
   outline: none;
 }
 
-.admin-rejection-field textarea:focus {
-  border-color: #ff5303;
+.admin-decline-modal-body textarea:focus {
+  border-color: #4c5867;
   box-shadow:
-    0 0 0 3px
-    rgba(255, 83, 3, 0.1);
+    0 0 0 2px
+    rgba(76, 88, 103, 0.1);
 }
 
-.admin-mentor-review-inline-actions {
+.admin-decline-modal footer {
   display: flex;
-  flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 9px;
+  gap: 10px;
+
+  padding: 16px 22px 20px;
+
+  border-top: 1px solid #e7eaee;
 }
 
-/* Keep existing button look */
+/* =========================================================
+   EXISTING BUTTON LOOK
+========================================================= */
+
 .admin-drawer-primary,
 .admin-drawer-secondary,
 .admin-drawer-secondary-danger,
@@ -479,28 +571,16 @@
   background: #ff5303;
 }
 
-.admin-drawer-primary:hover:not(:disabled) {
-  background: #e94b00;
-}
-
 .admin-drawer-secondary {
   border: 1px solid #d7dde3;
   color: #45525f;
   background: #ffffff;
 }
 
-.admin-drawer-secondary:hover:not(:disabled) {
-  background: #f8f9fa;
-}
-
 .admin-drawer-secondary-danger {
   border: 1px solid #e4c5c2;
   color: #b42318;
   background: #ffffff;
-}
-
-.admin-drawer-secondary-danger:hover:not(:disabled) {
-  background: #fff7f6;
 }
 
 .admin-drawer-danger {
@@ -556,33 +636,25 @@
     padding: 19px 16px 16px;
   }
 
-  .admin-mentor-review-header h2 {
-    font-size: 20px;
-  }
-
   .admin-mentor-review-body {
     padding: 18px 16px 24px;
   }
 
   .admin-mentor-review-footer {
     padding: 13px 16px;
+    flex-direction: column-reverse;
+    align-items: stretch;
   }
 
-  .admin-mentor-review-person img,
-  .admin-mentor-review-avatar {
-    width: 44px;
-    height: 44px;
-    flex-basis: 44px;
-    border-radius: 12px;
-  }
-
-  .admin-mentor-review-inline-actions,
-  .admin-mentor-review-footer {
+  .admin-mentor-review-footer-actions,
+  .admin-decline-modal footer {
+    width: 100%;
     flex-direction: column-reverse;
   }
 
-  .admin-mentor-review-inline-actions button,
-  .admin-mentor-review-footer button {
+  .admin-mentor-review-footer button,
+  .admin-mentor-review-footer-actions button,
+  .admin-decline-modal footer button {
     width: 100%;
   }
 }
