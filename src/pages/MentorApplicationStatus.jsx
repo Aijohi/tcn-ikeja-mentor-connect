@@ -6,7 +6,6 @@ import {
   Pencil,
   RotateCcw,
   Send,
-  UserPlus,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -29,12 +28,27 @@ const sessionLengthOptions = [
   60,
 ];
 
+const mentorshipCategoryOptions = [
+  "Career Development",
+  "Business & Entrepreneurship",
+  "Leadership & Management",
+  "Faith, Spirituality & Ministry",
+  "Personal Development",
+  "Education & Academic Development",
+  "Technology & Digital Skills",
+  "Finance & Stewardship",
+  "Creative Arts, Media & Communication",
+  "Family, Relationships & Parenting",
+  "Health & Wellbeing",
+  "Trades & Vocational Skills",
+  "Social Impact",
+];
+
 const initialForm = {
   biography: "",
   jobTitle: "",
   organisation: "",
-  expertise: "",
-  mentorshipCategories: "",
+  mentorshipCategories: [],
   languages: "English",
   meetingFormats: ["Virtual"],
   sessionLengths: [45],
@@ -60,14 +74,10 @@ function normaliseApplicationForm(data) {
     organisation:
       data?.organisation ?? "",
 
-    expertise:
-      (data?.expertise ?? []).join(", "),
-
     mentorshipCategories:
-      (
-        data?.mentorship_categories ??
-        []
-      ).join(", "),
+      data?.mentorship_categories?.length > 0
+        ? data.mentorship_categories
+        : [],
 
     languages:
       (
@@ -108,7 +118,6 @@ function MentorApplicationStatus() {
 
   const {
     profile,
-    signOut,
     refreshProfile,
   } = useAuth();
 
@@ -146,16 +155,6 @@ function MentorApplicationStatus() {
     submitting,
     setSubmitting,
   ] = useState(false);
-
-  const [
-    creatingMentorAccount,
-    setCreatingMentorAccount,
-  ] = useState(false);
-
-  const [
-    accountActionError,
-    setAccountActionError,
-  ] = useState("");
 
   const [
     error,
@@ -430,7 +429,6 @@ function MentorApplicationStatus() {
 
     setError("");
     setSuccess("");
-    setAccountActionError("");
   }
 
   function toggleTextOption(
@@ -462,7 +460,6 @@ function MentorApplicationStatus() {
 
     setError("");
     setSuccess("");
-    setAccountActionError("");
   }
 
   function toggleNumberOption(
@@ -501,7 +498,6 @@ function MentorApplicationStatus() {
 
     setError("");
     setSuccess("");
-    setAccountActionError("");
   }
 
   function startEditing() {
@@ -524,7 +520,6 @@ function MentorApplicationStatus() {
     setReapplying(false);
     setError("");
     setSuccess("");
-    setAccountActionError("");
   }
 
   function startReapplication() {
@@ -550,14 +545,12 @@ function MentorApplicationStatus() {
     setReapplying(true);
     setError("");
     setSuccess("");
-    setAccountActionError("");
   }
 
   function cancelEditing() {
     setEditing(false);
     setReapplying(false);
     setError("");
-    setAccountActionError("");
   }
 
   async function handleSubmit(
@@ -567,9 +560,7 @@ function MentorApplicationStatus() {
     setError("");
     setSuccess("");
 const categories =
-      convertTextToArray(
-        form.mentorshipCategories,
-      );
+      form.mentorshipCategories;
 
     const languages =
       convertTextToArray(
@@ -606,7 +597,7 @@ if (
       categories.length === 0
     ) {
       setError(
-        "Please provide at least one mentorship category.",
+        "Please select at least one mentoring area.",
       );
       return;
     }
@@ -657,7 +648,10 @@ if (
           form.organisation.trim() ||
           null,
 
-        p_expertise: form.categories,
+        // The separate expertise field has been removed.
+        // Keep this parameter populated for backend compatibility.
+        p_expertise:
+          categories,
 
         p_mentorship_categories:
           categories,
@@ -724,101 +718,6 @@ if (
     );
   }
 
-  async function handleCreateMentorAccount() {
-    if (
-      !latestApplication ||
-      latestApplication.status !==
-        "approved" ||
-      latestApplication.mentor_account_id
-    ) {
-      return;
-    }
-
-    setCreatingMentorAccount(
-      true,
-    );
-
-    setAccountActionError("");
-    setError("");
-    setSuccess("");
-
-    const {
-      data,
-      error:
-        invitationError,
-    } = await supabase.rpc(
-      "create_mentor_account_invitation",
-    );
-
-    if (invitationError) {
-      console.error(
-        "Unable to create mentor account invitation:",
-        invitationError,
-      );
-
-      setAccountActionError(
-        invitationError.message ||
-          "We could not prepare your mentor account. Please try again.",
-      );
-
-      setCreatingMentorAccount(
-        false,
-      );
-
-      return;
-    }
-
-    const invitation =
-      Array.isArray(data)
-        ? data[0]
-        : data;
-
-    const invitationToken =
-      invitation?.invitation_token;
-
-    if (!invitationToken) {
-      setAccountActionError(
-        "We could not prepare your mentor account invitation. Please try again.",
-      );
-
-      setCreatingMentorAccount(
-        false,
-      );
-
-      return;
-    }
-
-    const {
-      error: signOutError,
-    } = await signOut();
-
-    if (signOutError) {
-      console.error(
-        "Unable to sign out of mentee account:",
-        signOutError,
-      );
-
-      setAccountActionError(
-        "Your mentor invitation was created, but we could not sign you out of your mentee account. Please try again.",
-      );
-
-      setCreatingMentorAccount(
-        false,
-      );
-
-      return;
-    }
-
-    navigate(
-      `/mentor/register?invite=${encodeURIComponent(
-        invitationToken,
-      )}`,
-      {
-        replace: true,
-      },
-    );
-  }
-
   function viewApplication(
     application,
   ) {
@@ -830,7 +729,6 @@ if (
     setReapplying(false);
     setError("");
     setSuccess("");
-    setAccountActionError("");
   }
 
   if (loading) {
@@ -965,15 +863,6 @@ if (
               }
               onReapply={
                 startReapplication
-              }
-              onCreateMentorAccount={
-                handleCreateMentorAccount
-              }
-              creatingMentorAccount={
-                creatingMentorAccount
-              }
-              accountActionError={
-                accountActionError
               }
             />
 
@@ -1130,30 +1019,49 @@ function ApplicationForm({
 
         
 
-        <label>
-          Areas you want to mentor in
+        <fieldset className="mentor-status-option-group">
+          <legend>
+            Areas you want to mentor in
+          </legend>
 
-          <input
-            type="text"
-            name="mentorshipCategories"
-            value={
-              form.mentorshipCategories
-            }
-            onChange={
-              updateForm
-            }
-            placeholder="Career development, leadership, technology"
-            disabled={
-              submitting
-            }
-            required
-          />
+          <p className="field-help">
+            Select all the areas where you would like to mentor.
+          </p>
 
-          <small className="field-help">
-            Separate each category
-            with a comma.
-          </small>
-        </label>
+          <div className="mentor-status-option-grid mentor-status-category-grid">
+            {mentorshipCategoryOptions.map(
+              (category) => (
+                <label
+                  key={
+                    category
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    checked={
+                      form.mentorshipCategories.includes(
+                        category,
+                      )
+                    }
+                    onChange={() =>
+                      toggleTextOption(
+                        "mentorshipCategories",
+                        category,
+                      )
+                    }
+                    disabled={
+                      submitting
+                    }
+                  />
+
+                  <span>
+                    {category}
+                  </span>
+                </label>
+              ),
+            )}
+          </div>
+        </fieldset>
 
         <label>
           Languages
@@ -1360,9 +1268,6 @@ function ApplicationStatus({
   selectedIsLatest,
   onEdit,
   onReapply,
-  onCreateMentorAccount,
-  creatingMentorAccount,
-  accountActionError,
 }) {
   const statusInformation = {
     pending: {
@@ -1387,10 +1292,10 @@ function ApplicationStatus({
         "Your mentor application has been approved.",
 
       description:
-        "Your mentee account remains unchanged. The next step is to create a separate mentor account with a different email address.",
+        "Your application has been approved. This same account now has mentor access. You do not need to create another account or use another email address.",
 
       note:
-        "Your approved application remains saved in your application history.",
+        "Your approved application remains saved in your history, and you can continue from the mentor dashboard.",
     },
 
     rejected: {
@@ -1418,19 +1323,10 @@ function ApplicationStatus({
     ] ??
     statusInformation.pending;
 
-  const expertise =
-    application?.expertise ??
-    [];
-
-  const categories =
+  const mentoringAreas =
     application
       ?.mentorship_categories ??
     [];
-
-  const mentoringAreas =
-    expertise.length > 0
-      ? expertise
-      : categories;
 
   return (
     <section className="mentor-application-status">
@@ -1553,81 +1449,24 @@ function ApplicationStatus({
         status ===
           "approved" && (
         <div className="mentor-status-approved-action">
-          {application
-            ?.mentor_account_id ? (
-            <div className="mentor-status-account-created">
-              <CheckCircle2
-                size={18}
-                strokeWidth={1.9}
-              />
+          <div className="mentor-status-account-created">
+            <CheckCircle2
+              size={18}
+              strokeWidth={1.9}
+            />
 
-              <div>
-                <strong>
-                  Mentor account created
-                </strong>
+            <div>
+              <strong>
+                Mentor access approved
+              </strong>
 
-                <p>
-                  This approved
-                  application has
-                  already been linked
-                  to a mentor account.
-                  Sign in with your
-                  mentor account email
-                  to continue.
-                </p>
-              </div>
+              <p>
+                Your existing account is now your mentor account.
+                No second registration, invitation or different email address is required.
+              </p>
             </div>
-          ) : (
-            <>
-              <div className="mentor-status-approved-copy">
-                <strong>
-                  Ready for the next
-                  step
-                </strong>
-
-                <p>
-                  Create your separate
-                  mentor account using
-                  a different email
-                  address. You will
-                  keep this mentee
-                  account exactly as
-                  it is.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="mentor-status-create-account-button"
-                onClick={
-                  onCreateMentorAccount
-                }
-                disabled={
-                  creatingMentorAccount
-                }
-              >
-                <UserPlus
-                  size={16}
-                />
-
-                <span>
-                  {creatingMentorAccount
-                    ? "Preparing mentor account..."
-                    : "Create mentor account"}
-                </span>
-              </button>
-            </>
-          )}
+          </div>
         </div>
-      )}
-
-      {accountActionError && (
-        <p
-          className="mentor-status-account-error"
-          role="alert"
-        >
-          {accountActionError}
-        </p>
       )}
 
       {application

@@ -401,6 +401,12 @@
   display: none;
 }
 
+/* Mobile-only mentor position count.
+   Never show the 1 / 4 card counter on tablet or desktop. */
+.hmc-public-mentor-mobile-controls {
+  display: none;
+}
+
 /* =========================================================
    FIND A MENTOR CTA
    Keep it centred and compact on every screen size.

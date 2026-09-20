@@ -216,7 +216,7 @@ function Home() {
   const [
     mentorPageSize,
     setMentorPageSize,
-  ] = useState(4);
+  ] = useState(16);
 
   const mentorViewportRef =
     useRef(null);
@@ -529,17 +529,24 @@ function Home() {
       const width =
         window.innerWidth;
 
+      // Mobile:
+      // 4 mentors per page.
+      // One main card is shown at a time with part of the next card visible.
       if (width <= 680) {
         setMentorPageSize(4);
         return;
       }
 
+      // Tablet:
+      // 2 columns x up to 4 rows = 8 mentors per page.
       if (width <= 1000) {
-        setMentorPageSize(4);
+        setMentorPageSize(8);
         return;
       }
 
-      setMentorPageSize(8);
+      // Desktop:
+      // 4 columns x up to 4 rows = 16 mentors per page.
+      setMentorPageSize(16);
     }
 
     updateMentorPageSize();
@@ -1589,7 +1596,8 @@ function Home() {
                     )}
                   </div>
                 </div>
-                {pagedMentors.length > 1 && (
+                {mentorPageSize === 4 &&
+                  pagedMentors.length > 1 && (
                   <div
                     className="hmc-public-mentor-mobile-controls"
                     aria-label="Current mentor position on this page"
