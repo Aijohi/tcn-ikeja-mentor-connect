@@ -76,13 +76,13 @@ const pageInformation = {
   requests: {
     title: "Mentorship requests",
     description:
-      "Monitor mentor registrations awaiting application and mentorship requests submitted by mentees.",
+      "Monitor mentorship requests submitted by mentees, the mentors they selected and the progress of each request.",
   },
 
   requestDetails: {
     title: "Mentorship request details",
     description:
-      "Review the request, participants, goal and request history.",
+      "Review the mentee, mentor, request information, current status and activity history.",
   },
 
   sessions: {
@@ -2736,306 +2736,6 @@ function ReviewList({ label, items = [] }) {
 }
 
 
-function MentorRegistrationsAwaitingApplication() {
-  const [
-    registrations,
-    setRegistrations,
-  ] = useState([]);
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-  const [
-    error,
-    setError,
-  ] = useState("");
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadMentorRegistrations() {
-      setLoading(true);
-      setError("");
-
-      const {
-        data: profileData,
-        error: profileError,
-      } = await supabase
-        .from("profiles")
-        .select(`
-          id,
-          full_name,
-          email,
-          signup_intent,
-          role,
-          account_status,
-          email_verified,
-          onboarding_completed,
-          created_at
-        `)
-        .eq(
-          "signup_intent",
-          "mentor",
-        )
-        .neq(
-          "role",
-          "mentor",
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false,
-          },
-        );
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (profileError) {
-        console.error(
-          "Unable to load mentor registrations:",
-          profileError,
-        );
-
-        setError(
-          "We could not load mentor registrations awaiting application.",
-        );
-
-        setLoading(false);
-        return;
-      }
-
-      const profiles =
-        profileData ?? [];
-
-      if (profiles.length === 0) {
-        setRegistrations([]);
-        setLoading(false);
-        return;
-      }
-
-      const {
-        data: applicationData,
-        error: applicationError,
-      } = await supabase
-        .from(
-          "mentor_applications",
-        )
-        .select(
-          "applicant_user_id",
-        )
-        .in(
-          "applicant_user_id",
-          profiles.map(
-            (person) =>
-              person.id,
-          ),
-        );
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (applicationError) {
-        console.error(
-          "Unable to check mentor applications:",
-          applicationError,
-        );
-
-        setError(
-          "We could not prepare the mentor registration list.",
-        );
-
-        setLoading(false);
-        return;
-      }
-
-      const submittedIds =
-        new Set(
-          (
-            applicationData ??
-            []
-          ).map(
-            (application) =>
-              application.applicant_user_id,
-          ),
-        );
-
-      setRegistrations(
-        profiles.filter(
-          (person) =>
-            !submittedIds.has(
-              person.id,
-            ),
-        ),
-      );
-
-      setLoading(false);
-    }
-
-    loadMentorRegistrations();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  function getProgress(person) {
-    if (
-      person.account_status ===
-      "rejected"
-    ) {
-      return {
-        value: "rejected",
-        label:
-          "Registration rejected",
-      };
-    }
-
-    if (
-      !person.email_verified
-    ) {
-      return {
-        value: "pending",
-        label:
-          "Email verification pending",
-      };
-    }
-
-    return {
-      value: "pending",
-      label:
-        "Application not submitted",
-    };
-  }
-
-  return (
-    <section className="admin-list-section admin-mentor-interest-section">
-      <div className="admin-workflow-section-heading">
-        <div>
-          <span>
-            MENTOR REGISTRATIONS
-          </span>
-
-          <h2>
-            Mentor registrations awaiting application
-          </h2>
-
-          <p>
-            These people selected “I want to mentor” but have not submitted the mentor application yet.
-          </p>
-        </div>
-
-        <strong>
-          {loading
-            ? "Loading..."
-            : `${registrations.length} ${
-                registrations.length === 1
-                  ? "person"
-                  : "people"
-              }`}
-        </strong>
-      </div>
-
-      {error && (
-        <p
-          className="form-error"
-          role="alert"
-        >
-          {error}
-        </p>
-      )}
-
-      {!loading &&
-      !error &&
-      registrations.length === 0 ? (
-        <AdminEmptyState
-          title="No mentor registrations awaiting application"
-          description="People who select “I want to mentor” but have not submitted their mentor application will appear here."
-        />
-      ) : null}
-
-      {!loading &&
-      !error &&
-      registrations.length > 0 && (
-        <div className="admin-table-wrapper admin-table-wrapper--flush">
-          <table className="admin-data-table admin-mentor-interest-table">
-            <thead>
-              <tr>
-                <th>
-                  Person
-                </th>
-
-                <th>
-                  Email
-                </th>
-
-                <th>
-                  Progress
-                </th>
-
-                <th>
-                  Registered
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {registrations.map(
-                (person) => {
-                  const progress =
-                    getProgress(
-                      person,
-                    );
-
-                  return (
-                    <tr
-                      key={
-                        person.id
-                      }
-                    >
-                      <td>
-                        <strong>
-                          {person.full_name ||
-                            "Name not provided"}
-                        </strong>
-                      </td>
-
-                      <td>
-                        {person.email}
-                      </td>
-
-                      <td>
-                        <StatusBadge
-                          value={
-                            progress.value
-                          }
-                          label={
-                            progress.label
-                          }
-                        />
-                      </td>
-
-                      <td>
-                        {formatDate(
-                          person.created_at,
-                        )}
-                      </td>
-                    </tr>
-                  );
-                },
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
-  );
-}
-
 function RequestsPage() {
   const [requests, setRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -3147,10 +2847,7 @@ function RequestsPage() {
   }
 
   return (
-    <>
-      <MentorRegistrationsAwaitingApplication />
-
-      <section className="admin-list-section admin-requests-page">
+    <section className="admin-list-section admin-requests-page">
       <div className="admin-request-toolbar">
         <div className="admin-search-field admin-request-search">
           <Search size={16} aria-hidden="true" />
@@ -3193,9 +2890,9 @@ function RequestsPage() {
         </span>
 
         <small>
-          Pending includes clarification requests. Active contains accepted
-          relationships. Closed contains declined, referred and withdrawn
-          requests.
+          Pending includes requests awaiting a mentor response or clarification.
+          Active contains accepted mentorships. Closed contains declined,
+          referred and withdrawn requests.
         </small>
       </div>
 
@@ -3220,6 +2917,7 @@ function RequestsPage() {
                   <th>Mentoring area</th>
                   <th>Status</th>
                   <th>Submitted</th>
+                  <th>Updated</th>
                   <th aria-label="Action" />
                 </tr>
               </thead>
@@ -3242,10 +2940,17 @@ function RequestsPage() {
                     </td>
 
                     <td>
-                      <StatusBadge value={request.status} />
+                      <StatusBadge
+                        value={request.status}
+                        label={getAdminRequestStatusLabel(request.status)}
+                      />
                     </td>
 
                     <td>{formatDate(request.created_at)}</td>
+
+                    <td>
+                      {formatDate(request.updated_at || request.created_at)}
+                    </td>
 
                     <td className="admin-table-action-cell">
                       <Link
@@ -3272,7 +2977,10 @@ function RequestsPage() {
                     <small>{request.mentee?.email || ""}</small>
                   </div>
 
-                  <StatusBadge value={request.status} />
+                  <StatusBadge
+                    value={request.status}
+                    label={getAdminRequestStatusLabel(request.status)}
+                  />
                 </div>
 
                 <dl>
@@ -3289,6 +2997,13 @@ function RequestsPage() {
                   <div>
                     <dt>Submitted</dt>
                     <dd>{formatDate(request.created_at)}</dd>
+                  </div>
+
+                  <div>
+                    <dt>Last updated</dt>
+                    <dd>
+                      {formatDate(request.updated_at || request.created_at)}
+                    </dd>
                   </div>
                 </dl>
 
@@ -3338,8 +3053,7 @@ function RequestsPage() {
           </div>
         </div>
       )}
-      </section>
-    </>
+    </section>
   );
 }
 
@@ -3644,7 +3358,10 @@ function RequestDetailsPage({
           </p>
         </div>
 
-        <StatusBadge value={request.status} />
+        <StatusBadge
+          value={request.status}
+          label={getAdminRequestStatusLabel(request.status)}
+        />
       </div>
 
       <div className="admin-request-participants">
@@ -3669,7 +3386,7 @@ function RequestDetailsPage({
 
         <RequestInformation
           label="Current status"
-          value={formatStatusLabel(request.status)}
+          value={getAdminRequestStatusLabel(request.status)}
         />
 
         <RequestInformation
@@ -3985,6 +3702,19 @@ function RequestOutcomeHistory({
       </div>
     </section>
   );
+}
+
+function getAdminRequestStatusLabel(status) {
+  const labels = {
+    pending: "Awaiting mentor response",
+    clarification_requested: "Clarification requested",
+    accepted: "Active mentorship",
+    declined: "Declined",
+    referred: "Referred for matching",
+    withdrawn: "Withdrawn",
+  };
+
+  return labels[status] || formatStatusLabel(status);
 }
 
 function requestMatchesAdminFilter(status, filter) {
