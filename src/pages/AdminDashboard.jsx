@@ -64,19 +64,19 @@ const pageInformation = {
   people: {
     title: "People",
     description:
-      "View and manage mentees, mentors and administrators on Mentor Connect.",
+      "View the people who have registered on Mentor Connect.",
   },
 
   applications: {
     title: "Mentor applications",
     description:
-      "Review and manage people who have applied to become mentors.",
+      "Review people who have applied to become mentors.",
   },
 
   requests: {
     title: "Mentorship requests",
     description:
-      "Monitor the mentorship requests submitted by mentees.",
+      "Monitor mentor registrations awaiting application and mentorship requests submitted by mentees.",
   },
 
   requestDetails: {
@@ -965,8 +965,6 @@ function OverviewPage() {
 function PeoplePage({ canManageAccounts = false }) {
   const [people, setPeople] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [peopleTypeFilter, setPeopleTypeFilter] = useState("all");
-  const [peopleStatusFilter, setPeopleStatusFilter] = useState("all");
   const [peoplePage, setPeoplePage] = useState(1);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [selectedAction, setSelectedAction] = useState("");
@@ -1069,33 +1067,9 @@ function PeoplePage({ canManageAccounts = false }) {
     setProcessing(false);
   }
 
-  const peopleTypeOptions = [
-    ["all", "All users"],
-    ["mentee", "Mentees"],
-    ["mentor", "Mentors"],
-    ["admin", "Administrators"],
-  ];
-
-  const statusOptions = getPeopleStatusOptions(peopleTypeFilter);
   const searchValue = searchTerm.trim().toLowerCase();
 
   const filteredPeople = people.filter((person) => {
-    const personType = getPeopleTypeFilterValue(person);
-
-    if (
-      peopleTypeFilter !== "all" &&
-      personType !== peopleTypeFilter
-    ) {
-      return false;
-    }
-
-    if (
-      peopleStatusFilter !== "all" &&
-      !matchesPeopleStatusFilter(person, peopleStatusFilter)
-    ) {
-      return false;
-    }
-
     if (!searchValue) {
       return true;
     }
@@ -1116,101 +1090,59 @@ function PeoplePage({ canManageAccounts = false }) {
 
   const totalPeoplePages = Math.max(
     1,
-    Math.ceil(filteredPeople.length / PEOPLE_PAGE_SIZE),
+    Math.ceil(
+      filteredPeople.length /
+        PEOPLE_PAGE_SIZE,
+    ),
   );
 
-  const safePeoplePage = Math.min(peoplePage, totalPeoplePages);
-  const firstPeopleIndex = (safePeoplePage - 1) * PEOPLE_PAGE_SIZE;
-
-  const visiblePeople = filteredPeople.slice(
-    firstPeopleIndex,
-    firstPeopleIndex + PEOPLE_PAGE_SIZE,
+  const safePeoplePage = Math.min(
+    peoplePage,
+    totalPeoplePages,
   );
+
+  const firstPeopleIndex =
+    (safePeoplePage - 1) *
+    PEOPLE_PAGE_SIZE;
+
+  const visiblePeople =
+    filteredPeople.slice(
+      firstPeopleIndex,
+      firstPeopleIndex +
+        PEOPLE_PAGE_SIZE,
+    );
 
   const visiblePeopleStart =
-    filteredPeople.length === 0 ? 0 : firstPeopleIndex + 1;
+    filteredPeople.length === 0
+      ? 0
+      : firstPeopleIndex + 1;
 
-  const visiblePeopleEnd = Math.min(
-    firstPeopleIndex + PEOPLE_PAGE_SIZE,
-    filteredPeople.length,
-  );
-
-  function changePeopleType(nextType) {
-    setPeopleTypeFilter(nextType);
-    setPeopleStatusFilter("all");
-    setPeoplePage(1);
-  }
-
-  function changePeopleStatus(nextStatus) {
-    setPeopleStatusFilter(nextStatus);
-    setPeoplePage(1);
-  }
+  const visiblePeopleEnd =
+    Math.min(
+      firstPeopleIndex +
+        PEOPLE_PAGE_SIZE,
+      filteredPeople.length,
+    );
 
   if (loading) {
     return <AdminLoadingState />;
   }
 
   return (
-    <section className="admin-list-section admin-people-page">
-      <div className="admin-people-filter-panel">
-        <div
-          className="admin-people-primary-tabs"
-          role="tablist"
-          aria-label="Filter people by account type"
-        >
-          {peopleTypeOptions.map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              role="tab"
-              aria-selected={peopleTypeFilter === value}
-              className={peopleTypeFilter === value ? "active" : ""}
-              onClick={() => changePeopleType(value)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div className="admin-people-status-filter">
-          <span>Account status</span>
-
-          <div
-            className="admin-people-status-tabs"
-            role="tablist"
-            aria-label="Filter people by account status"
-          >
-            {statusOptions.map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                role="tab"
-                aria-selected={peopleStatusFilter === value}
-                className={peopleStatusFilter === value ? "active" : ""}
-                onClick={() => changePeopleStatus(value)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="admin-list-toolbar admin-people-list-toolbar">
-        <label className="admin-people-search">
-          <Search size={16} aria-hidden="true" />
-
-          <input
-            type="search"
-            value={searchTerm}
-            placeholder="Search by name, email or role"
-            aria-label="Search registered people"
-            onChange={(event) => {
-              setSearchTerm(event.target.value);
-              setPeoplePage(1);
-            }}
-          />
-        </label>
+    <section className="admin-list-section">
+      <div className="admin-list-toolbar">
+        <input
+          type="search"
+          value={searchTerm}
+          placeholder="Search by name, email or role"
+          aria-label="Search registered people"
+          onChange={(event) => {
+            setSearchTerm(
+              event.target.value,
+            );
+            setPeoplePage(1);
+          }}
+        />
 
         <span>
           {filteredPeople.length}{" "}
@@ -1230,79 +1162,83 @@ function PeoplePage({ canManageAccounts = false }) {
       ) : filteredPeople.length === 0 ? (
         <AdminEmptyState
           title="No matching people"
-          description="Try another user type, status or search term."
+          description="Try another name, email or role."
         />
       ) : (
         <div className="admin-mobile-table-shell">
           <div className="admin-table-wrapper admin-responsive-table-desktop">
             <table className="admin-data-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email address</th>
-                  <th>Account type</th>
-                  <th>Account status</th>
-                  <th>Membership</th>
-                  <th>Registered</th>
-                  <th>Actions</th>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email address</th>
+                <th>Account type</th>
+                <th>Account status</th>
+                <th>Membership</th>
+                <th>Registered</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {visiblePeople.map((person) => (
+                <tr key={person.id}>
+                  <td>
+                    <strong>{person.full_name || "Name not provided"}</strong>
+                  </td>
+
+                  <td>{person.email}</td>
+
+                  <td>
+                    <StatusBadge
+                      value={getPersonAccountTypeValue(person)}
+                      label={getPersonAccountType(person)}
+                    />
+                  </td>
+
+                  <td>
+                    <StatusBadge
+                      value={person.account_status}
+                      label={
+                        person.account_status === "pending"
+                          ? "Awaiting verification"
+                          : undefined
+                      }
+                    />
+                  </td>
+
+                  <td>
+                    <StatusBadge
+                      value={
+                        person.membership_verified
+                          ? "verified"
+                          : "not_verified"
+                      }
+                      label={
+                        person.membership_verified
+                          ? "Verified"
+                          : "Not verified"
+                      }
+                    />
+                  </td>
+
+                  <td>{formatDate(person.created_at)}</td>
+
+                  <td>
+                    {canManageAccounts ? (
+                      <MemberActions
+                        person={person}
+                        onAction={openConfirmation}
+                      />
+                    ) : (
+                      <span className="admin-protected-account">
+                        View only
+                      </span>
+                    )}
+                  </td>
                 </tr>
-              </thead>
-
-              <tbody>
-                {visiblePeople.map((person) => (
-                  <tr key={person.id}>
-                    <td>
-                      <strong>{person.full_name || "Name not provided"}</strong>
-                    </td>
-
-                    <td>{person.email}</td>
-
-                    <td>
-                      <StatusBadge
-                        value={getPersonAccountTypeValue(person)}
-                        label={getPersonAccountType(person)}
-                      />
-                    </td>
-
-                    <td>
-                      <StatusBadge
-                        value={person.account_status}
-                        label={getPeopleAccountStatusLabel(person)}
-                      />
-                    </td>
-
-                    <td>
-                      <StatusBadge
-                        value={
-                          person.membership_verified
-                            ? "verified"
-                            : "not_verified"
-                        }
-                        label={
-                          person.membership_verified
-                            ? "Verified"
-                            : "Not verified"
-                        }
-                      />
-                    </td>
-
-                    <td>{formatDate(person.created_at)}</td>
-
-                    <td>
-                      {canManageAccounts ? (
-                        <MemberActions
-                          person={person}
-                          onAction={openConfirmation}
-                        />
-                      ) : (
-                        <span className="admin-protected-account">
-                          View only
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+              ))}
+            </tbody>
             </table>
           </div>
 
@@ -1328,7 +1264,11 @@ function PeoplePage({ canManageAccounts = false }) {
                     <dd>
                       <StatusBadge
                         value={person.account_status}
-                        label={getPeopleAccountStatusLabel(person)}
+                        label={
+                          person.account_status === "pending"
+                            ? "Awaiting verification"
+                            : undefined
+                        }
                       />
                     </dd>
                   </div>
@@ -1375,7 +1315,9 @@ function PeoplePage({ canManageAccounts = false }) {
 
           <div className="admin-table-pagination">
             <p>
-              Showing {visiblePeopleStart}-{visiblePeopleEnd} of{" "}
+              Showing{" "}
+              {visiblePeopleStart}-
+              {visiblePeopleEnd} of{" "}
               {filteredPeople.length}
             </p>
 
@@ -1384,32 +1326,50 @@ function PeoplePage({ canManageAccounts = false }) {
                 type="button"
                 aria-label="Previous people page"
                 onClick={() =>
-                  setPeoplePage((currentPage) =>
-                    Math.max(1, currentPage - 1),
+                  setPeoplePage(
+                    (currentPage) =>
+                      Math.max(
+                        1,
+                        currentPage - 1,
+                      ),
                   )
                 }
-                disabled={safePeoplePage === 1}
+                disabled={
+                  safePeoplePage === 1
+                }
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft
+                  size={16}
+                />
                 Previous
               </button>
 
               <span>
-                Page {safePeoplePage} of {totalPeoplePages}
+                Page {safePeoplePage} of{" "}
+                {totalPeoplePages}
               </span>
 
               <button
                 type="button"
                 aria-label="Next people page"
                 onClick={() =>
-                  setPeoplePage((currentPage) =>
-                    Math.min(totalPeoplePages, currentPage + 1),
+                  setPeoplePage(
+                    (currentPage) =>
+                      Math.min(
+                        totalPeoplePages,
+                        currentPage + 1,
+                      ),
                   )
                 }
-                disabled={safePeoplePage === totalPeoplePages}
+                disabled={
+                  safePeoplePage ===
+                  totalPeoplePages
+                }
               >
                 Next
-                <ChevronRight size={16} />
+                <ChevronRight
+                  size={16}
+                />
               </button>
             </div>
           </div>
@@ -1427,93 +1387,6 @@ function PeoplePage({ canManageAccounts = false }) {
       )}
     </section>
   );
-}
-
-function getPeopleStatusOptions(type) {
-  if (type === "mentee") {
-    return [
-      ["all", "All"],
-      ["pending", "Pending"],
-      ["approved", "Approved"],
-      ["suspended", "Suspended"],
-      ["rejected", "Rejected"],
-      ["removed", "Removed"],
-    ];
-  }
-
-  if (type === "mentor") {
-    return [
-      ["all", "All"],
-      ["pending", "Pending"],
-      ["active", "Active"],
-      ["suspended", "Suspended"],
-      ["rejected", "Rejected"],
-      ["removed", "Removed"],
-    ];
-  }
-
-  if (type === "admin") {
-    return [
-      ["all", "All"],
-      ["active", "Active"],
-      ["suspended", "Suspended"],
-      ["removed", "Removed"],
-    ];
-  }
-
-  return [
-    ["all", "All"],
-    ["pending", "Pending"],
-    ["active", "Active"],
-    ["suspended", "Suspended"],
-    ["rejected", "Rejected"],
-    ["removed", "Removed"],
-  ];
-}
-
-function getPeopleTypeFilterValue(person) {
-  if (["admin", "safeguarding_lead"].includes(person.role)) {
-    return "admin";
-  }
-
-  if (person.role === "mentor" || person.signup_intent === "mentor") {
-    return "mentor";
-  }
-
-  return "mentee";
-}
-
-function matchesPeopleStatusFilter(person, filter) {
-  const status = String(person.account_status || "").toLowerCase();
-
-  if (filter === "approved") {
-    return status === "active";
-  }
-
-  if (filter === "removed") {
-    return status === "removed";
-  }
-
-  return status === filter;
-}
-
-function getPeopleAccountStatusLabel(person) {
-  const status = String(person.account_status || "").toLowerCase();
-  const type = getPeopleTypeFilterValue(person);
-
-  if (status === "pending") {
-    return "Awaiting verification";
-  }
-
-  if (status === "active" && type === "mentee") {
-    return "Approved";
-  }
-
-  if (status === "removed") {
-    return "Removed";
-  }
-
-  return undefined;
 }
 
 function getPersonAccountType(person) {
@@ -2862,6 +2735,307 @@ function ReviewList({ label, items = [] }) {
   );
 }
 
+
+function MentorRegistrationsAwaitingApplication() {
+  const [
+    registrations,
+    setRegistrations,
+  ] = useState([]);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadMentorRegistrations() {
+      setLoading(true);
+      setError("");
+
+      const {
+        data: profileData,
+        error: profileError,
+      } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          full_name,
+          email,
+          signup_intent,
+          role,
+          account_status,
+          email_verified,
+          onboarding_completed,
+          created_at
+        `)
+        .eq(
+          "signup_intent",
+          "mentor",
+        )
+        .neq(
+          "role",
+          "mentor",
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          },
+        );
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (profileError) {
+        console.error(
+          "Unable to load mentor registrations:",
+          profileError,
+        );
+
+        setError(
+          "We could not load mentor registrations awaiting application.",
+        );
+
+        setLoading(false);
+        return;
+      }
+
+      const profiles =
+        profileData ?? [];
+
+      if (profiles.length === 0) {
+        setRegistrations([]);
+        setLoading(false);
+        return;
+      }
+
+      const {
+        data: applicationData,
+        error: applicationError,
+      } = await supabase
+        .from(
+          "mentor_applications",
+        )
+        .select(
+          "applicant_user_id",
+        )
+        .in(
+          "applicant_user_id",
+          profiles.map(
+            (person) =>
+              person.id,
+          ),
+        );
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (applicationError) {
+        console.error(
+          "Unable to check mentor applications:",
+          applicationError,
+        );
+
+        setError(
+          "We could not prepare the mentor registration list.",
+        );
+
+        setLoading(false);
+        return;
+      }
+
+      const submittedIds =
+        new Set(
+          (
+            applicationData ??
+            []
+          ).map(
+            (application) =>
+              application.applicant_user_id,
+          ),
+        );
+
+      setRegistrations(
+        profiles.filter(
+          (person) =>
+            !submittedIds.has(
+              person.id,
+            ),
+        ),
+      );
+
+      setLoading(false);
+    }
+
+    loadMentorRegistrations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  function getProgress(person) {
+    if (
+      person.account_status ===
+      "rejected"
+    ) {
+      return {
+        value: "rejected",
+        label:
+          "Registration rejected",
+      };
+    }
+
+    if (
+      !person.email_verified
+    ) {
+      return {
+        value: "pending",
+        label:
+          "Email verification pending",
+      };
+    }
+
+    return {
+      value: "pending",
+      label:
+        "Application not submitted",
+    };
+  }
+
+  return (
+    <section className="admin-list-section admin-mentor-interest-section">
+      <div className="admin-workflow-section-heading">
+        <div>
+          <span>
+            MENTOR REGISTRATIONS
+          </span>
+
+          <h2>
+            Mentor registrations awaiting application
+          </h2>
+
+          <p>
+            These people selected “I want to mentor” but have not submitted the mentor application yet.
+          </p>
+        </div>
+
+        <strong>
+          {loading
+            ? "Loading..."
+            : `${registrations.length} ${
+                registrations.length === 1
+                  ? "person"
+                  : "people"
+              }`}
+        </strong>
+      </div>
+
+      {error && (
+        <p
+          className="form-error"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+
+      {!loading &&
+      !error &&
+      registrations.length === 0 ? (
+        <AdminEmptyState
+          title="No mentor registrations awaiting application"
+          description="People who select “I want to mentor” but have not submitted their mentor application will appear here."
+        />
+      ) : null}
+
+      {!loading &&
+      !error &&
+      registrations.length > 0 && (
+        <div className="admin-table-wrapper admin-table-wrapper--flush">
+          <table className="admin-data-table admin-mentor-interest-table">
+            <thead>
+              <tr>
+                <th>
+                  Person
+                </th>
+
+                <th>
+                  Email
+                </th>
+
+                <th>
+                  Progress
+                </th>
+
+                <th>
+                  Registered
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {registrations.map(
+                (person) => {
+                  const progress =
+                    getProgress(
+                      person,
+                    );
+
+                  return (
+                    <tr
+                      key={
+                        person.id
+                      }
+                    >
+                      <td>
+                        <strong>
+                          {person.full_name ||
+                            "Name not provided"}
+                        </strong>
+                      </td>
+
+                      <td>
+                        {person.email}
+                      </td>
+
+                      <td>
+                        <StatusBadge
+                          value={
+                            progress.value
+                          }
+                          label={
+                            progress.label
+                          }
+                        />
+                      </td>
+
+                      <td>
+                        {formatDate(
+                          person.created_at,
+                        )}
+                      </td>
+                    </tr>
+                  );
+                },
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function RequestsPage() {
   const [requests, setRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -2973,7 +3147,10 @@ function RequestsPage() {
   }
 
   return (
-    <section className="admin-list-section admin-requests-page">
+    <>
+      <MentorRegistrationsAwaitingApplication />
+
+      <section className="admin-list-section admin-requests-page">
       <div className="admin-request-toolbar">
         <div className="admin-search-field admin-request-search">
           <Search size={16} aria-hidden="true" />
@@ -3161,7 +3338,8 @@ function RequestsPage() {
           </div>
         </div>
       )}
-    </section>
+      </section>
+    </>
   );
 }
 
@@ -4555,6 +4733,16 @@ function MessagesPage({ canSendMessages = false }) {
     <>
       <section className="admin-messages-page">
         <div className="admin-messages-toolbar">
+          <div>
+            <span className="admin-section-eyebrow">
+              ADMINISTRATIVE MESSAGING
+            </span>
+
+            <p>
+              Contact a mentor or mentee without entering their private mentorship conversation.
+            </p>
+          </div>
+
           {canSendMessages && (
             <button
               type="button"

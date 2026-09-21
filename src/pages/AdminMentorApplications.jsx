@@ -99,9 +99,9 @@ function SubmittedApplications({
   ] = useState(null);
 
   const [
-    rejectionOpen,
-    setRejectionOpen,
-  ] = useState(false);
+    rejectionMode,
+    setRejectionMode,
+  ] = useState("");
 
   const [
     rejectionReason,
@@ -128,17 +128,10 @@ function SubmittedApplications({
     setSuccess,
   ] = useState("");
 
-  const canDecideApplications =
-    isFullAccessAdmin ||
-    canRecommendApplications ||
-    canSecondSignoffApplications;
-
   async function loadApplications({
     keepModalOpen = false,
   } = {}) {
-    if (
-      !keepModalOpen
-    ) {
+    if (!keepModalOpen) {
       setLoading(true);
     }
 
@@ -171,6 +164,14 @@ function SubmittedApplications({
         reviewed_by,
         approved_at,
         mentor_account_id,
+        onboarding_recommendation,
+        onboarding_feedback,
+        onboarding_reviewed_at,
+        onboarding_reviewed_by,
+        operations_decision,
+        operations_feedback,
+        operations_reviewed_at,
+        operations_reviewed_by,
         created_at,
         updated_at,
         applicant:profiles!mentor_applications_applicant_user_id_fkey (
@@ -193,9 +194,7 @@ function SubmittedApplications({
         },
       );
 
-    if (
-      applicationError
-    ) {
+    if (applicationError) {
       console.error(
         "Unable to load mentor applications:",
         applicationError,
@@ -215,11 +214,14 @@ function SubmittedApplications({
     const reviewerIds = [
       ...new Set(
         rawApplications
-          .map(
+          .flatMap(
             (
               application,
-            ) =>
+            ) => [
+              application.onboarding_reviewed_by,
+              application.operations_reviewed_by,
               application.reviewed_by,
+            ],
           )
           .filter(Boolean),
       ),
@@ -228,10 +230,7 @@ function SubmittedApplications({
     let reviewerMap =
       new Map();
 
-    if (
-      reviewerIds.length >
-      0
-    ) {
+    if (reviewerIds.length > 0) {
       const {
         data: reviewerData,
       } = await supabase
@@ -267,7 +266,16 @@ function SubmittedApplications({
         ) => ({
           ...application,
 
-          reviewer:
+          onboarding_reviewer:
+            reviewerMap.get(
+              application.onboarding_reviewed_by,
+            ) ??
+            null,
+
+          operations_reviewer:
+            reviewerMap.get(
+              application.operations_reviewed_by,
+            ) ??
             reviewerMap.get(
               application.reviewed_by,
             ) ??
@@ -318,7 +326,7 @@ function SubmittedApplications({
 
     setError("");
     setSuccess("");
-    setRejectionOpen(false);
+    setRejectionMode("");
     setRejectionReason("");
   }
 
@@ -333,11 +341,11 @@ function SubmittedApplications({
 
     setError("");
     setSuccess("");
-    setRejectionOpen(false);
+    setRejectionMode("");
     setRejectionReason("");
   }
 
-  async function submitDecision(
+  async function submitReview(
     action,
     reason = null,
   ) {
@@ -350,25 +358,79 @@ function SubmittedApplications({
       return;
     }
 
+    const isRecommendationAction =
+      [
+        "recommend_approve",
+        "recommend_reject",
+      ].includes(
+        action,
+      );
+
+    const isFinalAction =
+      [
+        "approve",
+        "reject",
+      ].includes(
+        action,
+      );
+
     if (
-      !canDecideApplications
+      isRecommendationAction &&
+      !(
+        canRecommendApplications ||
+        isFullAccessAdmin
+      )
     ) {
       setError(
-        "Your administrator role can view this application but cannot make the mentor decision.",
+        "Your administrator role cannot record the Mentor Onboarding recommendation.",
       );
 
       return;
     }
 
     if (
-      action === "reject" &&
+      isFinalAction &&
+      !(
+        canSecondSignoffApplications ||
+        isFullAccessAdmin
+      )
+    ) {
+      setError(
+        "Your administrator role cannot record the final Operations and Governance decision.",
+      );
+
+      return;
+    }
+
+    if (
+      isFinalAction &&
+      !selectedApplication
+        .onboarding_recommendation
+    ) {
+      setError(
+        "The Mentor Onboarding recommendation must be recorded before the final Operations and Governance decision.",
+      );
+
+      return;
+    }
+
+    if (
+      [
+        "recommend_reject",
+        "reject",
+      ].includes(
+        action,
+      ) &&
       !String(
         reason ||
           "",
       ).trim()
     ) {
       setError(
-        "Please provide a reason for declining this mentor application.",
+        action ===
+          "recommend_reject"
+          ? "Please provide a reason before recommending rejection."
+          : "Please provide a reason before rejecting this mentor application.",
       );
 
       return;
@@ -379,18 +441,23 @@ function SubmittedApplications({
     setSuccess("");
 
     const {
-      error: decisionError,
+      error: reviewError,
     } = await supabase.rpc(
-      "admin_decide_mentor_application",
+      "admin_review_mentor_application",
       {
         p_application_id:
           selectedApplication.id,
 
-        p_decision:
+        p_action:
           action,
 
-        p_reason:
-          action === "reject"
+        p_feedback:
+          [
+            "recommend_reject",
+            "reject",
+          ].includes(
+            action,
+          )
             ? String(
                 reason,
               ).trim()
@@ -398,30 +465,41 @@ function SubmittedApplications({
       },
     );
 
-    if (
-      decisionError
-    ) {
+    if (reviewError) {
       console.error(
         "Unable to review mentor application:",
-        decisionError,
+        reviewError,
       );
 
       setError(
-        decisionError.message ||
-          "We could not save this mentor decision.",
+        reviewError.message ||
+          "We could not update this mentor application.",
       );
 
       setProcessing(false);
       return;
     }
 
+    const messages = {
+      recommend_approve:
+        "Approval has been recommended. The application is now ready for Operations and Governance review.",
+
+      recommend_reject:
+        "Rejection has been recommended. The application is now ready for Operations and Governance review.",
+
+      approve:
+        "The mentor application has received final approval.",
+
+      reject:
+        "The mentor application has been rejected.",
+    };
+
     setSuccess(
-      action === "approve"
-        ? "The mentor application has been approved."
-        : "The mentor application has been declined.",
+      messages[action] ||
+        "The application was updated.",
     );
 
-    setRejectionOpen(false);
+    setRejectionMode("");
     setRejectionReason("");
 
     await loadApplications({
@@ -468,6 +546,10 @@ function SubmittedApplications({
             application.organisation,
 
             application.status,
+
+            getReviewStageLabel(
+              application,
+            ),
 
             ...(
               application.mentorship_categories ??
@@ -647,6 +729,10 @@ function SubmittedApplications({
                     </th>
 
                     <th>
+                      Review stage
+                    </th>
+
+                    <th>
                       Status
                     </th>
 
@@ -714,6 +800,12 @@ function SubmittedApplications({
                               ", ",
                             ) ||
                             "Not provided"}
+                        </td>
+
+                        <td>
+                          {getReviewStageLabel(
+                            application,
+                          )}
                         </td>
 
                         <td>
@@ -854,14 +946,17 @@ function SubmittedApplications({
           application={
             selectedApplication
           }
-          canDecideApplications={
-            canDecideApplications
+          canRecommendApplications={
+            canRecommendApplications
           }
-          adminOperationalRole={
-            adminOperationalRole
+          canSecondSignoffApplications={
+            canSecondSignoffApplications
           }
           isFullAccessAdmin={
             isFullAccessAdmin
+          }
+          adminOperationalRole={
+            adminOperationalRole
           }
           processing={
             processing
@@ -872,17 +967,29 @@ function SubmittedApplications({
           success={
             success
           }
-          onApprove={() =>
-            submitDecision(
+          onRecommendApprove={() =>
+            submitReview(
+              "recommend_approve",
+            )
+          }
+          onRecommendReject={() => {
+            setError("");
+            setRejectionMode(
+              "recommend_reject",
+            );
+            setRejectionReason("");
+          }}
+          onFinalApprove={() =>
+            submitReview(
               "approve",
             )
           }
-          onDecline={() => {
+          onFinalReject={() => {
             setError("");
-            setRejectionReason("");
-            setRejectionOpen(
-              true,
+            setRejectionMode(
+              "reject",
             );
+            setRejectionReason("");
           }}
           onClose={
             closeReview
@@ -891,10 +998,13 @@ function SubmittedApplications({
       )}
 
       {selectedApplication &&
-        rejectionOpen && (
-          <DeclineApplicationModal
+        rejectionMode && (
+          <DecisionReasonModal
             application={
               selectedApplication
+            }
+            mode={
+              rejectionMode
             }
             reason={
               rejectionReason
@@ -912,18 +1022,20 @@ function SubmittedApplications({
               if (
                 !processing
               ) {
-                setRejectionOpen(
-                  false,
+                setRejectionMode(
+                  "",
                 );
+
                 setRejectionReason(
                   "",
                 );
+
                 setError("");
               }
             }}
             onConfirm={() =>
-              submitDecision(
-                "reject",
+              submitReview(
+                rejectionMode,
                 rejectionReason,
               )
             }
@@ -939,14 +1051,17 @@ function SubmittedApplications({
 
 function ApplicationReviewModal({
   application,
-  canDecideApplications,
-  adminOperationalRole,
+  canRecommendApplications,
+  canSecondSignoffApplications,
   isFullAccessAdmin,
+  adminOperationalRole,
   processing,
   error,
   success,
-  onApprove,
-  onDecline,
+  onRecommendApprove,
+  onRecommendReject,
+  onFinalApprove,
+  onFinalReject,
   onClose,
 }) {
   useLockBodyScroll(true);
@@ -954,6 +1069,39 @@ function ApplicationReviewModal({
   const isPending =
     application.status ===
     "pending";
+
+  const onboardingComplete =
+    Boolean(
+      application.onboarding_recommendation,
+    );
+
+  const finalDecisionComplete =
+    Boolean(
+      application.operations_decision,
+    ) ||
+    [
+      "approved",
+      "rejected",
+    ].includes(
+      application.status,
+    );
+
+  const canMakeOnboardingRecommendation =
+    isPending &&
+    !onboardingComplete &&
+    (
+      canRecommendApplications ||
+      isFullAccessAdmin
+    );
+
+  const canMakeFinalDecision =
+    isPending &&
+    onboardingComplete &&
+    !finalDecisionComplete &&
+    (
+      canSecondSignoffApplications ||
+      isFullAccessAdmin
+    );
 
   return (
     <div
@@ -1049,6 +1197,12 @@ function ApplicationReviewModal({
             />
 
             <span>
+              {getReviewStageLabel(
+                application,
+              )}
+            </span>
+
+            <span>
               Submitted{" "}
               {formatDate(
                 application.created_at,
@@ -1063,7 +1217,7 @@ function ApplicationReviewModal({
               </strong>
 
               <p>
-                You can review this mentor application and approve or decline it.
+                You can complete either review stage. Stage 1 must be recorded before Stage 2 so the approval trail stays clear.
               </p>
             </section>
           )}
@@ -1104,16 +1258,7 @@ function ApplicationReviewModal({
                   application.membership_reference ||
                   application.applicant
                     ?.membership_reference ||
-                  (
-                    (
-                      application.membership_verification_method ||
-                      application.applicant
-                        ?.membership_verification_method
-                    ) ===
-                    "manual_admin_review"
-                      ? "Manual administrator review requested"
-                      : "Not provided"
-                  )
+                  "Not provided"
                 }
               />
 
@@ -1128,11 +1273,12 @@ function ApplicationReviewModal({
               />
 
               <ReviewDetail
-                label="Mobile number"
+                label="Membership"
                 value={
                   application.applicant
-                    ?.phone_number ||
-                  "Not provided"
+                    ?.membership_verified
+                    ? "Verified"
+                    : "Not verified"
                 }
               />
             </div>
@@ -1231,54 +1377,227 @@ function ApplicationReviewModal({
             </p>
           </section>
 
-          {!isPending && (
-            <section className="admin-mentor-decision-summary">
-              <span>
-                DECISION
-              </span>
+          <section
+            className={`admin-mentor-review-stage-card admin-mentor-review-stage-card--recommendation${
+              onboardingComplete
+                ? " is-complete"
+                : ""
+            }`}
+          >
+            <span>
+              STAGE 1 · RECOMMENDATION
+            </span>
 
-              <h3>
-                {application.status ===
-                "approved"
-                  ? "Application approved"
-                  : "Application declined"}
-              </h3>
+            <h3>
+              Mentor Onboarding recommendation
+            </h3>
 
-              <p>
-                Reviewed by{" "}
+            <p>
+              The Mentor Onboarding, Vetting and Training admin reviews the applicant and records a recommendation. This is not the final mentor approval.
+            </p>
 
+            {onboardingComplete ? (
+              <div className="admin-mentor-stage-result">
                 <strong>
-                  {application.reviewer
-                    ?.full_name ||
-                    application.reviewer
-                      ?.email ||
-                    "Administrator"}
+                  {application.onboarding_recommendation ===
+                  "approve"
+                    ? "Approval recommended"
+                    : "Rejection recommended"}
                 </strong>
 
-                {application.reviewed_at
-                  ? ` on ${formatDate(
-                      application.reviewed_at,
-                    )}.`
-                  : "."}
-              </p>
+                <p>
+                  Recorded by{" "}
 
-              {application.status ===
-                "rejected" &&
-                application.admin_feedback && (
-                  <div className="admin-mentor-decline-reason">
-                    <span>
-                      Reason
-                    </span>
+                  <strong>
+                    {application.onboarding_reviewer
+                      ?.full_name ||
+                      application.onboarding_reviewer
+                        ?.email ||
+                      "Administrator"}
+                  </strong>
 
-                    <p>
-                      {
-                        application.admin_feedback
-                      }
-                    </p>
-                  </div>
+                  {application.onboarding_reviewed_at
+                    ? ` on ${formatDate(
+                        application.onboarding_reviewed_at,
+                      )}.`
+                    : "."}
+                </p>
+
+                {application.onboarding_feedback && (
+                  <p>
+                    Reason:{" "}
+                    {
+                      application.onboarding_feedback
+                    }
+                  </p>
                 )}
-            </section>
-          )}
+              </div>
+            ) : canMakeOnboardingRecommendation ? (
+              <div className="admin-mentor-review-actions-box">
+                <p className="admin-mentor-review-action-helper">
+                  Choose one recommendation after reviewing the mentor's information.
+                </p>
+
+                <div className="admin-mentor-review-inline-actions">
+                  <button
+                    type="button"
+                    className="admin-recommend-reject-button"
+                    onClick={
+                      onRecommendReject
+                    }
+                    disabled={
+                      processing
+                    }
+                  >
+                    Recommend rejection
+                  </button>
+
+                  <button
+                    type="button"
+                    className="admin-recommend-approve-button"
+                    onClick={
+                      onRecommendApprove
+                    }
+                    disabled={
+                      processing
+                    }
+                  >
+                    {processing
+                      ? "Saving..."
+                      : "Recommend approval"}
+                  </button>
+                </div>
+              </div>
+            ) : isPending ? (
+              <div className="admin-mentor-stage-waiting">
+                <strong>
+                  Waiting for Stage 1
+                </strong>
+
+                <p>
+                  A Mentor Onboarding, Vetting and Training administrator must record the recommendation first.
+                </p>
+              </div>
+            ) : null}
+          </section>
+
+          <section
+            className={`admin-mentor-review-stage-card admin-mentor-review-stage-card--final${
+              canMakeFinalDecision
+                ? " is-ready"
+                : ""
+            }${
+              finalDecisionComplete
+                ? " is-complete"
+                : ""
+            }`}
+          >
+            <span>
+              STAGE 2 · FINAL DECISION
+            </span>
+
+            <h3>
+              Operations and Governance final decision
+            </h3>
+
+            {finalDecisionComplete ? (
+              <div className="admin-mentor-stage-result">
+                <strong>
+                  {application.status ===
+                  "approved"
+                    ? "Mentor approved"
+                    : "Mentor rejected"}
+                </strong>
+
+                <p>
+                  Final decision recorded by{" "}
+
+                  <strong>
+                    {application.operations_reviewer
+                      ?.full_name ||
+                      application.operations_reviewer
+                        ?.email ||
+                      "Administrator"}
+                  </strong>
+
+                  {application.operations_reviewed_at
+                    ? ` on ${formatDate(
+                        application.operations_reviewed_at,
+                      )}.`
+                    : application.reviewed_at
+                      ? ` on ${formatDate(
+                          application.reviewed_at,
+                        )}.`
+                      : "."}
+                </p>
+
+                {(application.operations_feedback ||
+                  application.admin_feedback) && (
+                    <p>
+                      Reason:{" "}
+                      {application.operations_feedback ||
+                        application.admin_feedback}
+                    </p>
+                  )}
+              </div>
+            ) : !onboardingComplete ? (
+              <div className="admin-mentor-stage-waiting">
+                <strong>
+                  Stage 2 is not ready yet
+                </strong>
+
+                <p>
+                  The final approval buttons will become available after the Stage 1 recommendation is recorded.
+                </p>
+              </div>
+            ) : canMakeFinalDecision ? (
+              <div className="admin-mentor-review-actions-box">
+                <p className="admin-mentor-review-action-helper">
+                  Review the Stage 1 recommendation, then make the final mentor decision.
+                </p>
+
+                <div className="admin-mentor-review-inline-actions">
+                  <button
+                    type="button"
+                    className="admin-final-reject-button"
+                    onClick={
+                      onFinalReject
+                    }
+                    disabled={
+                      processing
+                    }
+                  >
+                    Reject mentor
+                  </button>
+
+                  <button
+                    type="button"
+                    className="admin-final-approve-button"
+                    onClick={
+                      onFinalApprove
+                    }
+                    disabled={
+                      processing
+                    }
+                  >
+                    {processing
+                      ? "Saving..."
+                      : "Final approval"}
+                  </button>
+                </div>
+              </div>
+            ) : isPending ? (
+              <div className="admin-mentor-stage-waiting">
+                <strong>
+                  Awaiting Operations and Governance
+                </strong>
+
+                <p>
+                  The Stage 1 recommendation is complete. An Operations and Governance administrator must record the final decision.
+                </p>
+              </div>
+            ) : null}
+          </section>
 
           {success && (
             <p className="admin-success-message">
@@ -1294,19 +1613,6 @@ function ApplicationReviewModal({
               {error}
             </p>
           )}
-
-          {isPending &&
-            !canDecideApplications && (
-              <section className="admin-mentor-review-callout">
-                <strong>
-                  View only
-                </strong>
-
-                <p>
-                  Your administrator role can view this application but cannot approve or decline it.
-                </p>
-              </section>
-            )}
         </div>
 
         <footer className="admin-mentor-review-footer">
@@ -1322,51 +1628,15 @@ function ApplicationReviewModal({
           >
             Close
           </button>
-
-          {isPending &&
-            canDecideApplications && (
-              <div className="admin-mentor-review-footer-actions">
-                <button
-                  type="button"
-                  className="admin-drawer-secondary-danger"
-                  onClick={
-                    onDecline
-                  }
-                  disabled={
-                    processing
-                  }
-                >
-                  Decline
-                </button>
-
-                <button
-                  type="button"
-                  className="admin-drawer-primary"
-                  onClick={
-                    onApprove
-                  }
-                  disabled={
-                    processing
-                  }
-                >
-                  {processing
-                    ? "Saving..."
-                    : "Approve"}
-                </button>
-              </div>
-            )}
         </footer>
       </section>
     </div>
   );
 }
 
-/* =========================================================
-   DECLINE REASON MODAL
-========================================================= */
-
-function DeclineApplicationModal({
+function DecisionReasonModal({
   application,
+  mode,
   reason,
   setReason,
   processing,
@@ -1374,33 +1644,48 @@ function DeclineApplicationModal({
   onCancel,
   onConfirm,
 }) {
+  const isRecommendationReject =
+    mode ===
+    "recommend_reject";
+
   return (
     <div
       className="admin-decline-modal-backdrop"
       role="presentation"
+      onMouseDown={(
+        event,
+      ) => {
+        if (
+          event.target ===
+            event.currentTarget &&
+          !processing
+        ) {
+          onCancel();
+        }
+      }}
     >
       <section
         className="admin-decline-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="decline-mentor-title"
+        aria-labelledby="mentor-rejection-reason-title"
       >
         <header>
           <div>
             <span>
-              DECLINE APPLICATION
+              {isRecommendationReject
+                ? "STAGE 1 · RECOMMEND REJECTION"
+                : "STAGE 2 · REJECT MENTOR"}
             </span>
 
-            <h2 id="decline-mentor-title">
+            <h2 id="mentor-rejection-reason-title">
               Give a reason
             </h2>
 
             <p>
-              Tell{" "}
-              {application.applicant
-                ?.full_name ||
-                "the applicant"}{" "}
-              why this mentor application was not approved.
+              {isRecommendationReject
+                ? `Explain why ${application.applicant?.full_name || "this applicant"} should not be recommended for mentor approval.`
+                : `Explain why ${application.applicant?.full_name || "this applicant"} should not receive final mentor approval.`}
             </p>
           </div>
 
@@ -1412,7 +1697,7 @@ function DeclineApplicationModal({
             disabled={
               processing
             }
-            aria-label="Close decline modal"
+            aria-label="Close rejection reason modal"
           >
             <X size={18} />
           </button>
@@ -1421,7 +1706,7 @@ function DeclineApplicationModal({
         <div className="admin-decline-modal-body">
           <label>
             <span>
-              Reason for declining
+              Reason
             </span>
 
             <textarea
@@ -1480,8 +1765,10 @@ function DeclineApplicationModal({
             }
           >
             {processing
-              ? "Declining..."
-              : "Decline application"}
+              ? "Saving..."
+              : isRecommendationReject
+                ? "Submit rejection recommendation"
+                : "Reject mentor"}
           </button>
         </footer>
       </section>
@@ -1608,6 +1895,32 @@ function AdminEmptyState({
       </p>
     </section>
   );
+}
+
+function getReviewStageLabel(
+  application,
+) {
+  if (
+    application.status ===
+    "approved"
+  ) {
+    return "Completed · Approved";
+  }
+
+  if (
+    application.status ===
+    "rejected"
+  ) {
+    return "Completed · Declined";
+  }
+
+  if (
+    application.onboarding_recommendation
+  ) {
+    return "Awaiting Operations sign-off";
+  }
+
+  return "Awaiting Mentor Onboarding review";
 }
 
 function formatMembershipVerificationMethod(

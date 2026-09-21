@@ -597,6 +597,275 @@
   cursor: not-allowed;
 }
 
+
+/* =========================================================
+   MENTOR APPROVAL STAGES
+   Stage 1 is a recommendation.
+   Stage 2 is the final approval decision.
+========================================================= */
+
+.admin-mentor-review-stage-card {
+  margin-top: 20px;
+  padding: 18px;
+
+  border: 1px solid #e3e7eb;
+  border-radius: 14px;
+
+  background: #ffffff;
+  text-align: left;
+}
+
+.admin-mentor-review-stage-card > span {
+  display: block;
+  margin-bottom: 6px;
+
+  color: #ff5303;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.admin-mentor-review-stage-card h3 {
+  margin: 0;
+
+  color: #18212a;
+
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.admin-mentor-review-stage-card > p {
+  max-width: 760px;
+
+  margin: 8px 0 0;
+
+  color: #667481;
+
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+/* Stage 1: lighter recommendation treatment */
+.admin-mentor-review-stage-card--recommendation {
+  border-color: #f0c8b7;
+  background: #fffaf7;
+}
+
+.admin-mentor-review-stage-card--recommendation.is-complete {
+  border-color: #dce2e7;
+  background: #fbfcfd;
+}
+
+/* Stage 2: stronger final-decision treatment */
+.admin-mentor-review-stage-card--final {
+  border-color: #e1e6eb;
+  background: #ffffff;
+}
+
+.admin-mentor-review-stage-card--final.is-ready {
+  border-color: #ffb28f;
+
+  background:
+    linear-gradient(
+      180deg,
+      #fffdfc 0%,
+      #ffffff 100%
+    );
+
+  box-shadow:
+    0 8px 24px
+    rgba(255, 83, 3, 0.06);
+}
+
+.admin-mentor-review-stage-card--final.is-complete {
+  border-color: #dce2e7;
+  background: #fbfcfd;
+  box-shadow: none;
+}
+
+.admin-mentor-review-actions-box {
+  margin-top: 16px;
+  padding-top: 16px;
+
+  border-top: 1px solid #e9edf0;
+}
+
+.admin-mentor-review-action-helper {
+  margin: 0 0 12px;
+
+  color: #687582;
+
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.admin-mentor-review-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* -----------------------------------------
+   Stage 1 buttons
+   Recommendation buttons are intentionally
+   outlined so they never look like final approval.
+----------------------------------------- */
+
+.admin-recommend-approve-button,
+.admin-recommend-reject-button,
+.admin-final-approve-button,
+.admin-final-reject-button {
+  min-height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 16px;
+
+  border-radius: 9px;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.admin-recommend-approve-button {
+  border: 1px solid #ff5303;
+
+  color: #d94700;
+  background: #ffffff;
+}
+
+.admin-recommend-approve-button:hover:not(:disabled) {
+  color: #ffffff;
+  background: #ff5303;
+}
+
+.admin-recommend-reject-button {
+  border: 1px solid #e2b7b2;
+
+  color: #b42318;
+  background: #ffffff;
+}
+
+.admin-recommend-reject-button:hover:not(:disabled) {
+  border-color: #d59b95;
+  background: #fff7f6;
+}
+
+/* -----------------------------------------
+   Stage 2 buttons
+   Solid treatment = final decision.
+----------------------------------------- */
+
+.admin-final-approve-button {
+  border: 1px solid #ff5303;
+
+  color: #ffffff;
+  background: #ff5303;
+
+  box-shadow:
+    0 6px 16px
+    rgba(255, 83, 3, 0.16);
+}
+
+.admin-final-approve-button:hover:not(:disabled) {
+  border-color: #e94b00;
+  background: #e94b00;
+}
+
+.admin-final-reject-button {
+  border: 1px solid #b42318;
+
+  color: #ffffff;
+  background: #b42318;
+}
+
+.admin-final-reject-button:hover:not(:disabled) {
+  border-color: #971d14;
+  background: #971d14;
+}
+
+.admin-recommend-approve-button:active:not(:disabled),
+.admin-recommend-reject-button:active:not(:disabled),
+.admin-final-approve-button:active:not(:disabled),
+.admin-final-reject-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.admin-recommend-approve-button:disabled,
+.admin-recommend-reject-button:disabled,
+.admin-final-approve-button:disabled,
+.admin-final-reject-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Recorded decision / waiting state */
+.admin-mentor-stage-result,
+.admin-mentor-stage-waiting {
+  margin-top: 14px;
+  padding: 14px 15px;
+
+  border: 1px solid #e4e8ed;
+  border-radius: 11px;
+
+  background: #ffffff;
+}
+
+.admin-mentor-stage-waiting {
+  background: #fafbfc;
+}
+
+.admin-mentor-stage-result strong,
+.admin-mentor-stage-waiting strong {
+  display: block;
+  margin-bottom: 5px;
+
+  color: #252e37;
+  font-size: 12px;
+}
+
+.admin-mentor-stage-result p,
+.admin-mentor-stage-waiting p {
+  margin: 5px 0 0;
+
+  color: #667481;
+
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.admin-mentor-stage-result p strong {
+  display: inline;
+  margin: 0;
+}
+
+/* Distinguish the rejection reason dialog from the main modal. */
+.admin-decline-modal-body textarea:focus {
+  border-color: #b42318;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(180, 35, 24, 0.08);
+}
+
+
 /* =========================================================
    TABLET / MOBILE
 ========================================================= */
@@ -656,5 +925,22 @@
   .admin-mentor-review-footer-actions button,
   .admin-decline-modal footer button {
     width: 100%;
+  }
+
+
+  .admin-mentor-review-inline-actions {
+    width: 100%;
+    flex-direction: column-reverse;
+  }
+
+  .admin-recommend-approve-button,
+  .admin-recommend-reject-button,
+  .admin-final-approve-button,
+  .admin-final-reject-button {
+    width: 100%;
+  }
+
+  .admin-mentor-review-stage-card {
+    padding: 16px;
   }
 }
