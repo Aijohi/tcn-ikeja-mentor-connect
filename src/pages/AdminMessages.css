@@ -713,38 +713,67 @@
 
 /* =========================================================
    MESSAGE COMPOSER
+   Clean chat-style composer matching mentor/mentee messaging.
    ========================================================= */
 
 .admin-message-composer {
-  display: flex;
-  align-items: flex-end;
-
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
   gap: 10px;
 
-  padding: 14px 16px;
+  padding: 12px 14px;
 
   border-top: 1px solid #e4e8ef;
 
-  background: #ffffff;
+  background: #fbfcfd;
+}
+
+/*
+  Keep the text label accessible without displaying
+  "Write a message" above the input.
+*/
+.admin-message-composer .sr-only {
+  position: absolute !important;
+
+  width: 1px !important;
+  height: 1px !important;
+
+  padding: 0 !important;
+  margin: -1px !important;
+
+  overflow: hidden !important;
+
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+
+  white-space: nowrap !important;
+
+  border: 0 !important;
 }
 
 .admin-message-composer label {
-  flex: 1;
+  display: block;
 
   min-width: 0;
 }
 
 .admin-message-composer textarea {
+  display: block;
+
   box-sizing: border-box;
 
   width: 100%;
-  min-height: 44px;
-  max-height: 140px;
+  height: 46px;
+  min-height: 46px;
+  max-height: 126px;
 
-  padding: 11px 12px;
+  overflow-y: auto;
+
+  padding: 11px 13px;
 
   border: 1px solid #c9d2df;
-  border-radius: 9px;
+  border-radius: 10px;
 
   outline: none;
 
@@ -753,15 +782,24 @@
 
   font: inherit;
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 22px;
 
-  resize: vertical;
+  resize: none;
 
   box-shadow: none;
+
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
 }
 
-.admin-message-composer textarea:hover {
-  border-color: #97aac2;
+.admin-message-composer textarea::placeholder {
+  color: #97aac2;
+}
+
+.admin-message-composer textarea:hover:not(:disabled) {
+  border-color: #aeb8c4;
 }
 
 .admin-message-composer textarea:focus,
@@ -769,6 +807,8 @@
   border-color: #4c5867;
 
   outline: none;
+
+  background: #ffffff;
 
   box-shadow:
     0 0 0 2px
@@ -778,6 +818,11 @@
       103,
       0.10
     );
+}
+
+.admin-message-composer textarea:disabled {
+  color: #7b8794;
+  background: #f5f7f9;
 }
 
 .admin-message-composer button {
@@ -790,23 +835,31 @@
 
   gap: 7px;
 
-  min-height: 44px;
+  min-width: 92px;
+  height: 46px;
+  min-height: 46px;
 
   padding: 0 15px;
 
   border: 1px solid #ff5303;
-  border-radius: 9px;
+  border-radius: 10px;
 
   color: #ffffff;
   background: #ff5303;
 
   font: inherit;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 650;
 
   cursor: pointer;
 
   box-shadow: none;
+
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease,
+    transform 150ms ease;
 }
 
 .admin-message-composer button:hover:not(:disabled) {
@@ -814,10 +867,18 @@
   background: #c13c00;
 }
 
+.admin-message-composer button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.admin-message-composer button:focus-visible {
+  outline: 2px solid rgba(76, 88, 103, 0.22);
+  outline-offset: 2px;
+}
+
 .admin-message-composer button:disabled {
   cursor: not-allowed;
-
-  opacity: 0.5;
+  opacity: 0.48;
 }
 
 /* =========================================================
@@ -1115,7 +1176,22 @@
   }
 
   .admin-message-composer {
-    padding: 12px;
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto;
+
+    gap: 8px;
+
+    padding: 10px;
+  }
+
+  .admin-message-composer textarea {
+    font-size: 16px;
+  }
+
+  .admin-message-composer button {
+    min-width: 78px;
+    padding: 0 12px;
   }
 }
 
@@ -1165,11 +1241,46 @@
   }
 
   .admin-message-composer {
-    align-items: stretch;
-    flex-direction: column;
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto;
+
+    align-items: end;
+
+    gap: 8px;
   }
 
   .admin-message-composer button {
-    width: 100%;
+    width: auto;
+    min-width: 72px;
+
+    padding: 0 11px;
   }
 }
+
+@media (max-width: 430px) {
+  .admin-message-composer {
+    gap: 7px;
+    padding: 9px;
+  }
+
+  .admin-message-composer textarea {
+    height: 44px;
+    min-height: 44px;
+
+    padding: 10px 11px;
+
+    border-radius: 9px;
+  }
+
+  .admin-message-composer button {
+    min-width: 64px;
+    height: 44px;
+    min-height: 44px;
+
+    padding: 0 10px;
+
+    border-radius: 9px;
+  }
+}
+
