@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Search,
   Send,
+  ShieldCheck,
   Star,
   User,
   UserCheck,
@@ -556,6 +557,7 @@ function OverviewPage() {
     registeredPeople: 0,
     registeredMentees: 0,
     approvedMentors: 0,
+    registeredAdmins: 0,
     pendingApplications: 0,
     pendingRequests: 0,
   });
@@ -576,6 +578,7 @@ function OverviewPage() {
         peopleResult,
         registeredMenteesResult,
         approvedMentorsResult,
+        registeredAdminsResult,
         pendingApplicationsCountResult,
         pendingRequestsCountResult,
         pendingApplicationsResult,
@@ -602,6 +605,14 @@ function OverviewPage() {
             head: true,
           })
           .eq("approval_status", "approved"),
+
+        supabase
+          .from("profiles")
+          .select("*", {
+            count: "exact",
+            head: true,
+          })
+          .in("role", ["admin", "safeguarding_lead"]),
 
         supabase
           .from("mentor_applications")
@@ -672,6 +683,7 @@ function OverviewPage() {
         peopleResult.error ||
         registeredMenteesResult.error ||
         approvedMentorsResult.error ||
+        registeredAdminsResult.error ||
         pendingApplicationsCountResult.error ||
         pendingRequestsCountResult.error ||
         pendingApplicationsResult.error ||
@@ -737,6 +749,7 @@ function OverviewPage() {
         registeredPeople: peopleResult.count ?? 0,
         registeredMentees: registeredMenteesResult.count ?? 0,
         approvedMentors: approvedMentorsResult.count ?? 0,
+        registeredAdmins: registeredAdminsResult.count ?? 0,
         pendingApplications: pendingApplicationsCountResult.count ?? 0,
         pendingRequests: pendingRequestsCountResult.count ?? 0,
       });
@@ -836,6 +849,12 @@ function OverviewPage() {
           icon={<UserCheck size={19} />}
           label="Approved mentors"
           value={statistics.approvedMentors}
+        />
+
+        <SummaryCard
+          icon={<ShieldCheck size={19} />}
+          label="Registered admins"
+          value={statistics.registeredAdmins}
         />
 
         <SummaryCard
