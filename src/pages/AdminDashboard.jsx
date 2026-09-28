@@ -11,6 +11,7 @@ import {
   Search,
   Send,
   Star,
+  User,
   UserCheck,
   Users,
   X,
@@ -553,6 +554,7 @@ function AdminDashboard() {
 function OverviewPage() {
   const [statistics, setStatistics] = useState({
     registeredPeople: 0,
+    registeredMentees: 0,
     approvedMentors: 0,
     pendingApplications: 0,
     pendingRequests: 0,
@@ -572,6 +574,7 @@ function OverviewPage() {
 
       const [
         peopleResult,
+        registeredMenteesResult,
         approvedMentorsResult,
         pendingApplicationsCountResult,
         pendingRequestsCountResult,
@@ -582,6 +585,15 @@ function OverviewPage() {
           count: "exact",
           head: true,
         }),
+
+        supabase
+          .from("profiles")
+          .select("*", {
+            count: "exact",
+            head: true,
+          })
+          .eq("role", "mentee")
+          .or("signup_intent.is.null,signup_intent.neq.mentor"),
 
         supabase
           .from("mentor_profiles")
@@ -658,6 +670,7 @@ function OverviewPage() {
 
       const firstError =
         peopleResult.error ||
+        registeredMenteesResult.error ||
         approvedMentorsResult.error ||
         pendingApplicationsCountResult.error ||
         pendingRequestsCountResult.error ||
@@ -722,6 +735,7 @@ function OverviewPage() {
 
       setStatistics({
         registeredPeople: peopleResult.count ?? 0,
+        registeredMentees: registeredMenteesResult.count ?? 0,
         approvedMentors: approvedMentorsResult.count ?? 0,
         pendingApplications: pendingApplicationsCountResult.count ?? 0,
         pendingRequests: pendingRequestsCountResult.count ?? 0,
@@ -810,6 +824,12 @@ function OverviewPage() {
           icon={<Users size={19} />}
           label="Registered people"
           value={statistics.registeredPeople}
+        />
+
+        <SummaryCard
+          icon={<User size={19} />}
+          label="Registered mentees"
+          value={statistics.registeredMentees}
         />
 
         <SummaryCard
