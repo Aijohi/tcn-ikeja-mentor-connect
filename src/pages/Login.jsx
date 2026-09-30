@@ -254,9 +254,7 @@ function Login() {
 
     if (
       profile.account_status ===
-        "pending" ||
-      profile.account_status ===
-        "rejected"
+      "rejected"
     ) {
       navigate(
         "/membership-pending",
@@ -271,12 +269,24 @@ function Login() {
     if (
       profile.role === "mentor"
     ) {
-      navigate(
-        "/mentor/dashboard",
-        {
-          replace: true,
-        },
-      );
+      if (
+        profile.account_status ===
+        "active"
+      ) {
+        navigate(
+          "/mentor/dashboard",
+          {
+            replace: true,
+          },
+        );
+      } else {
+        navigate(
+          "/mentor/application-status",
+          {
+            replace: true,
+          },
+        );
+      }
 
       return;
     }

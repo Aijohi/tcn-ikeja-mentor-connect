@@ -32,6 +32,28 @@ function getSignInPath(
   return "/login";
 }
 
+function isStandardMentee(
+  profile,
+) {
+  return (
+    profile?.role ===
+      "mentee" &&
+    profile?.signup_intent !==
+      "mentor"
+  );
+}
+
+function isMentorOnboardingAccount(
+  profile,
+) {
+  return (
+    profile?.role ===
+      "mentee" &&
+    profile?.signup_intent ===
+      "mentor"
+  );
+}
+
 function getAvailablePage(
   profile,
 ) {
@@ -48,6 +70,14 @@ function getAvailablePage(
     "suspended"
   ) {
     return "/account-suspended";
+  }
+
+  if (
+    isStandardMentee(
+      profile,
+    )
+  ) {
+    return "/mentee/dashboard";
   }
 
   if (
@@ -73,10 +103,9 @@ function getAvailablePage(
   }
 
   if (
-    profile.role ===
-      "mentee" &&
-    profile.signup_intent ===
-      "mentor"
+    isMentorOnboardingAccount(
+      profile,
+    )
   ) {
     return "/mentor/apply";
   }
@@ -156,6 +185,16 @@ function ProtectedRoute({
       profile.role,
     );
 
+  const standardMentee =
+    isStandardMentee(
+      profile,
+    );
+
+  const mentorOnboardingAccount =
+    isMentorOnboardingAccount(
+      profile,
+    );
+
   const isCompleteProfilePage =
     location.pathname ===
     "/complete-profile";
@@ -163,12 +202,6 @@ function ProtectedRoute({
   const isMembershipPendingPage =
     location.pathname ===
     "/membership-pending";
-
-  const isMentorOnboardingAccount =
-    profile.role ===
-      "mentee" &&
-    profile.signup_intent ===
-      "mentor";
 
   const isMenteePlatformRoute =
     location.pathname ===
@@ -203,7 +236,23 @@ function ProtectedRoute({
   }
 
   if (
+    standardMentee &&
+    (
+      isCompleteProfilePage ||
+      isMembershipPendingPage
+    )
+  ) {
+    return (
+      <Navigate
+        to="/mentee/dashboard"
+        replace
+      />
+    );
+  }
+
+  if (
     !isAdministrator &&
+    !standardMentee &&
     !profile.onboarding_completed &&
     !isCompleteProfilePage
   ) {
@@ -230,6 +279,7 @@ function ProtectedRoute({
   }
 
   if (
+    !standardMentee &&
     profile.account_status ===
       "rejected" &&
     !isMembershipPendingPage
@@ -244,8 +294,11 @@ function ProtectedRoute({
 
   if (
     isMembershipPendingPage &&
-    profile.account_status ===
-      "active"
+    (
+      standardMentee ||
+      profile.account_status ===
+        "active"
+    )
   ) {
     return (
       <Navigate
@@ -258,12 +311,14 @@ function ProtectedRoute({
   }
 
   if (
-    isMentorOnboardingAccount &&
+    mentorOnboardingAccount &&
     isMenteePlatformRoute
   ) {
     return (
       <Navigate
-        to="/mentor/apply"
+        to={getAvailablePage(
+          profile,
+        )}
         replace
       />
     );
@@ -288,6 +343,7 @@ function ProtectedRoute({
   if (
     requireActiveAccount &&
     !isAdministrator &&
+    !standardMentee &&
     profile.account_status !==
       "active"
   ) {
