@@ -2257,12 +2257,6 @@ function RequestMentorship() {
 
 
 
-                  <option value="weeks:1">1 week</option>
-                  <option value="weeks:2">2 weeks</option>
-                  <option value="weeks:3">3 weeks</option>
-                  <option value="weeks:4">4 weeks</option>
-                  <option value="weeks:6">6 weeks</option>
-                  <option value="weeks:8">8 weeks</option>
                   <option value="months:1">
 
                     1 month
@@ -2284,9 +2278,6 @@ function RequestMentorship() {
                     3 months
 
                   </option>
-
-
-
 
                 </select>
 
