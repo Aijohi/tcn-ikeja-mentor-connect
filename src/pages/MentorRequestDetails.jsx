@@ -209,6 +209,9 @@ function MentorRequestDetails() {
   const [selectedAction, setSelectedAction] = useState("");
 
   const [actionMessage, setActionMessage] = useState("");
+  const [shorterDuration, setShorterDuration] = useState("");
+  const [proposingDuration, setProposingDuration] = useState(false);
+
 
 
 
@@ -456,6 +459,22 @@ function MentorRequestDetails() {
 
 
 
+  async function proposeShorterDuration() {
+    if (!request?.id || !shorterDuration) return;
+    const [unit, number] = shorterDuration.split(":");
+    setProposingDuration(true);
+    setError("");
+    const { error: offerError } = await supabase.rpc("mc_propose_shorter_duration", {
+      p_request_id: request.id,
+      p_duration_value: Number(number),
+      p_duration_unit: unit,
+    });
+    setProposingDuration(false);
+    if (offerError) { setError(offerError.message); return; }
+    setSuccess("Shorter duration sent to the mentee for confirmation.");
+    await refreshRequest();
+  }
+
   async function refreshRequest() {
 
     const result = await fetchRequest();
@@ -531,6 +550,11 @@ function MentorRequestDetails() {
     }
 
 
+
+    if (selectedAction === "accept" && request.duration_awaiting_mentee) {
+      setError("Wait for the mentee to confirm your shorter duration first.");
+      return;
+    }
 
     setProcessing(true);
 
@@ -1231,6 +1255,30 @@ function MentorRequestDetails() {
           )}
 
 
+
+          {statusKey === "pending" && (
+            <section style={{ marginTop: 16, padding: 16, border: "1px solid #ddd", borderRadius: 10 }}>
+              <strong>Mentorship duration agreement</strong>
+              <p>Requested: {request.proposed_duration_value
+                ? `${request.proposed_duration_value} ${request.proposed_duration_unit}`
+                : formatDuration(request.mentorship_duration_months)}</p>
+              {request.duration_awaiting_mentee ? (
+                <p>Waiting for mentee to confirm your shorter duration of {request.mentor_proposed_duration_value} {request.mentor_proposed_duration_unit}. Do not accept the request until they respond.</p>
+              ) : (
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+                  <label htmlFor="shorter-mentorship-duration">Offer a shorter duration</label>
+                  <select id="shorter-mentorship-duration" value={shorterDuration} onChange={(event) => setShorterDuration(event.target.value)}>
+                    <option value="">Select a shorter duration</option>
+                    {[1,2,3,4,6,8].map(value => <option key={`w${value}`} value={`weeks:${value}`}>{value} {value === 1 ? "week" : "weeks"}</option>)}
+                    {[1,2,3,6].map(value => <option key={`m${value}`} value={`months:${value}`}>{value} {value === 1 ? "month" : "months"}</option>)}
+                  </select>
+                  <button type="button" className="mentor-request-secondary-action" disabled={!shorterDuration || proposingDuration} onClick={proposeShorterDuration}>
+                    {proposingDuration ? "Sending..." : "Send duration offer"}
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
 
           {statusKey === "accepted" && (
 

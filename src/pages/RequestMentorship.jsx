@@ -426,7 +426,7 @@ function SuccessModal({
 
             <strong>
 
-              {mentorshipDuration} {Number(mentorshipDuration) === 1 ? "month" : "months"}
+              {mentorshipDuration ? `${mentorshipDuration.split(':')[1]} ${mentorshipDuration.split(':')[0]}` : 'Not selected'}
 
             </strong>
 
@@ -1386,7 +1386,7 @@ function RequestMentorship() {
 
     } = await supabase.rpc(
 
-      "submit_mentorship_request",
+      "mc_submit_mentorship_request",
 
       {
 
@@ -1414,9 +1414,8 @@ function RequestMentorship() {
 
 
 
-        p_duration_months:
-
-          Number(form.mentorshipDuration),
+        p_duration_value: Number(form.mentorshipDuration.split(':')[1]),
+        p_duration_unit: form.mentorshipDuration.split(':')[0],
 
 
 
@@ -2258,7 +2257,13 @@ function RequestMentorship() {
 
 
 
-                  <option value="1">
+                  <option value="weeks:1">1 week</option>
+                  <option value="weeks:2">2 weeks</option>
+                  <option value="weeks:3">3 weeks</option>
+                  <option value="weeks:4">4 weeks</option>
+                  <option value="weeks:6">6 weeks</option>
+                  <option value="weeks:8">8 weeks</option>
+                  <option value="months:1">
 
                     1 month
 
@@ -2266,7 +2271,7 @@ function RequestMentorship() {
 
 
 
-                  <option value="2">
+                  <option value="months:2">
 
                     2 months
 
@@ -2274,7 +2279,7 @@ function RequestMentorship() {
 
 
 
-                  <option value="3">
+                  <option value="months:3">
 
                     3 months
 
@@ -2282,11 +2287,6 @@ function RequestMentorship() {
 
 
 
-                  <option value="6">
-
-                    6 months
-
-                  </option>
 
                 </select>
 

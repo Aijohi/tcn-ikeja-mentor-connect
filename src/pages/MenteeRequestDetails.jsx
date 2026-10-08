@@ -162,6 +162,7 @@ function MenteeRequestDetails() {
 
 
 
+  const [respondingToOffer, setRespondingToOffer] = useState(false);
   const [request, setRequest] = useState(null);
 
   const [mentorProfile, setMentorProfile] = useState(null);
@@ -235,6 +236,13 @@ function MenteeRequestDetails() {
             mentoring_area,
 
             mentorship_duration_months,
+            proposed_duration_value,
+            proposed_duration_unit,
+            agreed_duration_value,
+            agreed_duration_unit,
+            mentor_proposed_duration_value,
+            mentor_proposed_duration_unit,
+            duration_awaiting_mentee,
 
             mentorship_started_at,
 
@@ -575,6 +583,13 @@ function MenteeRequestDetails() {
             mentoring_area,
 
             mentorship_duration_months,
+            proposed_duration_value,
+            proposed_duration_unit,
+            agreed_duration_value,
+            agreed_duration_unit,
+            mentor_proposed_duration_value,
+            mentor_proposed_duration_unit,
+            duration_awaiting_mentee,
 
             mentorship_started_at,
 
@@ -1240,14 +1255,34 @@ function MenteeRequestDetails() {
 
             <div>
 
+              {request?.duration_awaiting_mentee && request?.status === "pending" && (
+                <div style={{ padding: 12, marginBottom: 14, border: "1px solid #ddd", borderRadius: 8 }}>
+                  <strong>Your mentor proposed a shorter duration</strong>
+                  <p>Requested: {request.proposed_duration_value} {request.proposed_duration_unit}. Mentor offers: {request.mentor_proposed_duration_value} {request.mentor_proposed_duration_unit}.</p>
+                  <p>You must agree before the mentor can accept your request.</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {[true, false].map((accept) => (
+                      <button key={String(accept)} type="button" disabled={respondingToOffer} onClick={async () => {
+                        setRespondingToOffer(true);
+                        const { error: offerError } = await supabase.rpc("mc_respond_to_duration_offer", {
+                          p_request_id: request.id, p_accept: accept,
+                        });
+                        setRespondingToOffer(false);
+                        if (offerError) { window.alert(offerError.message); return; }
+                        window.location.reload();
+                      }}>
+                        {accept ? "Accept shorter duration" : "Keep my original duration"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <small>Mentorship duration</small>
 
               <strong>
 
                 {formatDuration(
-
                   request.mentorship_duration_months,
-
                 )}
 
               </strong>
