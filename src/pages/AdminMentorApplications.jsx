@@ -6,6 +6,8 @@ import {
 
   ClipboardCheck,
 
+  Mail,
+
   Search,
 
   X,
