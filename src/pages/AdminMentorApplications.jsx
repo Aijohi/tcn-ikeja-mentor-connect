@@ -1,1998 +1,4037 @@
 import {
+
   ChevronLeft,
+
   ChevronRight,
+
   ClipboardCheck,
-  Mail,
+
   Search,
+
   X,
+
 } from "lucide-react";
+
 import {
+
   useEffect,
+
   useMemo,
+
   useState,
+
 } from "react";
+
 import { useLocation } from "react-router-dom";
+
 import { supabase } from "../lib/supabase";
+
 import "./AdminLaunchFixes.css";
 
 const APPLICATION_PAGE_SIZE = 10;
 
-const CHECKLIST_ITEMS = [
-  ["identity_checked", "Identity and basic information reviewed"],
-  ["profile_information_checked", "Profile information reviewed"],
-  ["biography_checked", "Biography reviewed"],
-  ["employment_information_checked", "Job title and organisation reviewed"],
-  ["mentoring_experience_checked", "Mentoring experience reviewed"],
-  ["expertise_checked", "Expertise reviewed"],
-  ["mentoring_categories_checked", "Mentoring areas reviewed"],
-  ["availability_checked", "Availability reviewed"],
-  ["meeting_format_checked", "Meeting format reviewed"],
-  ["safeguarding_checked", "Safeguarding requirements reviewed"],
-  ["conduct_checked", "Code of conduct requirements reviewed"],
-];
-
-function useLockBodyScroll(active) {
-  useEffect(() => {
-    if (!active) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [active]);
-}
-
-function isMentorApplicationComplete(application) {
+function isMentorProfileComplete(application) {
   if (!application) return false;
 
   const biography = String(application.biography || "").trim();
   const jobTitle = String(application.job_title || "").trim();
-  const expertise = Array.isArray(application.expertise)
-    ? application.expertise.filter(Boolean)
-    : [];
-  const mentorshipCategories = Array.isArray(application.mentorship_categories)
-    ? application.mentorship_categories.filter(Boolean)
-    : [];
+  const expertise = Array.isArray(application.expertise) ? application.expertise.filter(Boolean) : [];
+  const mentoringCategories = Array.isArray(application.mentorship_categories) ? application.mentorship_categories.filter(Boolean) : [];
 
-  if (!biography) return false;
-  if (!jobTitle) return false;
-  if (expertise.length === 0) return false;
-  if (mentorshipCategories.length === 0) return false;
-
-  if (
-    application.years_of_experience === null ||
-    application.years_of_experience === undefined ||
-    application.years_of_experience === ""
-  ) return false;
-
-  if (
-    application.maximum_active_mentees === null ||
-    application.maximum_active_mentees === undefined ||
-    application.maximum_active_mentees === ""
-  ) return false;
-
-  return true;
+  return Boolean(
+    biography &&
+    jobTitle &&
+    expertise.length > 0 &&
+    mentoringCategories.length > 0 &&
+    application.years_of_experience !== null &&
+    application.years_of_experience !== undefined &&
+    application.years_of_experience !== "" &&
+    application.maximum_active_mentees !== null &&
+    application.maximum_active_mentees !== undefined &&
+    application.maximum_active_mentees !== ""
+  );
 }
 
-function isChecklistComplete(checklist = {}) {
-  return CHECKLIST_ITEMS.every(([key]) => checklist[key] === true);
+function getProfileCompletionLabel(application) {
+  return isMentorProfileComplete(application) ? "Complete" : "Incomplete";
 }
 
-function getMissingChecklistItems(checklist = {}) {
-  return CHECKLIST_ITEMS
-    .filter(([key]) => checklist[key] !== true)
-    .map(([, label]) => label);
-}
+function useLockBodyScroll(active) {
 
-function getApplicationCompletionMessage(application) {
-  const missing = [];
+  useEffect(() => {
 
-  if (!String(application?.biography || "").trim()) {
-    missing.push("Biography");
-  }
+    if (!active) {
 
-  if (!String(application?.job_title || "").trim()) {
-    missing.push("Job title");
-  }
+      return undefined;
 
-  const expertise = Array.isArray(application?.expertise)
-    ? application.expertise.filter(Boolean)
-    : [];
+    }
 
-  if (expertise.length === 0) {
-    missing.push("Expertise");
-  }
+    const previousOverflow =
 
-  const categories = Array.isArray(application?.mentorship_categories)
-    ? application.mentorship_categories.filter(Boolean)
-    : [];
+      document.body.style.overflow;
 
-  if (categories.length === 0) {
-    missing.push("Mentoring areas");
-  }
+    document.body.style.overflow =
 
-  if (
-    application?.years_of_experience === null ||
-    application?.years_of_experience === undefined ||
-    application?.years_of_experience === ""
-  ) {
-    missing.push("Years of experience");
-  }
+      "hidden";
 
-  if (
-    application?.maximum_active_mentees === null ||
-    application?.maximum_active_mentees === undefined ||
-    application?.maximum_active_mentees === ""
-  ) {
-    missing.push("Maximum active mentees");
-  }
+    return () => {
 
-  return missing.length
-    ? `Incomplete: ${missing.join(", ")}`
-    : "Application complete";
+      document.body.style.overflow =
+
+        previousOverflow;
+
+    };
+
+  }, [active]);
+
 }
 
 function AdminMentorApplications({
+
   canRecommendApplications = false,
+
   canSecondSignoffApplications = false,
+
   isFullAccessAdmin = false,
+
   adminOperationalRole = "",
+
 }) {
+
   return (
+
     <div className="admin-mentor-workflow-page">
+
       <SubmittedApplications
-        canRecommendApplications={canRecommendApplications}
-        canSecondSignoffApplications={canSecondSignoffApplications}
-        isFullAccessAdmin={isFullAccessAdmin}
-        adminOperationalRole={adminOperationalRole}
+
+        canRecommendApplications={
+
+          canRecommendApplications
+
+        }
+
+        canSecondSignoffApplications={
+
+          canSecondSignoffApplications
+
+        }
+
+        isFullAccessAdmin={
+
+          isFullAccessAdmin
+
+        }
+
+        adminOperationalRole={
+
+          adminOperationalRole
+
+        }
+
       />
+
     </div>
+
   );
+
 }
 
-function SubmittedApplications({
-  canRecommendApplications,
-  canSecondSignoffApplications,
-  isFullAccessAdmin,
-  adminOperationalRole,
-}) {
-  const location = useLocation();
-  const [onboardingChecklist, setOnboardingChecklist] = useState({});
-  const [applications, setApplications] = useState([]);
-  const [incompleteApplications, setIncompleteApplications] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [incompleteSearchTerm, setIncompleteSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [incompleteCurrentPage, setIncompleteCurrentPage] = useState(1);
-  const [selectedApplication, setSelectedApplication] = useState(null);
-  const [selectedIncompleteApplication, setSelectedIncompleteApplication] = useState(null);
-  const [rejectionMode, setRejectionMode] = useState("");
-  const [rejectionReason, setRejectionReason] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
-  const [savingChecklist, setSavingChecklist] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+/* =========================================================
 
-  async function loadApplications({ keepModalOpen = false } = {}) {
-    if (!keepModalOpen) setLoading(true);
+   SUBMITTED APPLICATIONS
+
+\\\\========================================================= \\\\\\*/
+
+function SubmittedApplications({
+
+  canRecommendApplications,
+
+  canSecondSignoffApplications,
+
+  isFullAccessAdmin,
+
+  adminOperationalRole,
+
+}) {
+
+  const location = useLocation();
+
+  const [onboardingChecklist, setOnboardingChecklist] = useState({});
+
+  const [
+
+    applications,
+
+    setApplications,
+
+  ] = useState([]);
+
+  const [
+
+    searchTerm,
+
+    setSearchTerm,
+
+  ] = useState("");
+
+  const [
+
+    statusFilter,
+
+    setStatusFilter,
+
+  ] = useState("all");
+
+  const [
+
+    profileFilter,
+
+    setProfileFilter,
+
+  ] = useState("all");
+
+  const [
+
+    currentPage,
+
+    setCurrentPage,
+
+  ] = useState(1);
+
+  const [
+
+    selectedApplication,
+
+    setSelectedApplication,
+
+  ] = useState(null);
+
+  const [
+
+    rejectionMode,
+
+    setRejectionMode,
+
+  ] = useState("");
+
+  const [
+
+    rejectionReason,
+
+    setRejectionReason,
+
+  ] = useState("");
+
+  const [
+
+    loading,
+
+    setLoading,
+
+  ] = useState(true);
+
+  const [
+
+    processing,
+
+    setProcessing,
+
+  ] = useState(false);
+
+  const [
+
+    error,
+
+    setError,
+
+  ] = useState("");
+
+  const [
+
+    success,
+
+    setSuccess,
+
+  ] = useState("");
+
+  async function loadApplications({
+
+    keepModalOpen = false,
+
+  } = {}) {
+
+    if (!keepModalOpen) {
+
+      setLoading(true);
+
+    }
+
     setError("");
 
-    const { data, error: applicationError } = await supabase
-      .from("mentor_applications")
+    const {
+
+      data,
+
+      error: applicationError,
+
+    } = await supabase
+
+      .from(
+
+        "mentor_applications",
+
+      )
+
       .select(`
+
         id,
+
         applicant_user_id,
+
         biography,
+
         job_title,
+
         organisation,
-        expertise,
+
         mentorship_categories,
+
         languages,
+
         meeting_formats,
+
         session_lengths,
+
         maximum_active_mentees,
+
         years_of_experience,
+
         membership_verification_method,
+
         membership_reference,
+
         onboarding_checklist,
+
         status,
+
         admin_feedback,
+
         reviewed_at,
+
         reviewed_by,
+
         approved_at,
+
         mentor_account_id,
+
         onboarding_recommendation,
+
         onboarding_feedback,
+
         onboarding_reviewed_at,
+
         onboarding_reviewed_by,
+
         operations_decision,
+
         operations_feedback,
+
         operations_reviewed_at,
+
         operations_reviewed_by,
+
         created_at,
+
         updated_at,
+
         applicant:profiles!mentor_applications_applicant_user_id_fkey (
+
           id,
+
           full_name,
+
           email,
+
           phone_number,
+
           account_status,
+
           membership_verified,
+
           email_verified,
+
           membership_verification_method,
+
           membership_reference,
+
           profile_photo_url
+
         )
+
       `)
-      .order("created_at", { ascending: false });
+
+      .order(
+
+        "created_at",
+
+        {
+
+          ascending: false,
+
+        },
+
+      );
 
     if (applicationError) {
-      console.error("Unable to load mentor applications:", applicationError);
-      setError(applicationError.message || "We could not load mentor applications.");
+
+      console.error(
+
+        "Unable to load mentor applications:",
+
+        applicationError,
+
+      );
+
+      setError(
+
+        "We could not load mentor applications.",
+
+      );
+
       setLoading(false);
+
       return;
+
     }
 
-    const rawApplications = data ?? [];
+    const rawApplications =
 
-    const submittedApplications = rawApplications.filter(
-      isMentorApplicationComplete,
-    );
-
-    const incompleteApplicationRecords = rawApplications.filter(
-      (application) => !isMentorApplicationComplete(application),
-    );
+      data ?? [];
 
     const reviewerIds = [
+
       ...new Set(
+
         rawApplications
-          .flatMap((application) => [
-            application.onboarding_reviewed_by,
-            application.operations_reviewed_by,
-            application.reviewed_by,
-          ])
+
+          .flatMap(
+
+            (
+
+              application,
+
+            ) => [
+
+              application.onboarding_reviewed_by,
+
+              application.operations_reviewed_by,
+
+              application.reviewed_by,
+
+            ],
+
+          )
+
           .filter(Boolean),
+
       ),
+
     ];
 
-    let reviewerMap = new Map();
+    let reviewerMap =
+
+      new Map();
 
     if (reviewerIds.length > 0) {
-      const { data: reviewerData } = await supabase
-        .from("profiles")
-        .select("id, full_name, email")
-        .in("id", reviewerIds);
 
-      reviewerMap = new Map(
-        (reviewerData ?? []).map((reviewer) => [reviewer.id, reviewer]),
-      );
+      const {
+
+        data: reviewerData,
+
+      } = await supabase
+
+        .from("profiles")
+
+        .select(
+
+          "id, full_name, email",
+
+        )
+
+        .in(
+
+          "id",
+
+          reviewerIds,
+
+        );
+
+      reviewerMap =
+
+        new Map(
+
+          (
+
+            reviewerData ??
+
+            []
+
+          ).map(
+
+            (
+
+              reviewer,
+
+            ) => [
+
+              reviewer.id,
+
+              reviewer,
+
+            ],
+
+          ),
+
+        );
+
     }
 
-    const addReviewerInformation = (application) => ({
-      ...application,
-      onboarding_reviewer:
-        reviewerMap.get(application.onboarding_reviewed_by) ?? null,
-      operations_reviewer:
-        reviewerMap.get(application.operations_reviewed_by) ??
-        reviewerMap.get(application.reviewed_by) ??
-        null,
-    });
+    const nextApplications =
 
-    const nextApplications = submittedApplications.map(
-      addReviewerInformation,
+      rawApplications.map(
+
+        (
+
+          application,
+
+        ) => ({
+
+          ...application,
+
+          onboarding_reviewer:
+
+            reviewerMap.get(
+
+              application.onboarding_reviewed_by,
+
+            ) ??
+
+            null,
+
+          operations_reviewer:
+
+            reviewerMap.get(
+
+              application.operations_reviewed_by,
+
+            ) ??
+
+            reviewerMap.get(
+
+              application.reviewed_by,
+
+            ) ??
+
+            null,
+
+        }),
+
+      );
+
+    setApplications(
+
+      nextApplications,
+
     );
-    const nextIncompleteApplications = incompleteApplicationRecords.map(
-      addReviewerInformation,
-    );
 
-    setApplications(nextApplications);
-    setIncompleteApplications(nextIncompleteApplications);
+    const requestedApplicationId =
 
-    const requestedApplicationId = new URLSearchParams(
-      location.search,
-    ).get("applicationId");
+      new URLSearchParams(location.search).get("applicationId");
 
     if (requestedApplicationId) {
+
       const requestedApplication = nextApplications.find(
+
         (application) => application.id === requestedApplicationId,
+
       );
 
       if (requestedApplication) {
+
         setSelectedApplication(requestedApplication);
+
         setOnboardingChecklist(
+
           requestedApplication.onboarding_checklist || {},
+
         );
+
       }
+
     }
 
-    if (keepModalOpen && selectedApplication) {
+    if (
+
+      keepModalOpen &&
+
+      selectedApplication
+
+    ) {
+
       setSelectedApplication(
+
         nextApplications.find(
-          (application) => application.id === selectedApplication.id,
-        ) ?? null,
+
+          (
+
+            application,
+
+          ) =>
+
+            application.id ===
+
+            selectedApplication.id,
+
+        ) ??
+
+          null,
+
       );
+
     }
 
     setLoading(false);
+
   }
 
   useEffect(() => {
+
     loadApplications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   useEffect(() => {
+
     setCurrentPage(1);
-  }, [searchTerm, statusFilter]);
 
-  useEffect(() => {
-    setIncompleteCurrentPage(1);
-  }, [incompleteSearchTerm]);
+  }, [
 
-  function openReview(application) {
-    setSelectedApplication(application);
-    setSelectedIncompleteApplication(null);
+    searchTerm,
+
+    statusFilter,
+
+    profileFilter,
+
+  ]);
+
+  function openReview(
+
+    application,
+
+  ) {
+
+    setSelectedApplication(
+
+      application,
+
+    );
+
     setError("");
+
     setSuccess("");
+
     setRejectionMode("");
+
     setRejectionReason("");
-    setOnboardingChecklist(application.onboarding_checklist || {});
+
+    setOnboardingChecklist(
+
+      application.onboarding_checklist || {},
+
+    );
+
   }
 
   function closeReview() {
-    if (processing || savingChecklist) return;
-    setSelectedApplication(null);
+
+    if (processing) {
+
+      return;
+
+    }
+
+    setSelectedApplication(
+
+      null,
+
+    );
+
     setError("");
+
     setSuccess("");
+
     setRejectionMode("");
+
     setRejectionReason("");
+
   }
 
-  function openIncompleteApplication(application) {
-    setSelectedIncompleteApplication(application);
-    setError("");
-    setSuccess("");
-  }
+  function nudgeApplicant(application) {
 
-  function closeIncompleteApplication() {
-    setSelectedIncompleteApplication(null);
-    setError("");
-    setSuccess("");
-  }
+    const email = application?.applicant?.email;
 
-  async function saveChecklist() {
-    if (!selectedApplication) return false;
-
-    setSavingChecklist(true);
-    setError("");
-    setSuccess("");
-
-    const { error: checklistError } = await supabase
-      .from("mentor_applications")
-      .update({
-        onboarding_checklist: onboardingChecklist,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", selectedApplication.id);
-
-    if (checklistError) {
-      console.error(
-        "Unable to save mentor onboarding checklist:",
-        checklistError,
-      );
-      setError(
-        checklistError.message ||
-          "We could not save the Mentor Onboarding checklist.",
-      );
-      setSavingChecklist(false);
-      return false;
+    if (!email) {
+      setError("This applicant does not have an email address.");
+      return;
     }
 
-    setSuccess("Mentor Onboarding checklist saved.");
-
-    setApplications((current) =>
-      current.map((application) =>
-        application.id === selectedApplication.id
-          ? {
-              ...application,
-              onboarding_checklist: onboardingChecklist,
-            }
-          : application,
-      ),
+    const name = application?.applicant?.full_name || "there";
+    const subject = encodeURIComponent("Complete your Mentor Connect mentor profile");
+    const body = encodeURIComponent(
+      `Hello ${name},\n\nThank you for your interest in becoming a mentor with Mentor Connect.\n\nOur records show that your mentor profile is not yet complete. Please log in to Mentor Connect and complete the remaining information before your mentor application can be reviewed.\n\nThank you.\nMentor Connect | TCN IKEJA`,
     );
 
-    setSelectedApplication((current) =>
-      current
-        ? {
-            ...current,
-            onboarding_checklist: onboardingChecklist,
-          }
-        : current,
-    );
-
-    setSavingChecklist(false);
-    return true;
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
   }
 
-  async function submitReview(action, reason = null) {
+  async function submitReview(
+
+    action,
+
+    reason = null,
+
+  ) {
+
     if (
+
       !selectedApplication ||
-      selectedApplication.status !== "pending" ||
+
+      selectedApplication.status !==
+
+        "pending" ||
+
       processing
+
     ) {
+
       return;
+
     }
 
-    const isRecommendationAction = [
-      "recommend_approve",
-      "recommend_reject",
-    ].includes(action);
+    const isRecommendationAction =
 
-    const isFinalAction = ["approve", "reject"].includes(action);
+      [
+
+        "recommend_approve",
+
+        "recommend_reject",
+
+      ].includes(
+
+        action,
+
+      );
+
+    const isFinalAction =
+
+      [
+
+        "approve",
+
+        "reject",
+
+      ].includes(
+
+        action,
+
+      );
 
     if (
+
       isRecommendationAction &&
-      !(canRecommendApplications || isFullAccessAdmin)
+
+      !(
+
+        canRecommendApplications ||
+
+        isFullAccessAdmin
+
+      )
+
     ) {
+
       setError(
+
         "Your administrator role cannot record the Mentor Onboarding recommendation.",
+
       );
+
       return;
+
     }
 
     if (
+
       isFinalAction &&
-      !(canSecondSignoffApplications || isFullAccessAdmin)
+
+      !(
+
+        canSecondSignoffApplications ||
+
+        isFullAccessAdmin
+
+      )
+
     ) {
+
       setError(
+
         "Your administrator role cannot record the final Operations and Governance decision.",
+
       );
+
       return;
+
     }
 
     if (
+
       isFinalAction &&
-      !selectedApplication.onboarding_recommendation
+
+      !selectedApplication
+
+        .onboarding_recommendation
+
     ) {
+
       setError(
+
         "The Mentor Onboarding recommendation must be recorded before the final Operations and Governance decision.",
+
       );
+
       return;
+
     }
 
     if (
-      ["recommend_reject", "reject"].includes(action) &&
-      !String(reason || "").trim()
+
+      [
+
+        "recommend_reject",
+
+        "reject",
+
+      ].includes(
+
+        action,
+
+      ) &&
+
+      !String(
+
+        reason ||
+
+          "",
+
+      ).trim()
+
     ) {
+
       setError(
-        action === "recommend_reject"
+
+        action ===
+
+          "recommend_reject"
+
           ? "Please provide a reason before recommending rejection."
+
           : "Please provide a reason before rejecting this mentor application.",
+
       );
+
       return;
+
     }
 
-    const checklistComplete = isChecklistComplete(onboardingChecklist);
+    const checklistComplete = [
+
+      "identity_checked",
+
+      "profile_information_checked",
+
+      "biography_checked",
+
+      "employment_information_checked",
+
+      "mentoring_experience_checked",
+
+      "expertise_checked",
+
+      "mentoring_categories_checked",
+
+      "availability_checked",
+
+      "meeting_format_checked",
+
+      "safeguarding_checked",
+
+      "conduct_checked",
+
+    ].every((key) => onboardingChecklist[key] === true);
+
     const isMentorOnboardingRole =
-      adminOperationalRole ===
-      "mentor_onboarding_vetting_training_lead";
+
+      adminOperationalRole === "mentor_onboarding_vetting_training_lead";
 
     if (isRecommendationAction && !checklistComplete) {
-      const missing = getMissingChecklistItems(onboardingChecklist);
 
       setError(
-        `Complete all checklist items before recording the recommendation. ${missing.length} item${missing.length === 1 ? "" : "s"} remaining.`,
+
+        "Complete the Mentor Onboarding checklist before recording the recommendation.",
+
       );
+
       return;
+
     }
 
-    if (
-      isFinalAction &&
-      isMentorOnboardingRole &&
-      !isFullAccessAdmin
-    ) {
+    if (isFinalAction && isMentorOnboardingRole && !isFullAccessAdmin) {
+
       setError(
+
         "The Mentor Onboarding role cannot give the final Operations and Governance decision.",
+
       );
+
       return;
+
     }
 
     if (isRecommendationAction) {
-      const saved = await saveChecklist();
-      if (!saved) return;
+
+      const { error: checklistError } = await supabase
+
+        .from("mentor_applications")
+
+        .update({ onboarding_checklist: onboardingChecklist })
+
+        .eq("id", selectedApplication.id);
+
+      if (checklistError) {
+
+        setError(
+
+          checklistError.message ||
+
+            "We could not save the Mentor Onboarding checklist.",
+
+        );
+
+        return;
+
+      }
+
     }
 
     setProcessing(true);
+
     setError("");
+
     setSuccess("");
 
-    const { data: reviewData, error: reviewError } = await supabase.rpc(
+    const {
+
+      error: reviewError,
+
+    } = await supabase.rpc(
+
       "admin_review_mentor_application",
+
       {
-        p_application_id: selectedApplication.id,
-        p_action: action,
-        p_feedback: ["recommend_reject", "reject"].includes(action)
-          ? String(reason || "").trim()
-          : null,
+
+        p_application_id:
+
+          selectedApplication.id,
+
+        p_action:
+
+          action,
+
+        p_feedback:
+
+          [
+
+            "recommend_reject",
+
+            "reject",
+
+          ].includes(
+
+            action,
+
+          )
+
+            ? String(
+
+                reason,
+
+              ).trim()
+
+            : null,
+
       },
+
     );
 
     if (reviewError) {
-      console.error("Unable to review mentor application:", reviewError);
-      setError(
-        reviewError.message ||
-          "We could not update this mentor application.",
-      );
-      setProcessing(false);
-      return;
-    }
 
-    if (reviewData && typeof reviewData === "object") {
-      setSelectedApplication((current) =>
-        current
-          ? {
-              ...current,
-              ...reviewData,
-              onboarding_checklist: onboardingChecklist,
-            }
-          : current,
+      console.error(
+
+        "Unable to review mentor application:",
+
+        reviewError,
+
       );
+
+      setError(
+
+        reviewError.message ||
+
+          "We could not update this mentor application.",
+
+      );
+
+      setProcessing(false);
+
+      return;
+
     }
 
     const messages = {
+
       recommend_approve:
+
         "Approval has been recommended. The application is now ready for Operations and Governance review.",
+
       recommend_reject:
+
         "Rejection has been recommended. The application is now ready for Operations and Governance review.",
-      approve: "The mentor application has received final approval.",
-      reject: "The mentor application has been rejected.",
+
+      approve:
+
+        "The mentor application has received final approval.",
+
+      reject:
+
+        "The mentor application has been rejected.",
+
     };
 
-    setSuccess(messages[action] || "The application was updated.");
+    setSuccess(
+
+      messages[action] ||
+
+        "The application was updated.",
+
+    );
+
     setRejectionMode("");
+
     setRejectionReason("");
 
-    await loadApplications({ keepModalOpen: true });
+    await loadApplications({
+
+      keepModalOpen:
+
+        true,
+
+    });
+
     setProcessing(false);
+
   }
 
-  const filteredApplications = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
+  const filteredApplications =
 
-    return applications.filter((application) => {
-      if (
-        statusFilter !== "all" &&
-        application.status !== statusFilter
-      ) {
-        return false;
-      }
+    useMemo(() => {
 
-      if (!query) return true;
+      const query =
 
-      return [
-        application.applicant?.full_name,
-        application.applicant?.email,
-        application.job_title,
-        application.organisation,
-        application.status,
-        getReviewStageLabel(application),
-        ...(application.mentorship_categories ?? []),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(query);
-    });
-  }, [applications, searchTerm, statusFilter]);
+        searchTerm
 
-  const filteredIncompleteApplications = useMemo(() => {
-    const query = incompleteSearchTerm.trim().toLowerCase();
+          .trim()
 
-    if (!query) return incompleteApplications;
+          .toLowerCase();
 
-    return incompleteApplications.filter((application) =>
-      [
-        application.applicant?.full_name,
-        application.applicant?.email,
-        application.job_title,
-        application.organisation,
-        getApplicationCompletionMessage(application),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(query),
+      return applications.filter(
+
+        (
+
+          application,
+
+        ) => {
+
+          if (
+
+            statusFilter !==
+
+              "all" &&
+
+            application.status !==
+
+              statusFilter
+
+          ) {
+
+            return false;
+
+          }
+
+          const profileComplete =
+
+            isMentorProfileComplete(application);
+
+          if (
+
+            profileFilter === "complete" &&
+
+            !profileComplete
+
+          ) {
+
+            return false;
+
+          }
+
+          if (
+
+            profileFilter === "incomplete" &&
+
+            profileComplete
+
+          ) {
+
+            return false;
+
+          }
+
+          if (!query) {
+
+            return true;
+
+          }
+
+          return [
+
+            application.applicant
+
+              ?.full_name,
+
+            application.applicant
+
+              ?.email,
+
+            application.job_title,
+
+            application.organisation,
+
+            application.status,
+
+            getReviewStageLabel(
+
+              application,
+
+            ),
+
+            ...(
+
+              application.mentorship_categories ??
+
+              []
+
+            ),
+
+          ]
+
+            .filter(Boolean)
+
+            .join(" ")
+
+            .toLowerCase()
+
+            .includes(
+
+              query,
+
+            );
+
+        },
+
+      );
+
+    }, [
+
+      applications,
+
+      searchTerm,
+
+      statusFilter,
+
+      profileFilter,
+
+    ]);
+
+  const totalPages =
+
+    Math.max(
+
+      1,
+
+      Math.ceil(
+
+        filteredApplications.length /
+
+          APPLICATION_PAGE_SIZE,
+
+      ),
+
     );
-  }, [incompleteApplications, incompleteSearchTerm]);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredApplications.length / APPLICATION_PAGE_SIZE),
-  );
+  const safePage =
 
-  const safePage = Math.min(currentPage, totalPages);
-  const firstIndex = (safePage - 1) * APPLICATION_PAGE_SIZE;
+    Math.min(
 
-  const visibleApplications = filteredApplications.slice(
-    firstIndex,
-    firstIndex + APPLICATION_PAGE_SIZE,
-  );
+      currentPage,
 
-  const incompleteTotalPages = Math.max(
-    1,
-    Math.ceil(
-      filteredIncompleteApplications.length / APPLICATION_PAGE_SIZE,
-    ),
-  );
+      totalPages,
 
-  const safeIncompletePage = Math.min(
-    incompleteCurrentPage,
-    incompleteTotalPages,
-  );
+    );
 
-  const incompleteFirstIndex =
-    (safeIncompletePage - 1) * APPLICATION_PAGE_SIZE;
+  const firstIndex =
 
-  const visibleIncompleteApplications =
-    filteredIncompleteApplications.slice(
-      incompleteFirstIndex,
-      incompleteFirstIndex + APPLICATION_PAGE_SIZE,
+    (safePage - 1) *
+
+    APPLICATION_PAGE_SIZE;
+
+  const visibleApplications =
+
+    filteredApplications.slice(
+
+      firstIndex,
+
+      firstIndex +
+
+        APPLICATION_PAGE_SIZE,
+
     );
 
   if (loading) {
+
     return (
+
       <section className="admin-list-section">
+
         <AdminLoadingState />
+
       </section>
+
     );
+
   }
 
   return (
+
     <>
-      {incompleteApplications.length > 0 && (
-        <section className="admin-list-section">
-          <div className="admin-application-toolbar">
-            <div>
-              <span className="admin-section-eyebrow">
-                MENTOR INTEREST
-              </span>
-              <h2>Incomplete mentor applications</h2>
-              <p>
-                These applicants indicated an interest in becoming
-                mentors but have not completed the required mentor
-                application.
-              </p>
-            </div>
-
-            <div className="admin-search-field">
-              <Search size={16} aria-hidden="true" />
-              <input
-                type="search"
-                value={incompleteSearchTerm}
-                placeholder="Search applicant or email"
-                aria-label="Search incomplete mentor applications"
-                onChange={(event) =>
-                  setIncompleteSearchTerm(event.target.value)
-                }
-              />
-            </div>
-          </div>
-
-          {filteredIncompleteApplications.length === 0 ? (
-            <AdminEmptyState
-              title="No matching incomplete applications"
-              description="Try another search term."
-            />
-          ) : (
-            <div className="admin-application-table-shell">
-              <div className="admin-table-wrapper admin-table-wrapper--flush">
-                <table className="admin-data-table admin-application-table">
-                  <thead>
-                    <tr>
-                      <th>Applicant</th>
-                      <th>Current role</th>
-                      <th>Completion</th>
-                      <th>Registered</th>
-                      <th aria-label="Action" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibleIncompleteApplications.map((application) => (
-                      <tr key={application.id}>
-                        <td>
-                          <strong>
-                            {application.applicant?.full_name ||
-                              "Name not provided"}
-                          </strong>
-                          <small>
-                            {application.applicant?.email ||
-                              "Email not provided"}
-                          </small>
-                        </td>
-                        <td>
-                          {application.job_title || "Not provided"}
-                          {application.organisation && (
-                            <small>{application.organisation}</small>
-                          )}
-                        </td>
-                        <td>
-                          <span className="admin-status-badge status-pending">
-                            <i className="admin-status-dot" />
-                            <span>
-                              {getApplicationCompletionMessage(
-                                application,
-                              )}
-                            </span>
-                          </span>
-                        </td>
-                        <td>{formatDate(application.created_at)}</td>
-                        <td className="admin-table-action-cell">
-                          <button
-                            type="button"
-                            className="admin-review-button"
-                            onClick={() =>
-                              openIncompleteApplication(application)
-                            }
-                          >
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="admin-table-pagination">
-                <p>
-                  Showing{" "}
-                  {filteredIncompleteApplications.length === 0
-                    ? 0
-                    : incompleteFirstIndex + 1}
-                  -
-                  {Math.min(
-                    incompleteFirstIndex + APPLICATION_PAGE_SIZE,
-                    filteredIncompleteApplications.length,
-                  )}{" "}
-                  of {filteredIncompleteApplications.length}
-                </p>
-
-                <div className="admin-pagination-controls">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setIncompleteCurrentPage((page) =>
-                        Math.max(1, page - 1),
-                      )
-                    }
-                    disabled={safeIncompletePage === 1}
-                  >
-                    <ChevronLeft size={16} />
-                    Previous
-                  </button>
-
-                  <span>
-                    Page {safeIncompletePage} of{" "}
-                    {incompleteTotalPages}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setIncompleteCurrentPage((page) =>
-                        Math.min(incompleteTotalPages, page + 1),
-                      )
-                    }
-                    disabled={
-                      safeIncompletePage === incompleteTotalPages
-                    }
-                  >
-                    Next
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
-      )}
 
       <section className="admin-list-section admin-submitted-applications-section">
+
         <div className="admin-application-toolbar">
-          <div>
-            <span className="admin-section-eyebrow">
-              MENTOR APPLICATIONS
-            </span>
-            <h2>Submitted mentor applications</h2>
-            <p>
-              Only applicants who have completed the required mentor
-              application information appear here.
-            </p>
-          </div>
 
           <div className="admin-search-field">
-            <Search size={16} aria-hidden="true" />
-            <input
-              type="search"
-              value={searchTerm}
-              placeholder="Search applicant or email"
-              aria-label="Search mentor applications"
-              onChange={(event) =>
-                setSearchTerm(event.target.value)
-              }
+
+            <Search
+
+              size={16}
+
+              aria-hidden="true"
+
             />
+
+            <input
+
+              type="search"
+
+              value={
+
+                searchTerm
+
+              }
+
+              placeholder="Search applicant or email"
+
+              aria-label="Search mentor applications"
+
+              onChange={(
+
+                event,
+
+              ) =>
+
+                setSearchTerm(
+
+                  event.target.value,
+
+                )
+
+              }
+
+            />
+
+          </div>
+
+          <div className="admin-application-filters admin-application-filters--profile">
+
+            {[
+
+              [
+
+                "all",
+
+                "All profiles",
+
+              ],
+
+              [
+
+                "complete",
+
+                "Complete",
+
+              ],
+
+              [
+
+                "incomplete",
+
+                "Incomplete",
+
+              ],
+
+            ].map(
+
+              ([
+
+                value,
+
+                label,
+
+              ]) => (
+
+                <button
+
+                  key={`profile-${value}`}
+
+                  type="button"
+
+                  className={
+
+                    profileFilter === value
+
+                      ? "active"
+
+                      : ""
+
+                  }
+
+                  onClick={() =>
+
+                    setProfileFilter(value)
+
+                  }
+
+                >
+
+                  {label}
+
+                </button>
+
+              ),
+
+            )}
+
           </div>
 
           <div className="admin-application-filters">
+
             {[
-              ["all", "All"],
-              ["pending", "Pending"],
-              ["approved", "Approved"],
-              ["rejected", "Declined"],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                className={statusFilter === value ? "active" : ""}
-                onClick={() => setStatusFilter(value)}
-              >
-                {label}
-              </button>
-            ))}
+
+              [
+
+                "all",
+
+                "All statuses",
+
+              ],
+
+              [
+
+                "pending",
+
+                "Pending",
+
+              ],
+
+              [
+
+                "approved",
+
+                "Approved",
+
+              ],
+
+              [
+
+                "rejected",
+
+                "Declined",
+
+              ],
+
+            ].map(
+
+              ([
+
+                value,
+
+                label,
+
+              ]) => (
+
+                <button
+
+                  key={`status-${value}`}
+
+                  type="button"
+
+                  className={
+
+                    statusFilter === value
+
+                      ? "active"
+
+                      : ""
+
+                  }
+
+                  onClick={() =>
+
+                    setStatusFilter(value)
+
+                  }
+
+                >
+
+                  {label}
+
+                </button>
+
+              ),
+
+            )}
+
           </div>
+
         </div>
 
         {success && (
-          <p className="admin-success-message">{success}</p>
+
+          <p className="admin-success-message">
+
+            {success}
+
+          </p>
+
         )}
 
         {error &&
-          !selectedApplication &&
-          !selectedIncompleteApplication && (
-            <p className="form-error" role="alert">
+
+          !selectedApplication && (
+
+            <p
+
+              className="form-error"
+
+              role="alert"
+
+            >
+
               {error}
+
             </p>
+
           )}
 
-        {applications.length === 0 ? (
+        {applications.length ===
+
+        0 ? (
+
           <AdminEmptyState
-            title="No submitted mentor applications"
-            description="Mentor applications will appear here after applicants complete and submit the form."
+
+            title="No mentor applications"
+
+            description="Mentor applications will appear here after applicants register or submit their mentor application."
+
           />
-        ) : filteredApplications.length === 0 ? (
+
+        ) : filteredApplications.length ===
+
+          0 ? (
+
           <AdminEmptyState
+
             title="No matching applications"
+
             description="Try another search term or status filter."
+
           />
+
         ) : (
+
           <div className="admin-application-table-shell">
+
             <div className="admin-table-wrapper admin-table-wrapper--flush">
+
               <table className="admin-data-table admin-application-table">
+
                 <thead>
+
                   <tr>
-                    <th>Applicant</th>
-                    <th>Current role</th>
-                    <th>Experience</th>
-                    <th>Mentoring areas</th>
-                    <th>Review stage</th>
-                    <th>Status</th>
-                    <th>Submitted</th>
+
+                    <th>
+
+                      Applicant
+
+                    </th>
+
+                    <th>
+
+                      Profile
+
+                    </th>
+
+                    <th>
+
+                      Current role
+
+                    </th>
+
+                    <th>
+
+                      Experience
+
+                    </th>
+
+                    <th>
+
+                      Mentoring areas
+
+                    </th>
+
+                    <th>
+
+                      Review stage
+
+                    </th>
+
+                    <th>
+
+                      Status
+
+                    </th>
+
+                    <th>
+
+                      Submitted
+
+                    </th>
+
                     <th aria-label="Action" />
+
                   </tr>
+
                 </thead>
 
                 <tbody>
-                  {visibleApplications.map((application) => (
-                    <tr key={application.id}>
-                      <td>
-                        <strong>
-                          {application.applicant?.full_name ||
-                            "Name not provided"}
-                        </strong>
-                        <small>
-                          {application.applicant?.email || ""}
-                        </small>
-                      </td>
 
-                      <td>
-                        {application.job_title || "Not provided"}
-                        {application.organisation && (
-                          <small>{application.organisation}</small>
-                        )}
-                      </td>
+                  {visibleApplications.map(
 
-                      <td>
-                        {application.years_of_experience} years
-                      </td>
+                    (
 
-                      <td className="admin-application-areas-cell">
-                        {(application.mentorship_categories ?? [])
-                          .slice(0, 3)
-                          .join(", ") || "Not provided"}
-                      </td>
+                      application,
 
-                      <td>
-                        {getReviewStageLabel(application)}
-                      </td>
+                    ) => (
 
-                      <td>
-                        <StatusBadge
-                          value={application.status}
-                          label={
-                            application.status === "pending"
-                              ? "Pending review"
-                              : application.status === "rejected"
-                                ? "Declined"
-                                : undefined
-                          }
-                        />
-                      </td>
+                      <tr
 
-                      <td>
-                        {formatDate(application.created_at)}
-                      </td>
+                        key={
 
-                      <td className="admin-table-action-cell">
-                        <button
-                          type="button"
-                          className="admin-review-button"
-                          onClick={() => openReview(application)}
-                        >
-                          {application.status === "pending"
-                            ? "Review"
-                            : "View"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                          application.id
+
+                        }
+
+                      >
+
+                        <td>
+
+                          <strong>
+
+                            {application.applicant
+
+                              ?.full_name ||
+
+                              "Name not provided"}
+
+                          </strong>
+
+                          <small>
+
+                            {application.applicant
+
+                              ?.email ||
+
+                              ""}
+
+                          </small>
+
+                        </td>
+
+                        <td>
+
+                          <StatusBadge
+
+                            value={
+
+                              isMentorProfileComplete(application)
+
+                                ? "complete"
+
+                                : "incomplete"
+
+                            }
+
+                            label={getProfileCompletionLabel(application)}
+
+                          />
+
+                        </td>
+
+                        <td>
+
+                          {application.job_title ||
+
+                            "Not provided"}
+
+                          {application.organisation && (
+
+                            <small>
+
+                              {
+
+                                application.organisation
+
+                              }
+
+                            </small>
+
+                          )}
+
+                        </td>
+
+                        <td>
+
+                          {application.years_of_experience ??
+
+                            0}{" "}
+
+                          years
+
+                        </td>
+
+                        <td className="admin-application-areas-cell">
+
+                          {(
+
+                            application.mentorship_categories ??
+
+                            []
+
+                          )
+
+                            .slice(
+
+                              0,
+
+                              3,
+
+                            )
+
+                            .join(
+
+                              ", ",
+
+                            ) ||
+
+                            "Not provided"}
+
+                        </td>
+
+                        <td>
+
+                          {getReviewStageLabel(
+
+                            application,
+
+                          )}
+
+                        </td>
+
+                        <td>
+
+                          <StatusBadge
+
+                            value={
+
+                              application.status
+
+                            }
+
+                            label={
+
+                              application.status ===
+
+                              "pending"
+
+                                ? "Pending review"
+
+                                : application.status ===
+
+                                    "rejected"
+
+                                  ? "Declined"
+
+                                  : undefined
+
+                            }
+
+                          />
+
+                        </td>
+
+                        <td>
+
+                          {formatDate(
+
+                            application.created_at,
+
+                          )}
+
+                        </td>
+
+                        <td className="admin-table-action-cell">
+
+                          {isMentorProfileComplete(application) ? (
+
+                            <button
+
+                              type="button"
+
+                              className="admin-review-button"
+
+                              onClick={() =>
+
+                                openReview(application)
+
+                              }
+
+                            >
+
+                              {application.status === "pending"
+
+                                ? "Review"
+
+                                : "View"}
+
+                            </button>
+
+                          ) : (
+
+                            <button
+
+                              type="button"
+
+                              className="admin-review-button admin-review-button--nudge"
+
+                              onClick={() =>
+
+                                nudgeApplicant(application)
+
+                              }
+
+                            >
+
+                              <Mail
+
+                                size={15}
+
+                                aria-hidden="true"
+
+                              />
+
+                              <span>Nudge</span>
+
+                            </button>
+
+                          )}
+
+                        </td>
+
+                      </tr>
+
+                    ),
+
+                  )}
+
                 </tbody>
+
               </table>
+
             </div>
 
             <div className="admin-table-pagination">
+
               <p>
+
                 Showing{" "}
-                {filteredApplications.length === 0
+
+                {filteredApplications.length ===
+
+                0
+
                   ? 0
-                  : firstIndex + 1}
+
+                  : firstIndex +
+
+                    1}
+
                 -
+
                 {Math.min(
-                  firstIndex + APPLICATION_PAGE_SIZE,
+
+                  firstIndex +
+
+                    APPLICATION_PAGE_SIZE,
+
                   filteredApplications.length,
+
                 )}{" "}
-                of {filteredApplications.length}
+
+                of{" "}
+
+                {
+
+                  filteredApplications.length
+
+                }
+
               </p>
 
               <div className="admin-pagination-controls">
+
                 <button
+
                   type="button"
+
                   onClick={() =>
-                    setCurrentPage((page) =>
-                      Math.max(1, page - 1),
+
+                    setCurrentPage(
+
+                      (
+
+                        page,
+
+                      ) =>
+
+                        Math.max(
+
+                          1,
+
+                          page - 1,
+
+                        ),
+
                     )
+
                   }
-                  disabled={safePage === 1}
+
+                  disabled={
+
+                    safePage ===
+
+                    1
+
+                  }
+
                 >
-                  <ChevronLeft size={16} />
+
+                  <ChevronLeft
+
+                    size={16}
+
+                  />
+
                   Previous
+
                 </button>
 
                 <span>
-                  Page {safePage} of {totalPages}
+
+                  Page{" "}
+
+                  {
+
+                    safePage
+
+                  }{" "}
+
+                  of{" "}
+
+                  {
+
+                    totalPages
+
+                  }
+
                 </span>
 
                 <button
+
                   type="button"
+
                   onClick={() =>
-                    setCurrentPage((page) =>
-                      Math.min(totalPages, page + 1),
+
+                    setCurrentPage(
+
+                      (
+
+                        page,
+
+                      ) =>
+
+                        Math.min(
+
+                          totalPages,
+
+                          page + 1,
+
+                        ),
+
                     )
+
                   }
-                  disabled={safePage === totalPages}
+
+                  disabled={
+
+                    safePage ===
+
+                    totalPages
+
+                  }
+
                 >
+
                   Next
-                  <ChevronRight size={16} />
+
+                  <ChevronRight
+
+                    size={16}
+
+                  />
+
                 </button>
+
               </div>
+
             </div>
+
           </div>
+
         )}
+
       </section>
 
       {selectedApplication && (
+
         <ApplicationReviewModal
-          application={selectedApplication}
-          canRecommendApplications={canRecommendApplications}
-          canSecondSignoffApplications={canSecondSignoffApplications}
-          isFullAccessAdmin={isFullAccessAdmin}
-          adminOperationalRole={adminOperationalRole}
+
+          application={
+
+            selectedApplication
+
+          }
+
+          canRecommendApplications={
+
+            canRecommendApplications
+
+          }
+
+          canSecondSignoffApplications={
+
+            canSecondSignoffApplications
+
+          }
+
+          isFullAccessAdmin={
+
+            isFullAccessAdmin
+
+          }
+
+          adminOperationalRole={
+
+            adminOperationalRole
+
+          }
+
           onboardingChecklist={onboardingChecklist}
+
           setOnboardingChecklist={setOnboardingChecklist}
-          processing={processing}
-          savingChecklist={savingChecklist}
-          error={error}
-          success={success}
-          onSaveChecklist={saveChecklist}
+
+          processing={
+
+            processing
+
+          }
+
+          error={
+
+            error
+
+          }
+
+          success={
+
+            success
+
+          }
+
           onRecommendApprove={() =>
-            submitReview("recommend_approve")
+
+            submitReview(
+
+              "recommend_approve",
+
+            )
+
           }
+
           onRecommendReject={() => {
-            setError("");
-            setRejectionMode("recommend_reject");
-            setRejectionReason("");
-          }}
-          onFinalApprove={() => submitReview("approve")}
-          onFinalReject={() => {
-            setError("");
-            setRejectionMode("reject");
-            setRejectionReason("");
-          }}
-          onClose={closeReview}
-        />
-      )}
 
-      {selectedIncompleteApplication && (
-        <IncompleteApplicationModal
-          application={selectedIncompleteApplication}
-          onClose={closeIncompleteApplication}
-        />
-      )}
+            setError("");
 
-      {selectedApplication && rejectionMode && (
-        <DecisionReasonModal
-          application={selectedApplication}
-          mode={rejectionMode}
-          reason={rejectionReason}
-          setReason={setRejectionReason}
-          processing={processing}
-          error={error}
-          onCancel={() => {
-            if (!processing) {
-              setRejectionMode("");
-              setRejectionReason("");
-              setError("");
-            }
+            setRejectionMode(
+
+              "recommend_reject",
+
+            );
+
+            setRejectionReason("");
+
           }}
-          onConfirm={() =>
-            submitReview(rejectionMode, rejectionReason)
+
+          onFinalApprove={() =>
+
+            submitReview(
+
+              "approve",
+
+            )
+
           }
+
+          onFinalReject={() => {
+
+            setError("");
+
+            setRejectionMode(
+
+              "reject",
+
+            );
+
+            setRejectionReason("");
+
+          }}
+
+          onClose={
+
+            closeReview
+
+          }
+
         />
+
       )}
+
+      {selectedApplication &&
+
+        rejectionMode && (
+
+          <DecisionReasonModal
+
+            application={
+
+              selectedApplication
+
+            }
+
+            mode={
+
+              rejectionMode
+
+            }
+
+            reason={
+
+              rejectionReason
+
+            }
+
+            setReason={
+
+              setRejectionReason
+
+            }
+
+            processing={
+
+              processing
+
+            }
+
+            error={
+
+              error
+
+            }
+
+            onCancel={() => {
+
+              if (
+
+                !processing
+
+              ) {
+
+                setRejectionMode(
+
+                  "",
+
+                );
+
+                setRejectionReason(
+
+                  "",
+
+                );
+
+                setError("");
+
+              }
+
+            }}
+
+            onConfirm={() =>
+
+              submitReview(
+
+                rejectionMode,
+
+                rejectionReason,
+
+              )
+
+            }
+
+          />
+
+        )}
+
     </>
+
   );
+
 }
 
-function IncompleteApplicationModal({
-  application,
-  onClose,
-}) {
-  useLockBodyScroll(true);
+/* =========================================================
 
-  const email = application?.applicant?.email || "";
-  const fullName = application?.applicant?.full_name || "Applicant";
+   APPLICATION REVIEW MODAL
 
-  const mailSubject = encodeURIComponent(
-    "Complete your Mentor Connect application",
-  );
-
-  const mailBody = encodeURIComponent(
-    `Hello ${fullName},
-
-Thank you for your interest in becoming a mentor with Mentor Connect.
-
-Our records show that your mentor application is not yet complete. Please log in to Mentor Connect and complete the remaining application details before your application can be reviewed for mentor approval.
-
-Thank you.`,
-  );
-
-  return (
-    <div
-      className="admin-mentor-review-backdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <section
-        className="admin-mentor-review-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="incomplete-mentor-title"
-      >
-        <header className="admin-mentor-review-header">
-          <div className="admin-mentor-review-person">
-            {application?.applicant?.profile_photo_url ? (
-              <img
-                src={application.applicant.profile_photo_url}
-                alt=""
-              />
-            ) : (
-              <span className="admin-mentor-review-avatar">
-                {getInitials(fullName)}
-              </span>
-            )}
-
-            <div>
-              <span className="admin-section-eyebrow">
-                MENTOR INTEREST
-              </span>
-              <h2 id="incomplete-mentor-title">{fullName}</h2>
-              <p>{email || "Email not provided"}</p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="admin-mentor-review-close"
-            onClick={onClose}
-            aria-label="Close incomplete application"
-          >
-            <X size={18} />
-          </button>
-        </header>
-
-        <div className="admin-mentor-review-body">
-          <section className="admin-mentor-review-callout">
-            <strong>Application not complete</strong>
-            <p>
-              This applicant has not completed the required mentor
-              application. The record is therefore not included in
-              Submitted Mentor Applications.
-            </p>
-            <p>
-              <strong>
-                {getApplicationCompletionMessage(application)}
-              </strong>
-            </p>
-          </section>
-
-          <section className="admin-mentor-review-section">
-            <h3>Applicant information</h3>
-
-            <div className="admin-mentor-review-details-grid">
-              <ReviewDetail label="Name" value={fullName} />
-              <ReviewDetail
-                label="Email"
-                value={email || "Not provided"}
-              />
-              <ReviewDetail
-                label="Phone number"
-                value={
-                  application?.applicant?.phone_number ||
-                  "Not provided"
-                }
-              />
-              <ReviewDetail
-                label="Current role"
-                value={application?.job_title || "Not provided"}
-              />
-              <ReviewDetail
-                label="Organisation"
-                value={
-                  application?.organisation || "Not provided"
-                }
-              />
-              <ReviewDetail
-                label="Email verification"
-                value={
-                  application?.applicant?.email_verified
-                    ? "Verified"
-                    : "Not verified"
-                }
-              />
-            </div>
-          </section>
-
-          {email && (
-            <section className="admin-mentor-review-actions-box">
-              <p className="admin-mentor-review-action-helper">
-                Contact the applicant and ask them to complete
-                their mentor application before it can be reviewed.
-              </p>
-
-              <div className="admin-mentor-review-inline-actions">
-                <a
-                  href={`mailto:${email}?subject=${mailSubject}&body=${mailBody}`}
-                  className="admin-review-button"
-                >
-                  <Mail size={16} />
-                  Contact applicant
-                </a>
-              </div>
-            </section>
-          )}
-        </div>
-
-        <footer className="admin-mentor-review-footer">
-          <button
-            type="button"
-            className="admin-drawer-secondary"
-            onClick={onClose}
-          >
-            Close
-          </button>
-        </footer>
-      </section>
-    </div>
-  );
-}
+\\\\========================================================= \\\\\\*/
 
 function ApplicationReviewModal({
+
   application,
+
   canRecommendApplications,
+
   canSecondSignoffApplications,
+
   isFullAccessAdmin,
+
   adminOperationalRole,
+
   onboardingChecklist,
+
   setOnboardingChecklist,
+
   processing,
-  savingChecklist,
+
   error,
+
   success,
-  onSaveChecklist,
+
   onRecommendApprove,
+
   onRecommendReject,
+
   onFinalApprove,
+
   onFinalReject,
+
   onClose,
+
 }) {
+
   useLockBodyScroll(true);
 
-  const isPending = application.status === "pending";
-  const onboardingComplete = Boolean(
-    application.onboarding_recommendation,
-  );
+  const isPending =
+
+    application.status ===
+
+    "pending";
+
+  const onboardingComplete =
+
+    Boolean(
+
+      application.onboarding_recommendation,
+
+    );
 
   const finalDecisionComplete =
-    Boolean(application.operations_decision) ||
-    ["approved", "rejected"].includes(application.status);
 
-  const checklistComplete = isChecklistComplete(
-    onboardingChecklist,
-  );
+    Boolean(
 
-  const missingChecklistItems = getMissingChecklistItems(
-    onboardingChecklist,
-  );
+      application.operations_decision,
 
-  const isMentorOnboardingRole =
-    adminOperationalRole ===
-    "mentor_onboarding_vetting_training_lead";
+    ) ||
+
+    [
+
+      "approved",
+
+      "rejected",
+
+    ].includes(
+
+      application.status,
+
+    );
 
   const canMakeOnboardingRecommendation =
+
     isPending &&
+
     !onboardingComplete &&
-    (canRecommendApplications || isFullAccessAdmin);
+
+    (
+
+      canRecommendApplications ||
+
+      isFullAccessAdmin
+
+    );
 
   const canMakeFinalDecision =
+
     isPending &&
+
     onboardingComplete &&
+
     !finalDecisionComplete &&
-    (canSecondSignoffApplications || isFullAccessAdmin) &&
-    (isFullAccessAdmin || !isMentorOnboardingRole);
+
+    (
+
+      canSecondSignoffApplications ||
+
+      isFullAccessAdmin
+
+    );
 
   return (
+
     <div
+
       className="admin-mentor-review-backdrop"
+
       role="presentation"
-      onMouseDown={(event) => {
+
+      onMouseDown={(
+
+        event,
+
+      ) => {
+
         if (
-          event.target === event.currentTarget &&
-          !processing &&
-          !savingChecklist
+
+          event.target ===
+
+            event.currentTarget &&
+
+          !processing
+
         ) {
+
           onClose();
+
         }
+
       }}
+
     >
+
       <section
+
         className="admin-mentor-review-modal"
+
         role="dialog"
+
         aria-modal="true"
+
         aria-labelledby="mentor-application-review-title"
+
       >
+
         <header className="admin-mentor-review-header">
+
           <div className="admin-mentor-review-person">
-            {application.applicant?.profile_photo_url ? (
+
+            {application.applicant
+
+              ?.profile_photo_url ? (
+
               <img
-                src={application.applicant.profile_photo_url}
+
+                src={
+
+                  application.applicant
+
+                    .profile_photo_url
+
+                }
+
                 alt=""
+
               />
+
             ) : (
+
               <span className="admin-mentor-review-avatar">
-                {getInitials(application.applicant?.full_name)}
+
+                {getInitials(
+
+                  application.applicant
+
+                    ?.full_name,
+
+                )}
+
               </span>
+
             )}
 
             <div>
+
               <span className="admin-section-eyebrow">
+
                 MENTOR APPLICATION
+
               </span>
+
               <h2 id="mentor-application-review-title">
-                {application.applicant?.full_name || "Applicant"}
+
+                {application.applicant
+
+                  ?.full_name ||
+
+                  "Applicant"}
+
               </h2>
-              <p>{application.applicant?.email || ""}</p>
+
+              <p>
+
+                {application.applicant
+
+                  ?.email ||
+
+                  ""}
+
+              </p>
+
             </div>
+
           </div>
 
           <button
+
             type="button"
+
             className="admin-mentor-review-close"
-            onClick={onClose}
-            disabled={processing || savingChecklist}
+
+            onClick={
+
+              onClose
+
+            }
+
+            disabled={
+
+              processing
+
+            }
+
             aria-label="Close application review"
+
           >
+
             <X size={18} />
+
           </button>
+
         </header>
 
         <div className="admin-mentor-review-body">
+
           <div className="admin-mentor-review-status-row">
+
             <StatusBadge
-              value={application.status}
-              label={
-                application.status === "pending"
-                  ? "Pending review"
-                  : application.status === "rejected"
-                    ? "Declined"
-                    : undefined
+
+              value={
+
+                application.status
+
               }
+
+              label={
+
+                application.status ===
+
+                "pending"
+
+                  ? "Pending review"
+
+                  : application.status ===
+
+                      "rejected"
+
+                    ? "Declined"
+
+                    : undefined
+
+              }
+
             />
-            <span>{getReviewStageLabel(application)}</span>
+
             <span>
-              Submitted {formatDate(application.created_at)}
+
+              {getReviewStageLabel(
+
+                application,
+
+              )}
+
             </span>
+
+            <span>
+
+              Submitted{" "}
+
+              {formatDate(
+
+                application.created_at,
+
+              )}
+
+            </span>
+
           </div>
 
           {isFullAccessAdmin && (
+
             <section className="admin-mentor-review-callout">
-              <strong>Full Access Admin</strong>
+
+              <strong>
+
+                Full Access Admin
+
+              </strong>
+
               <p>
-                You can complete either review stage. Stage 1 must
-                be recorded before Stage 2 so the approval trail
-                stays clear.
+
+                You can complete either review stage. Stage 1 must be recorded before Stage 2 so the approval trail stays clear.
+
               </p>
+
             </section>
+
           )}
 
-          {!isFullAccessAdmin && adminOperationalRole && (
-            <section className="admin-mentor-review-callout">
-              <strong>Your administrator role</strong>
-              <p>
-                {formatAdminOperationalRole(adminOperationalRole)}
-              </p>
-            </section>
-          )}
+          {!isFullAccessAdmin &&
 
-          <section className="admin-mentor-review-section">
-            <h3>Membership information</h3>
+            adminOperationalRole && (
 
-            <div className="admin-mentor-review-details-grid">
-              <ReviewDetail
-                label="Verification method"
-                value={formatMembershipVerificationMethod(
-                  application.membership_verification_method ||
-                    application.applicant
-                      ?.membership_verification_method,
-                )}
-              />
-              <ReviewDetail
-                label="Information supplied"
-                value={
-                  application.membership_reference ||
-                  application.applicant?.membership_reference ||
-                  "Not provided"
-                }
-              />
-              <ReviewDetail
-                label="Email verification"
-                value={
-                  application.applicant?.email_verified
-                    ? "Verified"
-                    : "Not verified"
-                }
-              />
-              <ReviewDetail
-                label="Membership"
-                value={
-                  application.applicant?.membership_verified
-                    ? "Verified"
-                    : "Not verified"
-                }
-              />
-            </div>
-          </section>
+              <section className="admin-mentor-review-callout">
 
-          <section className="admin-mentor-review-section">
-            <h3>Professional information</h3>
+                <strong>
 
-            <div className="admin-mentor-review-details-grid">
-              <ReviewDetail
-                label="Current role"
-                value={application.job_title || "Not provided"}
-              />
-              <ReviewDetail
-                label="Organisation"
-                value={
-                  application.organisation || "Not provided"
-                }
-              />
-              <ReviewDetail
-                label="Experience"
-                value={`${application.years_of_experience ?? 0} years`}
-              />
-              <ReviewDetail
-                label="Maximum active mentees"
-                value={
-                  application.maximum_active_mentees ??
-                  "Not provided"
-                }
-              />
-              <ReviewDetail
-                label="Meeting format"
-                value={
-                  (application.meeting_formats ?? []).join(", ") ||
-                  "Not provided"
-                }
-              />
-              <ReviewDetail
-                label="Session length"
-                value={
-                  (application.session_lengths ?? [])
-                    .map((length) =>
-                      Number(length) === 60
-                        ? "1 hour"
-                        : `${length} minutes`,
-                    )
-                    .join(", ") || "Not provided"
-                }
-              />
-            </div>
-          </section>
+                  Your administrator role
 
-          <ReviewList label="Expertise" items={application.expertise} />
-          <ReviewList
-            label="Mentoring areas"
-            items={application.mentorship_categories}
-          />
-          <ReviewList label="Languages" items={application.languages} />
+                </strong>
 
-          <section className="admin-mentor-review-section">
-            <h3>Biography</h3>
-            <p className="admin-mentor-review-biography">
-              {application.biography || "Not provided"}
-            </p>
-          </section>
-
-          {!onboardingComplete &&
-            canMakeOnboardingRecommendation && (
-              <section className="admin-mentor-review-section admin-mentor-checklist-section">
-                <span className="admin-section-eyebrow">
-                  STAGE 1 · REVIEW CHECKLIST
-                </span>
-                <h3>Mentor Onboarding checklist</h3>
                 <p>
-                  Complete all checks before recording the first
-                  recommendation.
+
+                  {formatAdminOperationalRole(
+
+                    adminOperationalRole,
+
+                  )}
+
                 </p>
 
-                <div className="admin-mentor-checklist">
-                  {CHECKLIST_ITEMS.map(([key, label]) => (
-                    <label
-                      key={key}
-                      className="admin-mentor-checklist-item"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={onboardingChecklist[key] === true}
-                        onChange={(event) =>
-                          setOnboardingChecklist((current) => ({
-                            ...current,
-                            [key]: event.target.checked,
-                          }))
-                        }
-                        disabled={processing || savingChecklist}
-                      />
-                      <span>{label}</span>
-                    </label>
-                  ))}
-                </div>
-
-                <div
-                  className="admin-mentor-review-inline-actions"
-                  style={{ marginTop: "16px" }}
-                >
-                  <button
-                    type="button"
-                    className="admin-drawer-secondary"
-                    onClick={onSaveChecklist}
-                    disabled={processing || savingChecklist}
-                  >
-                    {savingChecklist
-                      ? "Saving..."
-                      : "Save checklist"}
-                  </button>
-                </div>
-
-                {!checklistComplete && (
-                  <p className="form-error" style={{ marginTop: "12px" }}>
-                    {missingChecklistItems.length} checklist item
-                    {missingChecklistItems.length === 1 ? "" : "s"}{" "}
-                    remaining. Recommendation cannot be submitted
-                    until all items are checked.
-                  </p>
-                )}
               </section>
+
             )}
 
-          <section
+          <section className="admin-mentor-review-section">
+
+            <h3>
+
+              Membership information
+
+            </h3>
+
+            <div className="admin-mentor-review-details-grid">
+
+              <ReviewDetail
+
+                label="Verification method"
+
+                value={formatMembershipVerificationMethod(
+
+                  application.membership_verification_method ||
+
+                    application.applicant
+
+                      ?.membership_verification_method,
+
+                )}
+
+              />
+
+              <ReviewDetail
+
+                label="Information supplied"
+
+                value={
+
+                  application.membership_reference ||
+
+                  application.applicant
+
+                    ?.membership_reference ||
+
+                  "Not provided"
+
+                }
+
+              />
+
+              <ReviewDetail
+
+                label="Email verification"
+
+                value={
+
+                  application.applicant
+
+                    ?.email_verified
+
+                    ? "Verified"
+
+                    : "Not verified"
+
+                }
+
+              />
+
+              <ReviewDetail
+
+                label="Membership"
+
+                value={
+
+                  application.applicant
+
+                    ?.membership_verified
+
+                    ? "Verified"
+
+                    : "Not verified"
+
+                }
+
+              />
+
+            </div>
+
+          </section>
+
+          <section className="admin-mentor-review-section">
+
+            <h3>
+
+              Professional information
+
+            </h3>
+
+            <div className="admin-mentor-review-details-grid">
+
+              <ReviewDetail
+
+                label="Current role"
+
+                value={
+
+                  application.job_title ||
+
+                  "Not provided"
+
+                }
+
+              />
+
+              <ReviewDetail
+
+                label="Organisation"
+
+                value={
+
+                  application.organisation ||
+
+                  "Not provided"
+
+                }
+
+              />
+
+              <ReviewDetail
+
+                label="Experience"
+
+                value={`${application.years_of_experience ?? 0} years`}
+
+              />
+
+              <ReviewDetail
+
+                label="Maximum active mentees"
+
+                value={
+
+                  application.maximum_active_mentees ??
+
+                  "Not provided"
+
+                }
+
+              />
+
+              <ReviewDetail
+
+                label="Meeting format"
+
+                value={(
+
+                  application.meeting_formats ??
+
+                  []
+
+                ).join(
+
+                  ", ",
+
+                )}
+
+              />
+
+              <ReviewDetail
+
+                label="Session length"
+
+                value={(
+
+                  application.session_lengths ??
+
+                  []
+
+                )
+
+                  .map(
+
+                    (
+
+                      length,
+
+                    ) =>
+
+                      Number(
+
+                        length,
+
+                      ) === 60
+
+                        ? "1 hour"
+
+                        : `${length} minutes`,
+
+                  )
+
+                  .join(
+
+                    ", ",
+
+                  )}
+
+              />
+
+            </div>
+
+          </section>
+
+          <ReviewList
+
+            label="Mentoring areas"
+
+            items={
+
+              application.mentorship_categories
+
+            }
+
+          />
+
+          <ReviewList
+
+            label="Languages"
+
+            items={
+
+              application.languages
+
+            }
+
+          />
+
+          <section className="admin-mentor-review-section">
+
+            <h3>
+
+              Biography
+
+            </h3>
+
+            <p className="admin-mentor-review-biography">
+
+              {application.biography ||
+
+                "Not provided"}
+
+            </p>
+
+          </section>
+
+                    {!onboardingComplete && canMakeOnboardingRecommendation && (
+
+            <section className="admin-mentor-review-section admin-mentor-checklist-section">
+
+              <span className="admin-section-eyebrow">STAGE 1 · REVIEW CHECKLIST</span>
+
+              <h3>Mentor Onboarding checklist</h3>
+
+              <p>Complete all checks before recording the first recommendation.</p>
+
+              <div className="admin-mentor-checklist">
+
+                {[
+
+                  ["identity_checked", "Identity and basic information reviewed"],
+
+                  ["profile_information_checked", "Profile information reviewed"],
+
+                  ["biography_checked", "Biography reviewed"],
+
+                  ["employment_information_checked", "Job title and organisation reviewed"],
+
+                  ["mentoring_experience_checked", "Mentoring experience reviewed"],
+
+                  ["expertise_checked", "Expertise reviewed"],
+
+                  ["mentoring_categories_checked", "Mentoring areas reviewed"],
+
+                  ["availability_checked", "Availability reviewed"],
+
+                  ["meeting_format_checked", "Meeting format reviewed"],
+
+                  ["safeguarding_checked", "Safeguarding requirements reviewed"],
+
+                  ["conduct_checked", "Code of conduct requirements reviewed"],
+
+                ].map(([key, label]) => (
+
+                  <label key={key} className="admin-mentor-checklist-item">
+
+                    <input
+
+                      type="checkbox"
+
+                      checked={onboardingChecklist[key] === true}
+
+                      onChange={(event) =>
+
+                        setOnboardingChecklist((current) => ({
+
+                          ...current,
+
+                          [key]: event.target.checked,
+
+                        }))
+
+                      }
+
+                      disabled={processing}
+
+                    />
+
+                    <span>{label}</span>
+
+                  </label>
+
+                ))}
+
+              </div>
+
+            </section>
+
+          )}
+
+<section
+
             className={`admin-mentor-review-stage-card admin-mentor-review-stage-card--recommendation${
-              onboardingComplete ? " is-complete" : ""
+
+              onboardingComplete
+
+                ? " is-complete"
+
+                : ""
+
             }`}
+
           >
-            <span>STAGE 1 · RECOMMENDATION</span>
-            <h3>Mentor Onboarding recommendation</h3>
+
+            <span>
+
+              STAGE 1 · RECOMMENDATION
+
+            </span>
+
+            <h3>
+
+              Mentor Onboarding recommendation
+
+            </h3>
+
             <p>
-              The Mentor Onboarding, Vetting and Training
-              administrator reviews the applicant and records a
-              recommendation. This is not the final mentor approval.
+
+              The Mentor Onboarding, Vetting and Training admin reviews the applicant and records a recommendation. This is not the final mentor approval.
+
             </p>
 
             {onboardingComplete ? (
+
               <div className="admin-mentor-stage-result">
+
                 <strong>
+
                   {application.onboarding_recommendation ===
-                  "approved"
+
+                  "approve"
+
                     ? "Approval recommended"
-                    : application.onboarding_recommendation ===
-                        "rejected"
-                      ? "Rejection recommended"
-                      : "Recommendation recorded"}
+
+                    : "Rejection recommended"}
+
                 </strong>
 
                 <p>
+
                   Recorded by{" "}
+
                   <strong>
-                    {application.onboarding_reviewer?.full_name ||
-                      application.onboarding_reviewer?.email ||
+
+                    {application.onboarding_reviewer
+
+                      ?.full_name ||
+
+                      application.onboarding_reviewer
+
+                        ?.email ||
+
                       "Administrator"}
+
                   </strong>
+
                   {application.onboarding_reviewed_at
+
                     ? ` on ${formatDate(
+
                         application.onboarding_reviewed_at,
+
                       )}.`
+
                     : "."}
+
                 </p>
 
                 {application.onboarding_feedback && (
+
                   <p>
-                    Reason: {application.onboarding_feedback}
+
+                    Reason:{" "}
+
+                    {
+
+                      application.onboarding_feedback
+
+                    }
+
                   </p>
+
                 )}
+
               </div>
+
             ) : canMakeOnboardingRecommendation ? (
+
               <div className="admin-mentor-review-actions-box">
+
                 <p className="admin-mentor-review-action-helper">
-                  Review the mentor information and complete every
-                  checklist item before choosing a recommendation.
+
+                  Choose one recommendation after reviewing the mentor's information.
+
                 </p>
 
                 <div className="admin-mentor-review-inline-actions">
+
                   <button
+
                     type="button"
+
                     className="admin-recommend-reject-button"
-                    onClick={onRecommendReject}
-                    disabled={
-                      processing ||
-                      savingChecklist ||
-                      !checklistComplete
+
+                    onClick={
+
+                      onRecommendReject
+
                     }
+
+                    disabled={
+
+                      processing
+
+                    }
+
                   >
+
                     Recommend rejection
+
                   </button>
 
                   <button
+
                     type="button"
+
                     className="admin-recommend-approve-button"
-                    onClick={onRecommendApprove}
-                    disabled={
-                      processing ||
-                      savingChecklist ||
-                      !checklistComplete
+
+                    onClick={
+
+                      onRecommendApprove
+
                     }
+
+                    disabled={
+
+                      processing
+
+                    }
+
                   >
+
                     {processing
+
                       ? "Saving..."
+
                       : "Recommend approval"}
+
                   </button>
+
                 </div>
 
-                {!checklistComplete && (
-                  <p className="form-error">
-                    Complete all {CHECKLIST_ITEMS.length} checklist
-                    items before making a recommendation.
-                  </p>
-                )}
               </div>
+
             ) : isPending ? (
+
               <div className="admin-mentor-stage-waiting">
-                <strong>Waiting for Stage 1</strong>
+
+                <strong>
+
+                  Waiting for Stage 1
+
+                </strong>
+
                 <p>
-                  A Mentor Onboarding, Vetting and Training
-                  administrator must record the recommendation first.
+
+                  A Mentor Onboarding, Vetting and Training administrator must record the recommendation first.
+
                 </p>
+
               </div>
+
             ) : null}
+
           </section>
 
           <section
+
             className={`admin-mentor-review-stage-card admin-mentor-review-stage-card--final${
-              canMakeFinalDecision ? " is-ready" : ""
-            }${finalDecisionComplete ? " is-complete" : ""}`}
+
+              canMakeFinalDecision
+
+                ? " is-ready"
+
+                : ""
+
+            }${
+
+              finalDecisionComplete
+
+                ? " is-complete"
+
+                : ""
+
+            }`}
+
           >
-            <span>STAGE 2 · FINAL DECISION</span>
-            <h3>Operations and Governance final decision</h3>
+
+            <span>
+
+              STAGE 2 · FINAL DECISION
+
+            </span>
+
+            <h3>
+
+              Operations and Governance final decision
+
+            </h3>
 
             {finalDecisionComplete ? (
+
               <div className="admin-mentor-stage-result">
+
                 <strong>
-                  {application.status === "approved"
+
+                  {application.status ===
+
+                  "approved"
+
                     ? "Mentor approved"
+
                     : "Mentor rejected"}
+
                 </strong>
 
                 <p>
+
                   Final decision recorded by{" "}
+
                   <strong>
-                    {application.operations_reviewer?.full_name ||
-                      application.operations_reviewer?.email ||
+
+                    {application.operations_reviewer
+
+                      ?.full_name ||
+
+                      application.operations_reviewer
+
+                        ?.email ||
+
                       "Administrator"}
+
                   </strong>
+
                   {application.operations_reviewed_at
+
                     ? ` on ${formatDate(
+
                         application.operations_reviewed_at,
+
                       )}.`
+
                     : application.reviewed_at
+
                       ? ` on ${formatDate(
+
                           application.reviewed_at,
+
                         )}.`
+
                       : "."}
+
                 </p>
 
                 {(application.operations_feedback ||
+
                   application.admin_feedback) && (
-                  <p>
-                    Reason:{" "}
-                    {application.operations_feedback ||
-                      application.admin_feedback}
-                  </p>
-                )}
+
+                    <p>
+
+                      Reason:{" "}
+
+                      {application.operations_feedback ||
+
+                        application.admin_feedback}
+
+                    </p>
+
+                  )}
+
               </div>
+
             ) : !onboardingComplete ? (
+
               <div className="admin-mentor-stage-waiting">
-                <strong>Stage 2 is not ready yet</strong>
+
+                <strong>
+
+                  Stage 2 is not ready yet
+
+                </strong>
+
                 <p>
-                  The final approval buttons will become available
-                  after the Stage 1 recommendation is recorded.
+
+                  The final approval buttons will become available after the Stage 1 recommendation is recorded.
+
                 </p>
+
               </div>
+
             ) : canMakeFinalDecision ? (
+
               <div className="admin-mentor-review-actions-box">
+
                 <p className="admin-mentor-review-action-helper">
-                  Review the Stage 1 recommendation, then make the
-                  final mentor decision.
+
+                  Review the Stage 1 recommendation, then make the final mentor decision.
+
                 </p>
 
                 <div className="admin-mentor-review-inline-actions">
+
                   <button
+
                     type="button"
+
                     className="admin-final-reject-button"
-                    onClick={onFinalReject}
-                    disabled={processing}
+
+                    onClick={
+
+                      onFinalReject
+
+                    }
+
+                    disabled={
+
+                      processing
+
+                    }
+
                   >
+
                     Reject mentor
+
                   </button>
 
                   <button
+
                     type="button"
+
                     className="admin-final-approve-button"
-                    onClick={onFinalApprove}
-                    disabled={processing}
+
+                    onClick={
+
+                      onFinalApprove
+
+                    }
+
+                    disabled={
+
+                      processing
+
+                    }
+
                   >
-                    {processing ? "Saving..." : "Final approval"}
+
+                    {processing
+
+                      ? "Saving..."
+
+                      : "Final approval"}
+
                   </button>
+
                 </div>
+
               </div>
+
             ) : isPending ? (
+
               <div className="admin-mentor-stage-waiting">
+
                 <strong>
+
                   Awaiting Operations and Governance
+
                 </strong>
+
                 <p>
-                  The Stage 1 recommendation is complete. An
-                  Operations and Governance administrator must record
-                  the final decision.
+
+                  The Stage 1 recommendation is complete. An Operations and Governance administrator must record the final decision.
+
                 </p>
+
               </div>
+
             ) : null}
+
           </section>
 
           {success && (
-            <p className="admin-success-message">{success}</p>
+
+            <p className="admin-success-message">
+
+              {success}
+
+            </p>
+
           )}
 
           {error && (
-            <p className="form-error" role="alert">
+
+            <p
+
+              className="form-error"
+
+              role="alert"
+
+            >
+
               {error}
+
             </p>
+
           )}
+
         </div>
 
         <footer className="admin-mentor-review-footer">
+
           <button
+
             type="button"
+
             className="admin-drawer-secondary"
-            onClick={onClose}
-            disabled={processing || savingChecklist}
+
+            onClick={
+
+              onClose
+
+            }
+
+            disabled={
+
+              processing
+
+            }
+
           >
+
             Close
+
           </button>
+
         </footer>
+
       </section>
+
     </div>
+
   );
+
 }
 
 function DecisionReasonModal({
+
   application,
+
   mode,
+
   reason,
+
   setReason,
+
   processing,
+
   error,
+
   onCancel,
+
   onConfirm,
+
 }) {
-  const isRecommendationReject = mode === "recommend_reject";
+
+  const isRecommendationReject =
+
+    mode ===
+
+    "recommend_reject";
 
   return (
+
     <div
+
       className="admin-decline-modal-backdrop"
+
       role="presentation"
-      onMouseDown={(event) => {
+
+      onMouseDown={(
+
+        event,
+
+      ) => {
+
         if (
-          event.target === event.currentTarget &&
+
+          event.target ===
+
+            event.currentTarget &&
+
           !processing
+
         ) {
+
           onCancel();
+
         }
+
       }}
+
     >
+
       <section
+
         className="admin-decline-modal"
+
         role="dialog"
+
         aria-modal="true"
+
         aria-labelledby="mentor-rejection-reason-title"
+
       >
+
         <header>
+
           <div>
+
             <span>
+
               {isRecommendationReject
+
                 ? "STAGE 1 · RECOMMEND REJECTION"
+
                 : "STAGE 2 · REJECT MENTOR"}
+
             </span>
 
             <h2 id="mentor-rejection-reason-title">
+
               Give a reason
+
             </h2>
 
             <p>
+
               {isRecommendationReject
-                ? `Explain why ${
-                    application.applicant?.full_name ||
-                    "this applicant"
-                  } should not be recommended for mentor approval.`
-                : `Explain why ${
-                    application.applicant?.full_name ||
-                    "this applicant"
-                  } should not receive final mentor approval.`}
+
+                ? `Explain why ${application.applicant?.full_name || "this applicant"} should not be recommended for mentor approval.`
+
+                : `Explain why ${application.applicant?.full_name || "this applicant"} should not receive final mentor approval.`}
+
             </p>
+
           </div>
 
           <button
+
             type="button"
-            onClick={onCancel}
-            disabled={processing}
+
+            onClick={
+
+              onCancel
+
+            }
+
+            disabled={
+
+              processing
+
+            }
+
             aria-label="Close rejection reason modal"
+
           >
+
             <X size={18} />
+
           </button>
+
         </header>
 
         <div className="admin-decline-modal-body">
+
           <label>
-            <span>Reason</span>
+
+            <span>
+
+              Reason
+
+            </span>
+
             <textarea
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
+
+              value={
+
+                reason
+
+              }
+
+              onChange={(
+
+                event,
+
+              ) =>
+
+                setReason(
+
+                  event.target.value,
+
+                )
+
+              }
+
               rows="5"
+
               placeholder="Provide a clear and respectful reason."
-              disabled={processing}
+
+              disabled={
+
+                processing
+
+              }
+
               autoFocus
+
             />
+
           </label>
 
           {error && (
-            <p className="form-error" role="alert">
+
+            <p
+
+              className="form-error"
+
+              role="alert"
+
+            >
+
               {error}
+
             </p>
+
           )}
+
         </div>
 
         <footer>
+
           <button
+
             type="button"
+
             className="admin-drawer-secondary"
-            onClick={onCancel}
-            disabled={processing}
+
+            onClick={
+
+              onCancel
+
+            }
+
+            disabled={
+
+              processing
+
+            }
+
           >
+
             Cancel
+
           </button>
 
           <button
+
             type="button"
+
             className="admin-drawer-danger"
-            onClick={onConfirm}
-            disabled={processing || !reason.trim()}
+
+            onClick={
+
+              onConfirm
+
+            }
+
+            disabled={
+
+              processing ||
+
+              !reason.trim()
+
+            }
+
           >
+
             {processing
+
               ? "Saving..."
+
               : isRecommendationReject
+
                 ? "Submit rejection recommendation"
+
                 : "Reject mentor"}
+
           </button>
+
         </footer>
+
       </section>
+
     </div>
+
   );
+
 }
 
-function ReviewDetail({ label, value }) {
+function ReviewDetail({
+
+  label,
+
+  value,
+
+}) {
+
   return (
+
     <div className="admin-mentor-review-detail">
-      <span>{label}</span>
-      <strong>{value || "Not provided"}</strong>
-    </div>
-  );
-}
 
-function ReviewList({ label, items = [] }) {
-  return (
-    <section className="admin-mentor-review-section">
-      <h3>{label}</h3>
-
-      {items?.length > 0 ? (
-        <div className="admin-mentor-review-chip-list">
-          {items.map((item) => (
-            <span key={item}>{item}</span>
-          ))}
-        </div>
-      ) : (
-        <p className="admin-mentor-review-biography">
-          Not provided
-        </p>
-      )}
-    </section>
-  );
-}
-
-function StatusBadge({ value, label }) {
-  const normalizedValue = String(value || "unknown").replaceAll(
-    "_",
-    "-",
-  );
-
-  return (
-    <span
-      className={`admin-status-badge status-${normalizedValue}`}
-    >
-      <i className="admin-status-dot" aria-hidden="true" />
       <span>
-        {label || formatStatusLabel(value)}
+
+        {label}
+
       </span>
-    </span>
+
+      <strong>
+
+        {value ||
+
+          "Not provided"}
+
+      </strong>
+
+    </div>
+
   );
+
+}
+
+function ReviewList({
+
+  label,
+
+  items = [],
+
+}) {
+
+  return (
+
+    <section className="admin-mentor-review-section">
+
+      <h3>
+
+        {label}
+
+      </h3>
+
+      {items?.length >
+
+      0 ? (
+
+        <div className="admin-mentor-review-chip-list">
+
+          {items.map(
+
+            (
+
+              item,
+
+            ) => (
+
+              <span
+
+                key={
+
+                  item
+
+                }
+
+              >
+
+                {item}
+
+              </span>
+
+            ),
+
+          )}
+
+        </div>
+
+      ) : (
+
+        <p className="admin-mentor-review-biography">
+
+          Not provided
+
+        </p>
+
+      )}
+
+    </section>
+
+  );
+
+}
+
+function StatusBadge({
+
+  value,
+
+  label,
+
+}) {
+
+  const normalizedValue =
+
+    String(
+
+      value ||
+
+        "unknown",
+
+    ).replaceAll(
+
+      "_",
+
+      "-",
+
+    );
+
+  return (
+
+    <span
+
+      className={`admin-status-badge status-${normalizedValue}`}
+
+    >
+
+      <i
+
+        className="admin-status-dot"
+
+        aria-hidden="true"
+
+      />
+
+      <span>
+
+        {label ||
+
+          formatStatusLabel(
+
+            value,
+
+          )}
+
+      </span>
+
+    </span>
+
+  );
+
 }
 
 function AdminLoadingState() {
+
   return (
+
     <section className="admin-state-card">
+
       <div className="loader" />
-      <p>Loading information...</p>
+
+      <p>
+
+        Loading information...
+
+      </p>
+
     </section>
+
   );
+
 }
 
-function AdminEmptyState({ title, description }) {
+function AdminEmptyState({
+
+  title,
+
+  description,
+
+}) {
+
   return (
+
     <section className="admin-state-card">
+
       <span className="empty-state-icon">
-        <ClipboardCheck size={28} />
+
+        <ClipboardCheck
+
+          size={28}
+
+        />
+
       </span>
-      <h2>{title}</h2>
-      <p>{description}</p>
+
+      <h2>
+
+        {title}
+
+      </h2>
+
+      <p>
+
+        {description}
+
+      </p>
+
     </section>
+
   );
+
 }
 
-function getReviewStageLabel(application) {
-  if (application.status === "approved") {
+function getReviewStageLabel(
+
+  application,
+
+) {
+
+  if (
+
+    application.status ===
+
+    "approved"
+
+  ) {
+
     return "Completed · Approved";
+
   }
 
-  if (application.status === "rejected") {
+  if (
+
+    application.status ===
+
+    "rejected"
+
+  ) {
+
     return "Completed · Declined";
+
   }
 
-  if (application.onboarding_recommendation) {
+  if (
+
+    application.onboarding_recommendation
+
+  ) {
+
     return "Awaiting Operations sign-off";
+
   }
 
   return "Awaiting Mentor Onboarding review";
+
 }
 
-function formatMembershipVerificationMethod(value) {
+function formatMembershipVerificationMethod(
+
+  value,
+
+) {
+
   const labels = {
-    service_unit: "Service unit or department",
-    leader_reference: "TCN leader reference",
-    manual_admin_review: "Manual administrator review",
+
+    service_unit:
+
+      "Service unit or department",
+
+    leader_reference:
+
+      "TCN leader reference",
+
+    manual_admin_review:
+
+      "Manual administrator review",
+
   };
 
-  return labels[value] || "Not provided";
+  return (
+
+    labels[value] ||
+
+    "Not provided"
+
+  );
+
 }
 
-function formatAdminOperationalRole(role) {
+function formatAdminOperationalRole(
+
+  role,
+
+) {
+
   const labels = {
-    product_technology_lead: "Product and Technology Lead",
-    operations_governance_lead: "Operations and Governance Lead",
+
+    product_technology_lead:
+
+      "Product and Technology Lead",
+
+    operations_governance_lead:
+
+      "Operations and Governance Lead",
+
     mentor_onboarding_vetting_training_lead:
+
       "Mentor Onboarding, Vetting and Training Lead",
+
     mentee_matching_engagement_quality_lead:
+
       "Mentee Matching, Engagement and Quality Lead",
+
     trust_safety_case_resolution_lead:
+
       "Trust, Safety and Case Resolution Lead",
+
   };
 
-  return labels[role] || formatStatusLabel(role);
+  return (
+
+    labels[role] ||
+
+    formatStatusLabel(
+
+      role,
+
+    )
+
+  );
+
 }
 
-function formatStatusLabel(status) {
-  return String(status || "unknown")
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (character) =>
-      character.toUpperCase(),
+function formatStatusLabel(
+
+  status,
+
+) {
+
+  return String(
+
+    status ||
+
+      "unknown",
+
+  )
+
+    .replaceAll(
+
+      "_",
+
+      " ",
+
+    )
+
+    .replace(
+
+      /\b\w/g,
+
+      (
+
+        character,
+
+      ) =>
+
+        character.toUpperCase(),
+
     );
+
 }
 
-function formatDate(value) {
-  if (!value) return "Not available";
+function formatDate(
 
-  return new Intl.DateTimeFormat("en-NG", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value));
+  value,
+
+) {
+
+  if (!value) {
+
+    return "Not available";
+
+  }
+
+  return new Intl.DateTimeFormat(
+
+    "en-NG",
+
+    {
+
+      day: "numeric",
+
+      month: "short",
+
+      year: "numeric",
+
+    },
+
+  ).format(
+
+    new Date(
+
+      value,
+
+    ),
+
+  );
+
 }
 
-function getInitials(name) {
-  return String(name || "MC")
+function getInitials(
+
+  name,
+
+) {
+
+  return String(
+
+    name ||
+
+      "MC",
+
+  )
+
     .split(" ")
+
     .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
+
+    .slice(
+
+      0,
+
+      2,
+
+    )
+
+    .map(
+
+      (
+
+        part,
+
+      ) =>
+
+        part
+
+          .charAt(0)
+
+          .toUpperCase(),
+
+    )
+
     .join("");
+
 }
 
 export default AdminMentorApplications;

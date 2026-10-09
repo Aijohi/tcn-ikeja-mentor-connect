@@ -11,10 +11,6 @@
   margin-bottom: 22px;
 }
 
-.admin-workflow-section-heading--no-kicker {
-  margin-bottom: 20px;
-}
-
 .admin-workflow-section-heading > div {
   max-width: 760px;
 }
@@ -32,17 +28,14 @@
   margin: 0;
   color: #101419;
   font-size: 22px;
-  line-height: 1.3;
   letter-spacing: -0.025em;
-  text-align: left;
 }
 
 .admin-workflow-section-heading p {
   margin: 7px 0 0;
   color: #697782;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.6;
-  text-align: left;
 }
 
 .admin-workflow-section-heading > strong {
@@ -52,936 +45,209 @@
   border-radius: 999px;
   color: #5b6872;
   background: #f8f9fa;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
 }
 
-.admin-mentor-interest-section,
-.admin-submitted-applications-section {
-  min-width: 0;
-}
-
-.admin-mentor-interest-table td,
-.admin-mentor-interest-table th,
-.admin-application-table td,
-.admin-application-table th {
-  text-align: left;
-  vertical-align: middle;
-}
-
-.admin-application-areas-cell {
-  max-width: 230px;
+.admin-membership-reference-cell {
+  max-width: 260px;
   white-space: normal;
   line-height: 1.5;
 }
 
-.admin-application-table-shell {
-  min-width: 0;
-}
-
-/* =========================================================
-   CENTRE MENTOR REVIEW MODAL
-========================================================= */
-
-.admin-mentor-review-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 28px;
-
-  background: rgba(16, 20, 25, 0.48);
-  backdrop-filter: blur(1px);
-}
-
-.admin-mentor-review-modal {
-  width: min(980px, calc(100vw - 56px));
-  max-height: calc(100vh - 56px);
-
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-
-  overflow: hidden;
-
-  border: 1px solid #e3e7eb;
-  border-radius: 18px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 24px 70px
-    rgba(16, 24, 40, 0.22);
-}
-
-.admin-mentor-review-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-
-  padding: 24px 28px 20px;
-
-  border-bottom: 1px solid #e7eaee;
-  background: #ffffff;
-}
-
-.admin-mentor-review-header h2 {
-  margin: 4px 0 0;
-  color: #101419;
-  font-size: 24px;
-  line-height: 1.25;
-  letter-spacing: -0.025em;
-  text-align: left;
-}
-
-.admin-mentor-review-header p {
-  margin: 5px 0 0;
-  color: #697782;
-  font-size: 12px;
-  line-height: 1.5;
-  text-align: left;
-}
-
-.admin-mentor-review-person {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 14px;
-}
-
-.admin-mentor-review-person img,
-.admin-mentor-review-avatar {
-  width: 52px;
-  height: 52px;
-  flex: 0 0 52px;
-  border-radius: 14px;
-}
-
-.admin-mentor-review-person img {
-  display: block;
-  object-fit: cover;
-  object-position: center 22%;
-}
-
-.admin-mentor-review-avatar {
-  display: grid;
-  place-items: center;
-  color: #ff5303;
-  background: #fff1eb;
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.admin-mentor-review-close {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  flex: 0 0 36px;
-  place-items: center;
-
-  padding: 0;
-
-  border: 1px solid #e1e6eb;
-  border-radius: 9px;
-
-  color: #4f5d6a;
-  background: #ffffff;
-
-  cursor: pointer;
-}
-
-.admin-mentor-review-close:hover:not(:disabled) {
-  border-color: #cbd3dc;
-  background: #f8f9fa;
-}
-
-.admin-mentor-review-body {
-  min-height: 0;
+.admin-membership-review-modal {
+  width: min(760px, calc(100% - 32px));
+  max-height: calc(100dvh - 40px);
   overflow-y: auto;
-
-  padding: 24px 28px 32px;
-
-  overscroll-behavior: contain;
-}
-
-.admin-mentor-review-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-
-  padding: 16px 28px;
-
-  border-top: 1px solid #e7eaee;
+  padding: 26px;
+  border-radius: 18px;
   background: #ffffff;
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.25);
 }
 
-.admin-mentor-review-footer-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.admin-membership-detail-grid {
+  margin-top: 20px;
 }
 
-.admin-mentor-review-section {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #edf0f3;
-}
-
-.admin-mentor-review-section h3 {
-  margin: 0 0 13px;
-  color: #1d252d;
-  font-size: 14px;
-  font-weight: 750;
-  text-align: left;
-}
-
-.admin-mentor-review-details-grid {
+/* Mentor application table and filter layout */
+.admin-application-toolbar {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.admin-mentor-review-detail {
-  min-width: 0;
-  padding: 13px 14px;
-
-  border: 1px solid #e7eaee;
-  border-radius: 11px;
-
-  background: #fbfcfd;
-  text-align: left;
-}
-
-.admin-mentor-review-detail span {
-  display: block;
-  margin-bottom: 5px;
-
-  color: #7b8794;
-
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.admin-mentor-review-detail strong {
-  display: block;
-  overflow-wrap: anywhere;
-
-  color: #202830;
-
-  font-size: 12px;
-  font-weight: 650;
-  line-height: 1.5;
-}
-
-.admin-mentor-review-status-row {
-  display: flex;
-  flex-wrap: wrap;
+  grid-template-columns: minmax(260px, 1fr) auto;
   align-items: center;
-  gap: 9px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
-.admin-mentor-review-status-row > span:not(.admin-status-badge) {
-  color: #687582;
-  font-size: 11px;
-}
-
-.admin-mentor-review-callout {
-  margin-bottom: 20px;
-  padding: 14px 15px;
-
-  border: 1px solid #e4e8ed;
-  border-radius: 11px;
-
-  background: #fafbfc;
-  text-align: left;
-}
-
-.admin-mentor-review-callout strong {
-  display: block;
-  margin-bottom: 5px;
-
-  color: #252e37;
-  font-size: 12px;
-}
-
-.admin-mentor-review-callout p {
-  margin: 0;
-  color: #667481;
-  font-size: 11px;
-  line-height: 1.65;
-}
-
-.admin-mentor-review-biography {
-  margin: 0;
-  color: #566472;
-  font-size: 12px;
-  line-height: 1.75;
-  text-align: left;
-}
-
-.admin-mentor-review-chip-list {
+.admin-application-filters {
   display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
-  gap: 7px;
 }
 
-.admin-mentor-review-chip-list span {
+.admin-application-filters button {
   display: inline-flex;
   align-items: center;
-
-  min-height: 29px;
-  padding: 5px 9px;
-
-  border: 1px solid #e3e7eb;
-  border-radius: 999px;
-
-  color: #475563;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid #e0e5ea;
+  border-radius: 9px;
   background: #ffffff;
+  color: #4f5d68;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.18s ease, border-color 0.18s ease,
+    color 0.18s ease;
+}
 
+.admin-application-filters button:hover {
+  border-color: #c8d0d7;
+  color: #101419;
+}
+
+.admin-application-filters button.active {
+  border-color: #101419;
+  background: #101419;
+  color: #ffffff;
+}
+
+.admin-application-filters--profile {
+  grid-column: 1 / -1;
+}
+
+.admin-application-table-shell {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #e4e8eb;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.admin-table-wrapper--flush {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.admin-application-table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.admin-application-table th,
+.admin-application-table td {
+  vertical-align: middle;
+}
+
+.admin-application-table th {
+  white-space: nowrap;
+}
+
+.admin-application-table td small {
+  display: block;
+  margin-top: 4px;
+  color: #74818b;
   font-size: 10px;
-  font-weight: 650;
+  line-height: 1.4;
 }
 
-.admin-mentor-decision-summary {
-  margin-bottom: 18px;
-  padding: 17px;
-
-  border: 1px solid #e3e7eb;
-  border-radius: 13px;
-
-  background: #ffffff;
-  text-align: left;
+.admin-application-table .admin-application-areas-cell {
+  max-width: 230px;
+  white-space: normal;
+  line-height: 1.45;
 }
 
-.admin-mentor-decision-summary > span {
-  display: block;
-  margin-bottom: 5px;
-
-  color: #ff5303;
-
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+.admin-application-table .admin-table-action-cell {
+  width: 1%;
+  min-width: 112px;
+  text-align: right;
+  white-space: nowrap;
 }
 
-.admin-mentor-decision-summary h3 {
-  margin: 0 0 8px;
-  color: #1e2730;
-  font-size: 14px;
-}
-
-.admin-mentor-decision-summary p {
-  margin: 6px 0 0;
-  color: #667481;
-  font-size: 11px;
-  line-height: 1.65;
-}
-
-.admin-mentor-decline-reason {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #eceff2;
-}
-
-.admin-mentor-decline-reason span {
-  display: block;
-  margin-bottom: 4px;
-  color: #7b8794;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-/* =========================================================
-   DECLINE REASON MODAL
-========================================================= */
-
-.admin-decline-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 10050;
-
-  display: flex;
+.admin-review-button {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  padding: 20px;
-
-  background: rgba(16, 20, 25, 0.58);
-}
-
-.admin-decline-modal {
-  width: min(520px, calc(100vw - 40px));
-
-  overflow: hidden;
-
-  border: 1px solid #e3e7eb;
-  border-radius: 16px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 24px 70px
-    rgba(16, 24, 40, 0.26);
-}
-
-.admin-decline-modal header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-
-  padding: 22px 22px 18px;
-
-  border-bottom: 1px solid #e7eaee;
-}
-
-.admin-decline-modal header > div > span {
-  display: block;
-  margin-bottom: 5px;
-
-  color: #b42318;
-
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-}
-
-.admin-decline-modal header h2 {
-  margin: 0;
-  color: #101419;
-  font-size: 20px;
-}
-
-.admin-decline-modal header p {
-  margin: 6px 0 0;
-  color: #697782;
-  font-size: 11px;
-  line-height: 1.6;
-}
-
-.admin-decline-modal header button {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  flex: 0 0 34px;
-  place-items: center;
-
-  padding: 0;
-
-  border: 1px solid #e1e6eb;
+  gap: 8px;
+  min-width: 78px;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid #101419;
   border-radius: 9px;
-
-  color: #4f5d6a;
-  background: #ffffff;
-
+  background: #101419;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-.admin-decline-modal-body {
-  padding: 20px 22px;
+.admin-review-button svg {
+  flex: 0 0 auto;
 }
 
-.admin-decline-modal-body label {
-  display: grid;
+.admin-review-button--nudge {
   gap: 8px;
 }
 
-.admin-decline-modal-body label > span {
-  color: #27313a;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.admin-decline-modal-body textarea {
-  width: 100%;
-  min-height: 120px;
-  box-sizing: border-box;
-
-  padding: 11px 12px;
-
-  border: 1px solid #ccd4dc;
-  border-radius: 10px;
-
-  color: #1b242c;
-  background: #ffffff;
-
-  font: inherit;
-  font-size: 12px;
-  line-height: 1.5;
-
-  resize: vertical;
-  outline: none;
-}
-
-.admin-decline-modal-body textarea:focus {
-  border-color: #4c5867;
-  box-shadow:
-    0 0 0 2px
-    rgba(76, 88, 103, 0.1);
-}
-
-.admin-decline-modal footer {
+.admin-table-pagination {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-
-  padding: 16px 22px 20px;
-
-  border-top: 1px solid #e7eaee;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-top: 1px solid #e8ecef;
 }
 
-/* =========================================================
-   EXISTING BUTTON LOOK
-========================================================= */
-
-.admin-drawer-primary,
-.admin-drawer-secondary,
-.admin-drawer-secondary-danger,
-.admin-drawer-danger {
-  min-height: 42px;
-
+.admin-pagination-controls {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-
-  padding: 0 15px;
-
-  border-radius: 9px;
-
-  font: inherit;
-  font-size: 11px;
-  font-weight: 750;
-
-  cursor: pointer;
-}
-
-.admin-drawer-primary {
-  border: 1px solid #ff5303;
-  color: #ffffff;
-  background: #ff5303;
-}
-
-.admin-drawer-secondary {
-  border: 1px solid #d7dde3;
-  color: #45525f;
-  background: #ffffff;
-}
-
-.admin-drawer-secondary-danger {
-  border: 1px solid #e4c5c2;
-  color: #b42318;
-  background: #ffffff;
-}
-
-.admin-drawer-danger {
-  border: 1px solid #b42318;
-  color: #ffffff;
-  background: #b42318;
-}
-
-.admin-drawer-primary:disabled,
-.admin-drawer-secondary:disabled,
-.admin-drawer-secondary-danger:disabled,
-.admin-drawer-danger:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-
-/* =========================================================
-   MENTOR APPROVAL STAGES
-   Stage 1 is a recommendation.
-   Stage 2 is the final approval decision.
-========================================================= */
-
-.admin-mentor-review-stage-card {
-  margin-top: 20px;
-  padding: 18px;
-
-  border: 1px solid #e3e7eb;
-  border-radius: 14px;
-
-  background: #ffffff;
-  text-align: left;
-}
-
-.admin-mentor-review-stage-card > span {
-  display: block;
-  margin-bottom: 6px;
-
-  color: #ff5303;
-
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-}
-
-.admin-mentor-review-stage-card h3 {
-  margin: 0;
-
-  color: #18212a;
-
-  font-size: 15px;
-  font-weight: 750;
-  line-height: 1.35;
-}
-
-.admin-mentor-review-stage-card > p {
-  max-width: 760px;
-
-  margin: 8px 0 0;
-
-  color: #667481;
-
-  font-size: 11px;
-  line-height: 1.65;
-}
-
-/* Stage 1: lighter recommendation treatment */
-.admin-mentor-review-stage-card--recommendation {
-  border-color: #f0c8b7;
-  background: #fffaf7;
-}
-
-.admin-mentor-review-stage-card--recommendation.is-complete {
-  border-color: #dce2e7;
-  background: #fbfcfd;
-}
-
-/* Stage 2: stronger final-decision treatment */
-.admin-mentor-review-stage-card--final {
-  border-color: #e1e6eb;
-  background: #ffffff;
-}
-
-.admin-mentor-review-stage-card--final.is-ready {
-  border-color: #ffb28f;
-
-  background:
-    linear-gradient(
-      180deg,
-      #fffdfc 0%,
-      #ffffff 100%
-    );
-
-  box-shadow:
-    0 8px 24px
-    rgba(255, 83, 3, 0.06);
-}
-
-.admin-mentor-review-stage-card--final.is-complete {
-  border-color: #dce2e7;
-  background: #fbfcfd;
-  box-shadow: none;
-}
-
-.admin-mentor-review-actions-box {
-  margin-top: 16px;
-  padding-top: 16px;
-
-  border-top: 1px solid #e9edf0;
-}
-
-.admin-mentor-review-action-helper {
-  margin: 0 0 12px;
-
-  color: #687582;
-
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.6;
-}
-
-.admin-mentor-review-inline-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
   gap: 10px;
 }
 
-/* -----------------------------------------
-   Stage 1 buttons
-   Recommendation buttons are intentionally
-   outlined so they never look like final approval.
------------------------------------------ */
-
-.admin-recommend-approve-button,
-.admin-recommend-reject-button,
-.admin-final-approve-button,
-.admin-final-reject-button {
-  min-height: 42px;
-
+.admin-pagination-controls button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  padding: 0 16px;
-
-  border-radius: 9px;
-
-  font: inherit;
-  font-size: 11px;
-  font-weight: 750;
-
-  cursor: pointer;
-
-  transition:
-    background 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
+  gap: 6px;
 }
 
-.admin-recommend-approve-button {
-  border: 1px solid #ff5303;
-
-  color: #d94700;
-  background: #ffffff;
-}
-
-.admin-recommend-approve-button:hover:not(:disabled) {
-  color: #ffffff;
-  background: #ff5303;
-}
-
-.admin-recommend-reject-button {
-  border: 1px solid #e2b7b2;
-
-  color: #b42318;
-  background: #ffffff;
-}
-
-.admin-recommend-reject-button:hover:not(:disabled) {
-  border-color: #d59b95;
-  background: #fff7f6;
-}
-
-/* -----------------------------------------
-   Stage 2 buttons
-   Solid treatment = final decision.
------------------------------------------ */
-
-.admin-final-approve-button {
-  border: 1px solid #ff5303;
-
-  color: #ffffff;
-  background: #ff5303;
-
-  box-shadow:
-    0 6px 16px
-    rgba(255, 83, 3, 0.16);
-}
-
-.admin-final-approve-button:hover:not(:disabled) {
-  border-color: #e94b00;
-  background: #e94b00;
-}
-
-.admin-final-reject-button {
-  border: 1px solid #b42318;
-
-  color: #ffffff;
-  background: #b42318;
-}
-
-.admin-final-reject-button:hover:not(:disabled) {
-  border-color: #971d14;
-  background: #971d14;
-}
-
-.admin-recommend-approve-button:active:not(:disabled),
-.admin-recommend-reject-button:active:not(:disabled),
-.admin-final-approve-button:active:not(:disabled),
-.admin-final-reject-button:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.admin-recommend-approve-button:disabled,
-.admin-recommend-reject-button:disabled,
-.admin-final-approve-button:disabled,
-.admin-final-reject-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-/* Recorded decision / waiting state */
-.admin-mentor-stage-result,
-.admin-mentor-stage-waiting {
-  margin-top: 14px;
-  padding: 14px 15px;
-
-  border: 1px solid #e4e8ed;
-  border-radius: 11px;
-
-  background: #ffffff;
-}
-
-.admin-mentor-stage-waiting {
-  background: #fafbfc;
-}
-
-.admin-mentor-stage-result strong,
-.admin-mentor-stage-waiting strong {
-  display: block;
-  margin-bottom: 5px;
-
-  color: #252e37;
-  font-size: 12px;
-}
-
-.admin-mentor-stage-result p,
-.admin-mentor-stage-waiting p {
-  margin: 5px 0 0;
-
-  color: #667481;
-
-  font-size: 11px;
-  line-height: 1.65;
-}
-
-.admin-mentor-stage-result p strong {
-  display: inline;
-  margin: 0;
-}
-
-/* Distinguish the rejection reason dialog from the main modal. */
-.admin-decline-modal-body textarea:focus {
-  border-color: #b42318;
-
-  box-shadow:
-    0 0 0 2px
-    rgba(180, 35, 24, 0.08);
-}
-
-
-/* =========================================================
-   TABLET / MOBILE
-========================================================= */
-
-@media (max-width: 900px) {
-  .admin-mentor-review-modal {
-    width: min(900px, calc(100vw - 32px));
-    max-height: calc(100vh - 32px);
+@media (max-width: 980px) {
+  .admin-application-toolbar {
+    grid-template-columns: 1fr;
   }
 
-  .admin-mentor-review-details-grid {
-    grid-template-columns: 1fr;
+  .admin-application-filters--profile {
+    grid-column: auto;
   }
 }
 
 @media (max-width: 760px) {
   .admin-workflow-section-heading {
     flex-direction: column;
-    gap: 12px;
   }
 
-  .admin-workflow-section-heading > strong {
-    align-self: flex-start;
+  .admin-membership-review-modal {
+    width: calc(100% - 20px);
+    max-height: calc(100dvh - 20px);
+    padding: 20px;
   }
 
-  .admin-mentor-review-backdrop {
-    padding: 12px;
+  .admin-table-pagination {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
-  .admin-mentor-review-modal {
+  .admin-pagination-controls {
     width: 100%;
-    max-height: calc(100vh - 24px);
-    border-radius: 14px;
-  }
-
-  .admin-mentor-review-header {
-    padding: 19px 16px 16px;
-  }
-
-  .admin-mentor-review-body {
-    padding: 18px 16px 24px;
-  }
-
-  .admin-mentor-review-footer {
-    padding: 13px 16px;
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
-
-  .admin-mentor-review-footer-actions,
-  .admin-decline-modal footer {
-    width: 100%;
-    flex-direction: column-reverse;
-  }
-
-  .admin-mentor-review-footer button,
-  .admin-mentor-review-footer-actions button,
-  .admin-decline-modal footer button {
-    width: 100%;
-  }
-
-
-  .admin-mentor-review-inline-actions {
-    width: 100%;
-    flex-direction: column-reverse;
-  }
-
-  .admin-recommend-approve-button,
-  .admin-recommend-reject-button,
-  .admin-final-approve-button,
-  .admin-final-reject-button {
-    width: 100%;
-  }
-
-  .admin-mentor-review-stage-card {
-    padding: 16px;
-  }
-}
-
-
-/* Mentor Onboarding checklist */
-.admin-mentor-checklist-section {
-  margin-top: 20px;
-}
-
-.admin-mentor-checklist {
-  display: grid;
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.admin-mentor-checklist-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fff;
-  cursor: pointer;
-}
-
-.admin-mentor-checklist-item input {
-  width: 16px;
-  height: 16px;
-  margin-top: 2px;
-  flex: 0 0 auto;
-}
-
-.admin-mentor-checklist-item span {
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-@media (max-width: 640px) {
-  .admin-mentor-checklist-item {
-    padding: 11px 12px;
+    justify-content: space-between;
   }
 }
