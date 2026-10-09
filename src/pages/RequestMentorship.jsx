@@ -30,9 +30,9 @@ import {
 
 import {
 
-  useNavigate,
+  useLocation,
 
-  useParams,
+  useNavigate,
 
 } from "react-router-dom";
 
@@ -506,9 +506,20 @@ function SuccessModal({
 
 function RequestMentorship() {
 
-  const { mentorId } =
+  const location = useLocation();
 
-    useParams();
+  const mentorId =
+    location.state?.mentorId ||
+    sessionStorage.getItem("mentorRequestMentorId");
+
+  useEffect(() => {
+    if (location.state?.mentorId) {
+      sessionStorage.setItem(
+        "mentorRequestMentorId",
+        location.state.mentorId,
+      );
+    }
+  }, [location.state?.mentorId]);
 
 
 
@@ -2258,25 +2269,15 @@ function RequestMentorship() {
 
 
                   <option value="months:1">
-
                     1 month
-
                   </option>
-
-
 
                   <option value="months:2">
-
                     2 months
-
                   </option>
 
-
-
                   <option value="months:3">
-
                     3 months
-
                   </option>
 
                 </select>
