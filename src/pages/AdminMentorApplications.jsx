@@ -731,85 +731,89 @@ function SubmittedApplications({
   }
 
   async function nudgeApplicant(application) {
-  const email = application?.applicant?.email?.trim();
+    const email = application?.applicant?.email?.trim();
 
-  if (!email) {
-    setError("This applicant does not have an email address.");
-    return;
-  }
+    if (!email) {
+      setError("This applicant does not have an email address.");
+      return;
+    }
 
-  setError("");
-  setSuccess("");
-  setProcessing(true);
+    setError("");
+    setSuccess("");
+    setProcessing(true);
 
-  try {
-    if (application?.applicant?.email_verified === false) {
-      const { error: resendError } = await supabase.auth.resend({
-        type: "signup",
-        email,
-      });
+    try {
+      if (application?.applicant?.email_verified === false) {
+        const { error: resendError } = await supabase.auth.resend({
+          type: "signup",
+          email,
+        });
 
-      if (resendError) {
-        console.error("Unable to resend verification email:", resendError);
+        if (resendError) {
+          console.error("Unable to resend verification email:", resendError);
+          setError(
+            resendError.message ||
+              "We could not resend the verification email.",
+          );
+          return;
+        }
+
+        setSuccess(`Verification email sent again to ${email}.`);
+        return;
+      }
+
+      const name = application?.applicant?.full_name || "there";
+      const subject = "Complete your Mentor Connect mentor profile";
+      const message = `Hello ${name},
+
+Thank you for your interest in becoming a mentor with Mentor Connect.
+
+Our records show that your mentor profile is not yet complete. Please sign in to Mentor Connect and complete the remaining information so your mentor application can be reviewed.
+
+Thank you.
+
+Mentor Connect | TCN IKEJA`;
+
+      const { data, error: functionError } = await supabase.functions.invoke(
+        "send-notification-email",
+        {
+          body: {
+            to: email,
+            subject,
+            message,
+          },
+        },
+      );
+
+      if (functionError) {
+        console.error("Unable to send mentor follow-up email:", functionError);
         setError(
-          resendError.message ||
-            "We could not resend the verification email.",
+          functionError.message ||
+            "We could not send the email.",
         );
         return;
       }
 
-      setSuccess(`Verification email sent again to ${email}.`);
-      return;
-    }
+      if (!data?.success) {
+        console.error("Mentor follow-up email response:", data);
+        setError(
+          data?.error ||
+            "We could not send the email.",
+        );
+        return;
+      }
 
-    const name = application?.applicant?.full_name || "there";
-    const subject = "Complete your Mentor Connect mentor profile";
-    const message =
-      `Hello ${name},\n\n` +
-      `Thank you for your interest in becoming a mentor with Mentor Connect.\n\n` +
-      `Our records show that your mentor profile is not yet complete. Please sign in to Mentor Connect and complete the remaining information so your mentor application can be reviewed.\n\n` +
-      `Thank you.\n` +
-      `Mentor Connect | TCN IKEJA`;
-
-    const { data, error: emailError } = await supabase.functions.invoke(
-      "send-notification-email",
-      {
-        body: {
-          to: email,
-          subject,
-          message,
-          actionUrl: "https://mentorship.tcnikeja.org/",
-          actionLabel: "Complete your profile",
-          idempotencyKey: `mentor-profile-follow-up-${application.id}-${Date.now()}`,
-        },
-      },
-    );
-
-    if (emailError) {
-      console.error("Unable to send mentor profile email:", emailError);
+      setSuccess(`Email sent successfully to ${email}.`);
+    } catch (sendError) {
+      console.error("Unexpected mentor follow-up email error:", sendError);
       setError(
-        emailError.message ||
+        sendError?.message ||
           "We could not send the email.",
       );
-      return;
+    } finally {
+      setProcessing(false);
     }
-
-    if (!data?.success) {
-      setError(data?.error || "We could not send the email.");
-      return;
-    }
-
-    setSuccess(`Email sent successfully to ${email}.`);
-  } catch (sendError) {
-    console.error("Unexpected mentor email error:", sendError);
-    setError(
-      sendError?.message ||
-        "We could not send the email.",
-    );
-  } finally {
-    setProcessing(false);
   }
-}
 
   async function submitReview(
 
@@ -1890,10 +1894,10 @@ function SubmittedApplications({
                               className="admin-review-button admin-review-button--nudge"
 
                               onClick={() =>
-                                nudgeApplicant(application)
-                              }
 
-                              disabled={processing}
+                                nudgeApplicant(application)
+
+                              }
 
                             >
 
