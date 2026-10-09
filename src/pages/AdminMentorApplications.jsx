@@ -37,14 +37,30 @@ function isMentorProfileComplete(application) {
 
   const biography = String(application.biography || "").trim();
   const jobTitle = String(application.job_title || "").trim();
-  const expertise = Array.isArray(application.expertise) ? application.expertise.filter(Boolean) : [];
-  const mentoringCategories = Array.isArray(application.mentorship_categories) ? application.mentorship_categories.filter(Boolean) : [];
+  const expertise = Array.isArray(application.expertise)
+    ? application.expertise.filter(Boolean)
+    : [];
+  const mentoringCategories = Array.isArray(application.mentorship_categories)
+    ? application.mentorship_categories.filter(Boolean)
+    : [];
+  const languages = Array.isArray(application.languages)
+    ? application.languages.filter(Boolean)
+    : [];
+  const meetingFormats = Array.isArray(application.meeting_formats)
+    ? application.meeting_formats.filter(Boolean)
+    : [];
+  const sessionLengths = Array.isArray(application.session_lengths)
+    ? application.session_lengths.filter(Boolean)
+    : [];
 
   return Boolean(
-    biography &&
+    biography.length >= 50 &&
     jobTitle &&
     expertise.length > 0 &&
     mentoringCategories.length > 0 &&
+    languages.length > 0 &&
+    meetingFormats.length > 0 &&
+    sessionLengths.length > 0 &&
     application.years_of_experience !== null &&
     application.years_of_experience !== undefined &&
     application.years_of_experience !== "" &&
@@ -295,6 +311,8 @@ function SubmittedApplications({
         job_title,
 
         organisation,
+
+        expertise,
 
         mentorship_categories,
 
@@ -678,22 +696,50 @@ function SubmittedApplications({
 
   }
 
-  function nudgeApplicant(application) {
-
-    const email = application?.applicant?.email;
+  async function nudgeApplicant(application) {
+    const email = application?.applicant?.email?.trim();
 
     if (!email) {
       setError("This applicant does not have an email address.");
       return;
     }
 
-    const name = application?.applicant?.full_name || "there";
-    const subject = encodeURIComponent("Complete your Mentor Connect mentor profile");
-    const body = encodeURIComponent(
-      `Hello ${name},\n\nThank you for your interest in becoming a mentor with Mentor Connect.\n\nOur records show that your mentor profile is not yet complete. Please log in to Mentor Connect and complete the remaining information before your mentor application can be reviewed.\n\nThank you.\nMentor Connect | TCN IKEJA`,
-    );
+    setError("");
+    setSuccess("");
 
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    if (application?.applicant?.email_verified === false) {
+      setProcessing(true);
+
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email,
+      });
+
+      setProcessing(false);
+
+      if (resendError) {
+        console.error("Unable to resend verification email:", resendError);
+        setError(
+          resendError.message ||
+            "We could not resend the verification email.",
+        );
+        return;
+      }
+
+      setSuccess(`Verification email sent again to ${email}.`);
+      return;
+    }
+
+    const name = application?.applicant?.full_name || "there";
+    const subject = "Complete your Mentor Connect mentor profile";
+    const body = `Hello ${name},\n\nThank you for your interest in becoming a mentor with Mentor Connect.\n\nOur records show that your mentor profile is not yet complete. Please sign in to Mentor Connect and complete the remaining information so your mentor application can be reviewed.\n\nThank you.\nMentor Connect | TCN IKEJA`;
+
+    const gmailUrl =
+      `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}` +
+      `&su=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(body)}`;
+
+    window.open(gmailUrl, "_blank", "noopener,noreferrer");
   }
 
   async function submitReview(
@@ -1790,7 +1836,11 @@ function SubmittedApplications({
 
                               />
 
-                              <span>Nudge</span>
+                              <span>
+                                {application?.applicant?.email_verified === false
+                                  ? "Resend verification"
+                                  : "Send email"}
+                              </span>
 
                             </button>
 
