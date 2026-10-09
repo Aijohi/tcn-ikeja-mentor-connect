@@ -251,3 +251,153 @@
     justify-content: space-between;
   }
 }
+
+.admin-email-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 20, 25, 0.48);
+}
+
+.admin-email-modal {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(15, 20, 25, 0.2);
+}
+
+.admin-email-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 26px 18px;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.admin-email-modal-header h2 {
+  margin: 6px 0;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.admin-email-modal-header p {
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.admin-email-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border: 1px solid #dfe3e7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #344054;
+  cursor: pointer;
+}
+
+.admin-email-modal-close:hover {
+  background: #f8f9fa;
+}
+
+.admin-email-modal-body {
+  display: grid;
+  gap: 18px;
+  padding: 24px 26px;
+}
+
+.admin-email-field {
+  display: grid;
+  gap: 7px;
+}
+
+.admin-email-field > span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #344054;
+}
+
+.admin-email-field input,
+.admin-email-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #101828;
+  font: inherit;
+  font-size: 14px;
+  padding: 11px 12px;
+  outline: none;
+}
+
+.admin-email-field input:focus,
+.admin-email-field textarea:focus {
+  border-color: #98a2b3;
+  box-shadow: 0 0 0 3px rgba(16, 24, 40, 0.06);
+}
+
+.admin-email-field input[readonly] {
+  background: #f8f9fa;
+  color: #667085;
+}
+
+.admin-email-field textarea {
+  min-height: 220px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.admin-email-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px 26px 24px;
+  border-top: 1px solid #edf0f2;
+}
+
+.admin-email-modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+@media (max-width: 600px) {
+  .admin-email-modal-backdrop {
+    padding: 12px;
+  }
+
+  .admin-email-modal {
+    max-height: calc(100vh - 24px);
+    border-radius: 12px;
+  }
+
+  .admin-email-modal-header,
+  .admin-email-modal-body,
+  .admin-email-modal-actions {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .admin-email-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .admin-email-modal-actions button {
+    width: 100%;
+  }
+}
