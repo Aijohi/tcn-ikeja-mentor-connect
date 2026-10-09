@@ -1,0 +1,39 @@
+/* Mentor Onboarding checklist */
+.admin-mentor-checklist-section {
+  margin-top: 20px;
+}
+
+.admin-mentor-checklist {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.admin-mentor-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.admin-mentor-checklist-item input {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex: 0 0 auto;
+}
+
+.admin-mentor-checklist-item span {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .admin-mentor-checklist-item {
+    padding: 11px 12px;
+  }
+}

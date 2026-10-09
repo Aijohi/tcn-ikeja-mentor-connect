@@ -5,38 +5,30 @@ import {
   Search,
   X,
 } from "lucide-react";
-
 import {
   useEffect,
   useMemo,
   useState,
 } from "react";
-
+import { useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-
 import "./AdminLaunchFixes.css";
-
 const APPLICATION_PAGE_SIZE = 10;
-
 function useLockBodyScroll(active) {
   useEffect(() => {
     if (!active) {
       return undefined;
     }
-
     const previousOverflow =
       document.body.style.overflow;
-
     document.body.style.overflow =
       "hidden";
-
     return () => {
       document.body.style.overflow =
         previousOverflow;
     };
   }, [active]);
 }
-
 function AdminMentorApplications({
   canRecommendApplications = false,
   canSecondSignoffApplications = false,
@@ -62,81 +54,68 @@ function AdminMentorApplications({
     </div>
   );
 }
-
 /* =========================================================
    SUBMITTED APPLICATIONS
-========================================================= */
-
+\\========================================================= \\\*/
 function SubmittedApplications({
   canRecommendApplications,
   canSecondSignoffApplications,
   isFullAccessAdmin,
   adminOperationalRole,
 }) {
+  const location = useLocation();
+  const [onboardingChecklist, setOnboardingChecklist] = useState({});
   const [
     applications,
     setApplications,
   ] = useState([]);
-
   const [
     searchTerm,
     setSearchTerm,
   ] = useState("");
-
   const [
     statusFilter,
     setStatusFilter,
   ] = useState("all");
-
   const [
     currentPage,
     setCurrentPage,
   ] = useState(1);
-
   const [
     selectedApplication,
     setSelectedApplication,
   ] = useState(null);
-
   const [
     rejectionMode,
     setRejectionMode,
   ] = useState("");
-
   const [
     rejectionReason,
     setRejectionReason,
   ] = useState("");
-
   const [
     loading,
     setLoading,
   ] = useState(true);
-
   const [
     processing,
     setProcessing,
   ] = useState(false);
-
   const [
     error,
     setError,
   ] = useState("");
-
   const [
     success,
     setSuccess,
   ] = useState("");
-
   async function loadApplications({
     keepModalOpen = false,
   } = {}) {
     if (!keepModalOpen) {
       setLoading(true);
     }
-
     setError("");
-
     const {
       data,
       error: applicationError,
@@ -158,6 +137,7 @@ function SubmittedApplications({
         years_of_experience,
         membership_verification_method,
         membership_reference,
+        onboarding_checklist,
         status,
         admin_feedback,
         reviewed_at,
@@ -193,24 +173,19 @@ function SubmittedApplications({
           ascending: false,
         },
       );
-
     if (applicationError) {
       console.error(
         "Unable to load mentor applications:",
         applicationError,
       );
-
       setError(
         "We could not load mentor applications.",
       );
-
       setLoading(false);
       return;
     }
-
     const rawApplications =
       data ?? [];
-
     const reviewerIds = [
       ...new Set(
         rawApplications
@@ -226,10 +201,8 @@ function SubmittedApplications({
           .filter(Boolean),
       ),
     ];
-
     let reviewerMap =
       new Map();
-
     if (reviewerIds.length > 0) {
       const {
         data: reviewerData,
@@ -242,7 +215,6 @@ function SubmittedApplications({
           "id",
           reviewerIds,
         );
-
       reviewerMap =
         new Map(
           (
@@ -258,20 +230,17 @@ function SubmittedApplications({
           ),
         );
     }
-
     const nextApplications =
       rawApplications.map(
         (
           application,
         ) => ({
           ...application,
-
           onboarding_reviewer:
             reviewerMap.get(
               application.onboarding_reviewed_by,
             ) ??
             null,
-
           operations_reviewer:
             reviewerMap.get(
               application.operations_reviewed_by,
@@ -282,11 +251,22 @@ function SubmittedApplications({
             null,
         }),
       );
-
     setApplications(
       nextApplications,
     );
-
+    const requestedApplicationId =
+      new URLSearchParams(location.search).get("applicationId");
+    if (requestedApplicationId) {
+      const requestedApplication = nextApplications.find(
+        (application) => application.id === requestedApplicationId,
+      );
+      if (requestedApplication) {
+        setSelectedApplication(requestedApplication);
+        setOnboardingChecklist(
+          requestedApplication.onboarding_checklist || {},
+        );
+      }
+    }
     if (
       keepModalOpen &&
       selectedApplication
@@ -302,49 +282,43 @@ function SubmittedApplications({
           null,
       );
     }
-
     setLoading(false);
   }
-
   useEffect(() => {
     loadApplications();
   }, []);
-
   useEffect(() => {
     setCurrentPage(1);
   }, [
     searchTerm,
     statusFilter,
   ]);
-
   function openReview(
     application,
   ) {
     setSelectedApplication(
       application,
     );
-
     setError("");
     setSuccess("");
     setRejectionMode("");
     setRejectionReason("");
+    setOnboardingChecklist(
+      application.onboarding_checklist || {},
+    );
   }
-
   function closeReview() {
     if (processing) {
       return;
     }
-
     setSelectedApplication(
       null,
     );
-
     setError("");
     setSuccess("");
     setRejectionMode("");
     setRejectionReason("");
   }
-
   async function submitReview(
     action,
     reason = null,
@@ -357,7 +331,6 @@ function SubmittedApplications({
     ) {
       return;
     }
-
     const isRecommendationAction =
       [
         "recommend_approve",
@@ -365,7 +338,6 @@ function SubmittedApplications({
       ].includes(
         action,
       );
-
     const isFinalAction =
       [
         "approve",
@@ -373,7 +345,6 @@ function SubmittedApplications({
       ].includes(
         action,
       );
-
     if (
       isRecommendationAction &&
       !(
@@ -384,10 +355,8 @@ function SubmittedApplications({
       setError(
         "Your administrator role cannot record the Mentor Onboarding recommendation.",
       );
-
       return;
     }
-
     if (
       isFinalAction &&
       !(
@@ -398,10 +367,8 @@ function SubmittedApplications({
       setError(
         "Your administrator role cannot record the final Operations and Governance decision.",
       );
-
       return;
     }
-
     if (
       isFinalAction &&
       !selectedApplication
@@ -410,10 +377,8 @@ function SubmittedApplications({
       setError(
         "The Mentor Onboarding recommendation must be recorded before the final Operations and Governance decision.",
       );
-
       return;
     }
-
     if (
       [
         "recommend_reject",
@@ -432,14 +397,51 @@ function SubmittedApplications({
           ? "Please provide a reason before recommending rejection."
           : "Please provide a reason before rejecting this mentor application.",
       );
-
       return;
     }
-
+    const checklistComplete = [
+      "identity_checked",
+      "profile_information_checked",
+      "biography_checked",
+      "employment_information_checked",
+      "mentoring_experience_checked",
+      "expertise_checked",
+      "mentoring_categories_checked",
+      "availability_checked",
+      "meeting_format_checked",
+      "safeguarding_checked",
+      "conduct_checked",
+    ].every((key) => onboardingChecklist[key] === true);
+    const isMentorOnboardingRole =
+      adminOperationalRole === "mentor_onboarding_vetting_training_lead";
+    if (isRecommendationAction && !checklistComplete) {
+      setError(
+        "Complete the Mentor Onboarding checklist before recording the recommendation.",
+      );
+      return;
+    }
+    if (isFinalAction && isMentorOnboardingRole && !isFullAccessAdmin) {
+      setError(
+        "The Mentor Onboarding role cannot give the final Operations and Governance decision.",
+      );
+      return;
+    }
+    if (isRecommendationAction) {
+      const { error: checklistError } = await supabase
+        .from("mentor_applications")
+        .update({ onboarding_checklist: onboardingChecklist })
+        .eq("id", selectedApplication.id);
+      if (checklistError) {
+        setError(
+          checklistError.message ||
+            "We could not save the Mentor Onboarding checklist.",
+        );
+        return;
+      }
+    }
     setProcessing(true);
     setError("");
     setSuccess("");
-
     const {
       error: reviewError,
     } = await supabase.rpc(
@@ -447,10 +449,8 @@ function SubmittedApplications({
       {
         p_application_id:
           selectedApplication.id,
-
         p_action:
           action,
-
         p_feedback:
           [
             "recommend_reject",
@@ -464,59 +464,46 @@ function SubmittedApplications({
             : null,
       },
     );
-
     if (reviewError) {
       console.error(
         "Unable to review mentor application:",
         reviewError,
       );
-
       setError(
         reviewError.message ||
           "We could not update this mentor application.",
       );
-
       setProcessing(false);
       return;
     }
-
     const messages = {
       recommend_approve:
         "Approval has been recommended. The application is now ready for Operations and Governance review.",
-
       recommend_reject:
         "Rejection has been recommended. The application is now ready for Operations and Governance review.",
-
       approve:
         "The mentor application has received final approval.",
-
       reject:
         "The mentor application has been rejected.",
     };
-
     setSuccess(
       messages[action] ||
         "The application was updated.",
     );
-
     setRejectionMode("");
     setRejectionReason("");
-
     await loadApplications({
       keepModalOpen:
         true,
     });
-
     setProcessing(false);
   }
-
   const filteredApplications =
     useMemo(() => {
       const query =
         searchTerm
           .trim()
           .toLowerCase();
-
       return applications.filter(
         (
           application,
@@ -529,28 +516,20 @@ function SubmittedApplications({
           ) {
             return false;
           }
-
           if (!query) {
             return true;
           }
-
           return [
             application.applicant
               ?.full_name,
-
             application.applicant
               ?.email,
-
             application.job_title,
-
             application.organisation,
-
             application.status,
-
             getReviewStageLabel(
               application,
             ),
-
             ...(
               application.mentorship_categories ??
               []
@@ -569,7 +548,6 @@ function SubmittedApplications({
       searchTerm,
       statusFilter,
     ]);
-
   const totalPages =
     Math.max(
       1,
@@ -578,24 +556,20 @@ function SubmittedApplications({
           APPLICATION_PAGE_SIZE,
       ),
     );
-
   const safePage =
     Math.min(
       currentPage,
       totalPages,
     );
-
   const firstIndex =
     (safePage - 1) *
     APPLICATION_PAGE_SIZE;
-
   const visibleApplications =
     filteredApplications.slice(
       firstIndex,
       firstIndex +
         APPLICATION_PAGE_SIZE,
     );
-
   if (loading) {
     return (
       <section className="admin-list-section">
@@ -603,7 +577,6 @@ function SubmittedApplications({
       </section>
     );
   }
-
   return (
     <>
       <section className="admin-list-section admin-submitted-applications-section">
@@ -613,7 +586,6 @@ function SubmittedApplications({
               size={16}
               aria-hidden="true"
             />
-
             <input
               type="search"
               value={
@@ -630,7 +602,6 @@ function SubmittedApplications({
               }
             />
           </div>
-
           <div className="admin-application-filters">
             {[
               [
@@ -677,13 +648,11 @@ function SubmittedApplications({
             )}
           </div>
         </div>
-
         {success && (
           <p className="admin-success-message">
             {success}
           </p>
         )}
-
         {error &&
           !selectedApplication && (
             <p
@@ -693,7 +662,6 @@ function SubmittedApplications({
               {error}
             </p>
           )}
-
         {applications.length ===
         0 ? (
           <AdminEmptyState
@@ -715,35 +683,27 @@ function SubmittedApplications({
                     <th>
                       Applicant
                     </th>
-
                     <th>
                       Current role
                     </th>
-
                     <th>
                       Experience
                     </th>
-
                     <th>
                       Mentoring areas
                     </th>
-
                     <th>
                       Review stage
                     </th>
-
                     <th>
                       Status
                     </th>
-
                     <th>
                       Submitted
                     </th>
-
                     <th aria-label="Action" />
                   </tr>
                 </thead>
-
                 <tbody>
                   {visibleApplications.map(
                     (
@@ -760,18 +720,15 @@ function SubmittedApplications({
                               ?.full_name ||
                               "Name not provided"}
                           </strong>
-
                           <small>
                             {application.applicant
                               ?.email ||
                               ""}
                           </small>
                         </td>
-
                         <td>
                           {application.job_title ||
                             "Not provided"}
-
                           {application.organisation && (
                             <small>
                               {
@@ -780,13 +737,11 @@ function SubmittedApplications({
                             </small>
                           )}
                         </td>
-
                         <td>
                           {application.years_of_experience ??
                             0}{" "}
                           years
                         </td>
-
                         <td className="admin-application-areas-cell">
                           {(
                             application.mentorship_categories ??
@@ -801,13 +756,11 @@ function SubmittedApplications({
                             ) ||
                             "Not provided"}
                         </td>
-
                         <td>
                           {getReviewStageLabel(
                             application,
                           )}
                         </td>
-
                         <td>
                           <StatusBadge
                             value={
@@ -824,13 +777,11 @@ function SubmittedApplications({
                             }
                           />
                         </td>
-
                         <td>
                           {formatDate(
                             application.created_at,
                           )}
                         </td>
-
                         <td className="admin-table-action-cell">
                           <button
                             type="button"
@@ -853,7 +804,6 @@ function SubmittedApplications({
                 </tbody>
               </table>
             </div>
-
             <div className="admin-table-pagination">
               <p>
                 Showing{" "}
@@ -873,7 +823,6 @@ function SubmittedApplications({
                   filteredApplications.length
                 }
               </p>
-
               <div className="admin-pagination-controls">
                 <button
                   type="button"
@@ -896,10 +845,8 @@ function SubmittedApplications({
                   <ChevronLeft
                     size={16}
                   />
-
                   Previous
                 </button>
-
                 <span>
                   Page{" "}
                   {
@@ -910,7 +857,6 @@ function SubmittedApplications({
                     totalPages
                   }
                 </span>
-
                 <button
                   type="button"
                   onClick={() =>
@@ -930,7 +876,6 @@ function SubmittedApplications({
                   }
                 >
                   Next
-
                   <ChevronRight
                     size={16}
                   />
@@ -940,7 +885,6 @@ function SubmittedApplications({
           </div>
         )}
       </section>
-
       {selectedApplication && (
         <ApplicationReviewModal
           application={
@@ -958,6 +902,8 @@ function SubmittedApplications({
           adminOperationalRole={
             adminOperationalRole
           }
+          onboardingChecklist={onboardingChecklist}
+          setOnboardingChecklist={setOnboardingChecklist}
           processing={
             processing
           }
@@ -996,7 +942,6 @@ function SubmittedApplications({
           }
         />
       )}
-
       {selectedApplication &&
         rejectionMode && (
           <DecisionReasonModal
@@ -1025,11 +970,9 @@ function SubmittedApplications({
                 setRejectionMode(
                   "",
                 );
-
                 setRejectionReason(
                   "",
                 );
-
                 setError("");
               }
             }}
@@ -1044,17 +987,17 @@ function SubmittedApplications({
     </>
   );
 }
-
 /* =========================================================
    APPLICATION REVIEW MODAL
-========================================================= */
-
+\\========================================================= \\\*/
 function ApplicationReviewModal({
   application,
   canRecommendApplications,
   canSecondSignoffApplications,
   isFullAccessAdmin,
   adminOperationalRole,
+  onboardingChecklist,
+  setOnboardingChecklist,
   processing,
   error,
   success,
@@ -1065,16 +1008,13 @@ function ApplicationReviewModal({
   onClose,
 }) {
   useLockBodyScroll(true);
-
   const isPending =
     application.status ===
     "pending";
-
   const onboardingComplete =
     Boolean(
       application.onboarding_recommendation,
     );
-
   const finalDecisionComplete =
     Boolean(
       application.operations_decision,
@@ -1085,7 +1025,6 @@ function ApplicationReviewModal({
     ].includes(
       application.status,
     );
-
   const canMakeOnboardingRecommendation =
     isPending &&
     !onboardingComplete &&
@@ -1093,7 +1032,6 @@ function ApplicationReviewModal({
       canRecommendApplications ||
       isFullAccessAdmin
     );
-
   const canMakeFinalDecision =
     isPending &&
     onboardingComplete &&
@@ -1102,7 +1040,6 @@ function ApplicationReviewModal({
       canSecondSignoffApplications ||
       isFullAccessAdmin
     );
-
   return (
     <div
       className="admin-mentor-review-backdrop"
@@ -1144,18 +1081,15 @@ function ApplicationReviewModal({
                 )}
               </span>
             )}
-
             <div>
               <span className="admin-section-eyebrow">
                 MENTOR APPLICATION
               </span>
-
               <h2 id="mentor-application-review-title">
                 {application.applicant
                   ?.full_name ||
                   "Applicant"}
               </h2>
-
               <p>
                 {application.applicant
                   ?.email ||
@@ -1163,7 +1097,6 @@ function ApplicationReviewModal({
               </p>
             </div>
           </div>
-
           <button
             type="button"
             className="admin-mentor-review-close"
@@ -1178,7 +1111,6 @@ function ApplicationReviewModal({
             <X size={18} />
           </button>
         </header>
-
         <div className="admin-mentor-review-body">
           <div className="admin-mentor-review-status-row">
             <StatusBadge
@@ -1195,13 +1127,11 @@ function ApplicationReviewModal({
                     : undefined
               }
             />
-
             <span>
               {getReviewStageLabel(
                 application,
               )}
             </span>
-
             <span>
               Submitted{" "}
               {formatDate(
@@ -1209,26 +1139,22 @@ function ApplicationReviewModal({
               )}
             </span>
           </div>
-
           {isFullAccessAdmin && (
             <section className="admin-mentor-review-callout">
               <strong>
                 Full Access Admin
               </strong>
-
               <p>
                 You can complete either review stage. Stage 1 must be recorded before Stage 2 so the approval trail stays clear.
               </p>
             </section>
           )}
-
           {!isFullAccessAdmin &&
             adminOperationalRole && (
               <section className="admin-mentor-review-callout">
                 <strong>
                   Your administrator role
                 </strong>
-
                 <p>
                   {formatAdminOperationalRole(
                     adminOperationalRole,
@@ -1236,12 +1162,10 @@ function ApplicationReviewModal({
                 </p>
               </section>
             )}
-
           <section className="admin-mentor-review-section">
             <h3>
               Membership information
             </h3>
-
             <div className="admin-mentor-review-details-grid">
               <ReviewDetail
                 label="Verification method"
@@ -1251,7 +1175,6 @@ function ApplicationReviewModal({
                       ?.membership_verification_method,
                 )}
               />
-
               <ReviewDetail
                 label="Information supplied"
                 value={
@@ -1261,7 +1184,6 @@ function ApplicationReviewModal({
                   "Not provided"
                 }
               />
-
               <ReviewDetail
                 label="Email verification"
                 value={
@@ -1271,7 +1193,6 @@ function ApplicationReviewModal({
                     : "Not verified"
                 }
               />
-
               <ReviewDetail
                 label="Membership"
                 value={
@@ -1283,12 +1204,10 @@ function ApplicationReviewModal({
               />
             </div>
           </section>
-
           <section className="admin-mentor-review-section">
             <h3>
               Professional information
             </h3>
-
             <div className="admin-mentor-review-details-grid">
               <ReviewDetail
                 label="Current role"
@@ -1297,7 +1216,6 @@ function ApplicationReviewModal({
                   "Not provided"
                 }
               />
-
               <ReviewDetail
                 label="Organisation"
                 value={
@@ -1305,12 +1223,10 @@ function ApplicationReviewModal({
                   "Not provided"
                 }
               />
-
               <ReviewDetail
                 label="Experience"
                 value={`${application.years_of_experience ?? 0} years`}
               />
-
               <ReviewDetail
                 label="Maximum active mentees"
                 value={
@@ -1318,7 +1234,6 @@ function ApplicationReviewModal({
                   "Not provided"
                 }
               />
-
               <ReviewDetail
                 label="Meeting format"
                 value={(
@@ -1328,7 +1243,6 @@ function ApplicationReviewModal({
                   ", ",
                 )}
               />
-
               <ReviewDetail
                 label="Session length"
                 value={(
@@ -1351,33 +1265,65 @@ function ApplicationReviewModal({
               />
             </div>
           </section>
-
           <ReviewList
             label="Mentoring areas"
             items={
               application.mentorship_categories
             }
           />
-
           <ReviewList
             label="Languages"
             items={
               application.languages
             }
           />
-
           <section className="admin-mentor-review-section">
             <h3>
               Biography
             </h3>
-
             <p className="admin-mentor-review-biography">
               {application.biography ||
                 "Not provided"}
             </p>
           </section>
-
-          <section
+                    {!onboardingComplete && canMakeOnboardingRecommendation && (
+            <section className="admin-mentor-review-section admin-mentor-checklist-section">
+              <span className="admin-section-eyebrow">STAGE 1 · REVIEW CHECKLIST</span>
+              <h3>Mentor Onboarding checklist</h3>
+              <p>Complete all checks before recording the first recommendation.</p>
+              <div className="admin-mentor-checklist">
+                {[
+                  ["identity_checked", "Identity and basic information reviewed"],
+                  ["profile_information_checked", "Profile information reviewed"],
+                  ["biography_checked", "Biography reviewed"],
+                  ["employment_information_checked", "Job title and organisation reviewed"],
+                  ["mentoring_experience_checked", "Mentoring experience reviewed"],
+                  ["expertise_checked", "Expertise reviewed"],
+                  ["mentoring_categories_checked", "Mentoring areas reviewed"],
+                  ["availability_checked", "Availability reviewed"],
+                  ["meeting_format_checked", "Meeting format reviewed"],
+                  ["safeguarding_checked", "Safeguarding requirements reviewed"],
+                  ["conduct_checked", "Code of conduct requirements reviewed"],
+                ].map(([key, label]) => (
+                  <label key={key} className="admin-mentor-checklist-item">
+                    <input
+                      type="checkbox"
+                      checked={onboardingChecklist[key] === true}
+                      onChange={(event) =>
+                        setOnboardingChecklist((current) => ({
+                          ...current,
+                          [key]: event.target.checked,
+                        }))
+                      }
+                      disabled={processing}
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+            </section>
+          )}
+<section
             className={`admin-mentor-review-stage-card admin-mentor-review-stage-card--recommendation${
               onboardingComplete
                 ? " is-complete"
@@ -1387,15 +1333,12 @@ function ApplicationReviewModal({
             <span>
               STAGE 1 · RECOMMENDATION
             </span>
-
             <h3>
               Mentor Onboarding recommendation
             </h3>
-
             <p>
               The Mentor Onboarding, Vetting and Training admin reviews the applicant and records a recommendation. This is not the final mentor approval.
             </p>
-
             {onboardingComplete ? (
               <div className="admin-mentor-stage-result">
                 <strong>
@@ -1404,10 +1347,8 @@ function ApplicationReviewModal({
                     ? "Approval recommended"
                     : "Rejection recommended"}
                 </strong>
-
                 <p>
                   Recorded by{" "}
-
                   <strong>
                     {application.onboarding_reviewer
                       ?.full_name ||
@@ -1415,14 +1356,12 @@ function ApplicationReviewModal({
                         ?.email ||
                       "Administrator"}
                   </strong>
-
                   {application.onboarding_reviewed_at
                     ? ` on ${formatDate(
                         application.onboarding_reviewed_at,
                       )}.`
                     : "."}
                 </p>
-
                 {application.onboarding_feedback && (
                   <p>
                     Reason:{" "}
@@ -1437,7 +1376,6 @@ function ApplicationReviewModal({
                 <p className="admin-mentor-review-action-helper">
                   Choose one recommendation after reviewing the mentor's information.
                 </p>
-
                 <div className="admin-mentor-review-inline-actions">
                   <button
                     type="button"
@@ -1451,7 +1389,6 @@ function ApplicationReviewModal({
                   >
                     Recommend rejection
                   </button>
-
                   <button
                     type="button"
                     className="admin-recommend-approve-button"
@@ -1473,14 +1410,12 @@ function ApplicationReviewModal({
                 <strong>
                   Waiting for Stage 1
                 </strong>
-
                 <p>
                   A Mentor Onboarding, Vetting and Training administrator must record the recommendation first.
                 </p>
               </div>
             ) : null}
           </section>
-
           <section
             className={`admin-mentor-review-stage-card admin-mentor-review-stage-card--final${
               canMakeFinalDecision
@@ -1495,11 +1430,9 @@ function ApplicationReviewModal({
             <span>
               STAGE 2 · FINAL DECISION
             </span>
-
             <h3>
               Operations and Governance final decision
             </h3>
-
             {finalDecisionComplete ? (
               <div className="admin-mentor-stage-result">
                 <strong>
@@ -1508,10 +1441,8 @@ function ApplicationReviewModal({
                     ? "Mentor approved"
                     : "Mentor rejected"}
                 </strong>
-
                 <p>
                   Final decision recorded by{" "}
-
                   <strong>
                     {application.operations_reviewer
                       ?.full_name ||
@@ -1519,7 +1450,6 @@ function ApplicationReviewModal({
                         ?.email ||
                       "Administrator"}
                   </strong>
-
                   {application.operations_reviewed_at
                     ? ` on ${formatDate(
                         application.operations_reviewed_at,
@@ -1530,7 +1460,6 @@ function ApplicationReviewModal({
                         )}.`
                       : "."}
                 </p>
-
                 {(application.operations_feedback ||
                   application.admin_feedback) && (
                     <p>
@@ -1545,7 +1474,6 @@ function ApplicationReviewModal({
                 <strong>
                   Stage 2 is not ready yet
                 </strong>
-
                 <p>
                   The final approval buttons will become available after the Stage 1 recommendation is recorded.
                 </p>
@@ -1555,7 +1483,6 @@ function ApplicationReviewModal({
                 <p className="admin-mentor-review-action-helper">
                   Review the Stage 1 recommendation, then make the final mentor decision.
                 </p>
-
                 <div className="admin-mentor-review-inline-actions">
                   <button
                     type="button"
@@ -1569,7 +1496,6 @@ function ApplicationReviewModal({
                   >
                     Reject mentor
                   </button>
-
                   <button
                     type="button"
                     className="admin-final-approve-button"
@@ -1591,20 +1517,17 @@ function ApplicationReviewModal({
                 <strong>
                   Awaiting Operations and Governance
                 </strong>
-
                 <p>
                   The Stage 1 recommendation is complete. An Operations and Governance administrator must record the final decision.
                 </p>
               </div>
             ) : null}
           </section>
-
           {success && (
             <p className="admin-success-message">
               {success}
             </p>
           )}
-
           {error && (
             <p
               className="form-error"
@@ -1614,7 +1537,6 @@ function ApplicationReviewModal({
             </p>
           )}
         </div>
-
         <footer className="admin-mentor-review-footer">
           <button
             type="button"
@@ -1633,7 +1555,6 @@ function ApplicationReviewModal({
     </div>
   );
 }
-
 function DecisionReasonModal({
   application,
   mode,
@@ -1647,7 +1568,6 @@ function DecisionReasonModal({
   const isRecommendationReject =
     mode ===
     "recommend_reject";
-
   return (
     <div
       className="admin-decline-modal-backdrop"
@@ -1677,18 +1597,15 @@ function DecisionReasonModal({
                 ? "STAGE 1 · RECOMMEND REJECTION"
                 : "STAGE 2 · REJECT MENTOR"}
             </span>
-
             <h2 id="mentor-rejection-reason-title">
               Give a reason
             </h2>
-
             <p>
               {isRecommendationReject
                 ? `Explain why ${application.applicant?.full_name || "this applicant"} should not be recommended for mentor approval.`
                 : `Explain why ${application.applicant?.full_name || "this applicant"} should not receive final mentor approval.`}
             </p>
           </div>
-
           <button
             type="button"
             onClick={
@@ -1702,13 +1619,11 @@ function DecisionReasonModal({
             <X size={18} />
           </button>
         </header>
-
         <div className="admin-decline-modal-body">
           <label>
             <span>
               Reason
             </span>
-
             <textarea
               value={
                 reason
@@ -1728,7 +1643,6 @@ function DecisionReasonModal({
               autoFocus
             />
           </label>
-
           {error && (
             <p
               className="form-error"
@@ -1738,7 +1652,6 @@ function DecisionReasonModal({
             </p>
           )}
         </div>
-
         <footer>
           <button
             type="button"
@@ -1752,7 +1665,6 @@ function DecisionReasonModal({
           >
             Cancel
           </button>
-
           <button
             type="button"
             className="admin-drawer-danger"
@@ -1775,7 +1687,6 @@ function DecisionReasonModal({
     </div>
   );
 }
-
 function ReviewDetail({
   label,
   value,
@@ -1785,7 +1696,6 @@ function ReviewDetail({
       <span>
         {label}
       </span>
-
       <strong>
         {value ||
           "Not provided"}
@@ -1793,7 +1703,6 @@ function ReviewDetail({
     </div>
   );
 }
-
 function ReviewList({
   label,
   items = [],
@@ -1803,7 +1712,6 @@ function ReviewList({
       <h3>
         {label}
       </h3>
-
       {items?.length >
       0 ? (
         <div className="admin-mentor-review-chip-list">
@@ -1829,7 +1737,6 @@ function ReviewList({
     </section>
   );
 }
-
 function StatusBadge({
   value,
   label,
@@ -1842,7 +1749,6 @@ function StatusBadge({
       "_",
       "-",
     );
-
   return (
     <span
       className={`admin-status-badge status-${normalizedValue}`}
@@ -1851,7 +1757,6 @@ function StatusBadge({
         className="admin-status-dot"
         aria-hidden="true"
       />
-
       <span>
         {label ||
           formatStatusLabel(
@@ -1861,19 +1766,16 @@ function StatusBadge({
     </span>
   );
 }
-
 function AdminLoadingState() {
   return (
     <section className="admin-state-card">
       <div className="loader" />
-
       <p>
         Loading information...
       </p>
     </section>
   );
 }
-
 function AdminEmptyState({
   title,
   description,
@@ -1885,18 +1787,15 @@ function AdminEmptyState({
           size={28}
         />
       </span>
-
       <h2>
         {title}
       </h2>
-
       <p>
         {description}
       </p>
     </section>
   );
 }
-
 function getReviewStageLabel(
   application,
 ) {
@@ -1906,63 +1805,50 @@ function getReviewStageLabel(
   ) {
     return "Completed · Approved";
   }
-
   if (
     application.status ===
     "rejected"
   ) {
     return "Completed · Declined";
   }
-
   if (
     application.onboarding_recommendation
   ) {
     return "Awaiting Operations sign-off";
   }
-
   return "Awaiting Mentor Onboarding review";
 }
-
 function formatMembershipVerificationMethod(
   value,
 ) {
   const labels = {
     service_unit:
       "Service unit or department",
-
     leader_reference:
       "TCN leader reference",
-
     manual_admin_review:
       "Manual administrator review",
   };
-
   return (
     labels[value] ||
     "Not provided"
   );
 }
-
 function formatAdminOperationalRole(
   role,
 ) {
   const labels = {
     product_technology_lead:
       "Product and Technology Lead",
-
     operations_governance_lead:
       "Operations and Governance Lead",
-
     mentor_onboarding_vetting_training_lead:
       "Mentor Onboarding, Vetting and Training Lead",
-
     mentee_matching_engagement_quality_lead:
       "Mentee Matching, Engagement and Quality Lead",
-
     trust_safety_case_resolution_lead:
       "Trust, Safety and Case Resolution Lead",
   };
-
   return (
     labels[role] ||
     formatStatusLabel(
@@ -1970,7 +1856,6 @@ function formatAdminOperationalRole(
     )
   );
 }
-
 function formatStatusLabel(
   status,
 ) {
@@ -1990,14 +1875,12 @@ function formatStatusLabel(
         character.toUpperCase(),
     );
 }
-
 function formatDate(
   value,
 ) {
   if (!value) {
     return "Not available";
   }
-
   return new Intl.DateTimeFormat(
     "en-NG",
     {
@@ -2011,7 +1894,6 @@ function formatDate(
     ),
   );
 }
-
 function getInitials(
   name,
 ) {
@@ -2035,5 +1917,4 @@ function getInitials(
     )
     .join("");
 }
-
 export default AdminMentorApplications;

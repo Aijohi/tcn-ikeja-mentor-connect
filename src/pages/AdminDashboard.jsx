@@ -1109,6 +1109,7 @@ function PeoplePage({ canManageAccounts = false }) {
       .from("mentor_applications")
       .select(
         `
+          id,
           applicant_user_id,
           status,
           created_at
@@ -1146,6 +1147,8 @@ function PeoplePage({ canManageAccounts = false }) {
             mentorProfile?.accepting_requests ?? null,
           mentor_approval_status:
             mentorProfile?.approval_status ?? null,
+          mentor_application_id:
+            latestMentorApplication?.id ?? null,
           mentor_application_status:
             latestMentorApplication?.status ?? null,
         };
@@ -1247,21 +1250,11 @@ function PeoplePage({ canManageAccounts = false }) {
 
     if (peopleTypeFilter === "mentors") {
       return (
-        person.role === "mentor" &&
-        person.mentor_approval_status === "approved"
-      );
-    }
-
-    if (peopleTypeFilter === "mentor_pending") {
-      return (
         (
-          person.signup_intent === "mentor" ||
-          person.role === "mentor"
+          person.role === "mentor" ||
+          person.signup_intent === "mentor"
         ) &&
-        (
-          person.mentor_application_status === "pending" ||
-          person.mentor_approval_status === "pending"
-        )
+        !["admin", "safeguarding_lead"].includes(person.role)
       );
     }
 
@@ -1278,6 +1271,14 @@ function PeoplePage({ canManageAccounts = false }) {
     }
 
     if (peopleTypeFilter === "mentors") {
+      if (peopleStatusFilter === "pending") {
+        return (
+          person.mentor_application_status === "pending" ||
+          person.mentor_approval_status === "pending" ||
+          person.account_status === "pending"
+        );
+      }
+
       if (peopleStatusFilter === "active") {
         return person.account_status === "active";
       }
@@ -1340,6 +1341,7 @@ function PeoplePage({ canManageAccounts = false }) {
     ],
     mentors: [
       { value: "all", label: "All" },
+      { value: "pending", label: "Pending" },
       { value: "active", label: "Active" },
       {
         value: "not_accepting",
@@ -1358,11 +1360,6 @@ function PeoplePage({ canManageAccounts = false }) {
 
   const membershipTabsByType = {
     mentors: [
-      { value: "all", label: "All" },
-      { value: "verified", label: "Verified" },
-      { value: "not_verified", label: "Not verified" },
-    ],
-    mentor_pending: [
       { value: "all", label: "All" },
       { value: "verified", label: "Verified" },
       { value: "not_verified", label: "Not verified" },
@@ -1460,7 +1457,6 @@ function PeoplePage({ canManageAccounts = false }) {
             { value: "mentees", label: "Mentees" },
             { value: "mentors", label: "Mentors" },
             { value: "administrators", label: "Administrators" },
-            { value: "mentor_pending", label: "Mentor pending" },
           ].map((filter) => (
             <button
               key={filter.value}
@@ -2240,7 +2236,7 @@ function MembershipStatus({ person }) {
 
   if (isStandardMentee) {
     return (
-      <span className="admin-protected-account">Not required</span>
+      <span className="admin-protected-account">— Not verified</span>
     );
   }
 
@@ -2355,7 +2351,11 @@ function MemberActions({ person, onAction }) {
   ) {
     return (
       <Link
-        to="/admin/dashboard/mentor-applications"
+        to={
+          person.mentor_application_id
+            ? `${ADMIN_ROUTES.applications}?applicationId=${person.mentor_application_id}`
+            : ADMIN_ROUTES.applications
+        }
         className="admin-verify-button"
       >
         Review membership
