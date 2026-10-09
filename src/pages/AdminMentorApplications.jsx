@@ -33,45 +33,79 @@ import "./AdminLaunchFixes.css";
 const APPLICATION_PAGE_SIZE = 10;
 
 function isMentorProfileComplete(application) {
+
   if (!application) return false;
 
   const biography = String(application.biography || "").trim();
+
   const jobTitle = String(application.job_title || "").trim();
+
   const expertise = Array.isArray(application.expertise)
+
     ? application.expertise.filter(Boolean)
+
     : [];
+
   const mentoringCategories = Array.isArray(application.mentorship_categories)
+
     ? application.mentorship_categories.filter(Boolean)
+
     : [];
+
   const languages = Array.isArray(application.languages)
+
     ? application.languages.filter(Boolean)
+
     : [];
+
   const meetingFormats = Array.isArray(application.meeting_formats)
+
     ? application.meeting_formats.filter(Boolean)
+
     : [];
+
   const sessionLengths = Array.isArray(application.session_lengths)
+
     ? application.session_lengths.filter(Boolean)
+
     : [];
 
   return Boolean(
+
     biography.length >= 50 &&
+
     jobTitle &&
+
     expertise.length > 0 &&
+
     mentoringCategories.length > 0 &&
+
     languages.length > 0 &&
+
     meetingFormats.length > 0 &&
+
     sessionLengths.length > 0 &&
+
     application.years_of_experience !== null &&
+
     application.years_of_experience !== undefined &&
+
     application.years_of_experience !== "" &&
+
     application.maximum_active_mentees !== null &&
+
     application.maximum_active_mentees !== undefined &&
+
     application.maximum_active_mentees !== ""
+
   );
+
 }
 
 function getProfileCompletionLabel(application) {
+
   return isMentorProfileComplete(application) ? "Complete" : "Incomplete";
+
 }
 
 function useLockBodyScroll(active) {
@@ -158,7 +192,7 @@ function AdminMentorApplications({
 
    SUBMITTED APPLICATIONS
 
-\\\\========================================================= \\\\\\*/
+========================================================= */
 
 function SubmittedApplications({
 
@@ -271,6 +305,13 @@ function SubmittedApplications({
     setSuccess,
 
   ] = useState("");
+
+  const [emailApplication, setEmailApplication] = useState(null);
+  const [emailSubject, setEmailSubject] = useState(
+    "Complete your Mentor Connect mentor profile",
+  );
+  const [emailMessage, setEmailMessage] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
 
   async function loadApplications({
 
@@ -706,40 +747,109 @@ function SubmittedApplications({
 
     setError("");
     setSuccess("");
+    setProcessing(true);
 
-    if (application?.applicant?.email_verified === false) {
-      setProcessing(true);
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email,
+    });
 
-      const { error: resendError } = await supabase.auth.resend({
-        type: "signup",
-        email,
-      });
+    setProcessing(false);
 
-      setProcessing(false);
-
-      if (resendError) {
-        console.error("Unable to resend verification email:", resendError);
-        setError(
-          resendError.message ||
-            "We could not resend the verification email.",
-        );
-        return;
-      }
-
-      setSuccess(`Verification email sent again to ${email}.`);
+    if (resendError) {
+      console.error("Unable to resend verification email:", resendError);
+      setError(
+        resendError.message ||
+          "We could not resend the verification email.",
+      );
       return;
     }
 
+    setSuccess(`Verification email sent again to ${email}.`);
+  }
+
+  function openEmailModal(application) {
     const name = application?.applicant?.full_name || "there";
-    const subject = "Complete your Mentor Connect mentor profile";
-    const body = `Hello ${name},\n\nThank you for your interest in becoming a mentor with Mentor Connect.\n\nOur records show that your mentor profile is not yet complete. Please sign in to Mentor Connect and complete the remaining information so your mentor application can be reviewed.\n\nThank you.\nMentor Connect | TCN IKEJA`;
 
-    const gmailUrl =
-      `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}` +
-      `&su=${encodeURIComponent(subject)}` +
-      `&body=${encodeURIComponent(body)}`;
+    setEmailApplication(application);
+    setEmailSubject("Complete your Mentor Connect mentor profile");
+    setEmailMessage(
+      `Hello ${name}\n\nThank you for your interest in becoming a mentor with Mentor Connect.\n\nOur records show that your mentor profile is not yet complete. Please sign in to Mentor Connect and complete the remaining information so your mentor application can be reviewed.\n\nThank you.\nMentor Connect | TCN IKEJA`,
+    );
+    setError("");
+    setSuccess("");
+  }
 
-    window.open(gmailUrl, "_blank", "noopener,noreferrer");
+  function closeEmailModal() {
+    if (emailSending) return;
+
+    setEmailApplication(null);
+    setEmailSubject("Complete your Mentor Connect mentor profile");
+    setEmailMessage("");
+    setError("");
+  }
+
+  async function sendApplicantEmail() {
+    const email = emailApplication?.applicant?.email?.trim();
+    const subject = emailSubject.trim();
+    const message = emailMessage.trim();
+
+    if (!email) {
+      setError("This applicant does not have an email address.");
+      return;
+    }
+
+    if (!subject) {
+      setError("Please enter an email subject.");
+      return;
+    }
+
+    if (!message) {
+      setError("Please enter an email message.");
+      return;
+    }
+
+    setEmailSending(true);
+    setError("");
+    setSuccess("");
+
+    const { data, error: emailError } = await supabase.functions.invoke(
+      "send-notification-email",
+      {
+        body: {
+          to: email,
+          subject,
+          message,
+          actionUrl: "https://mentorship.tcnikeja.org/mentor/profile",
+          actionLabel: "Complete mentor profile",
+          idempotencyKey: `mentor-profile-nudge-${emailApplication.id}-${Date.now()}`,
+        },
+      },
+    );
+
+    setEmailSending(false);
+
+    if (emailError) {
+      console.error("Unable to send applicant email:", emailError);
+      setError(
+        emailError.message ||
+          "We could not send the email. Please try again.",
+      );
+      return;
+    }
+
+    if (!data?.success) {
+      setError(
+        data?.error ||
+          "We could not send the email. Please try again.",
+      );
+      return;
+    }
+
+    setEmailApplication(null);
+    setEmailSubject("Complete your Mentor Connect mentor profile");
+    setEmailMessage("");
+    setSuccess(`Email sent successfully to ${email}.`);
   }
 
   async function submitReview(
@@ -1820,11 +1930,14 @@ function SubmittedApplications({
 
                               className="admin-review-button admin-review-button--nudge"
 
-                              onClick={() =>
+                              onClick={() => {
+                                  if (application?.applicant?.email_verified === false) {
+                                    nudgeApplicant(application);
+                                    return;
+                                  }
 
-                                nudgeApplicant(application)
-
-                              }
+                                  openEmailModal(application);
+                                }}
 
                             >
 
@@ -1837,9 +1950,13 @@ function SubmittedApplications({
                               />
 
                               <span>
+
                                 {application?.applicant?.email_verified === false
+
                                   ? "Resend verification"
+
                                   : "Send email"}
+
                               </span>
 
                             </button>
@@ -2136,6 +2253,21 @@ function SubmittedApplications({
 
       )}
 
+      {emailApplication && (
+        <AdminEmailModal
+          application={emailApplication}
+          subject={emailSubject}
+          setSubject={setEmailSubject}
+          message={emailMessage}
+          setMessage={setEmailMessage}
+          sending={emailSending}
+          error={error}
+          onSend={sendApplicantEmail}
+          onClose={closeEmailModal}
+        />
+      )}
+
+
       {selectedApplication &&
 
         rejectionMode && (
@@ -2230,7 +2362,7 @@ function SubmittedApplications({
 
    APPLICATION REVIEW MODAL
 
-\\\\========================================================= \\\\\\*/
+========================================================= */
 
 function ApplicationReviewModal({
 
@@ -3361,6 +3493,124 @@ function ApplicationReviewModal({
   );
 
 }
+
+function AdminEmailModal({
+  application,
+  subject,
+  setSubject,
+  message,
+  setMessage,
+  sending,
+  error,
+  onSend,
+  onClose,
+}) {
+  useLockBodyScroll(true);
+
+  const applicantName =
+    application?.applicant?.full_name || "Applicant";
+  const applicantEmail = application?.applicant?.email || "";
+
+  return (
+    <div
+      className="admin-decline-modal-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (
+          event.target === event.currentTarget &&
+          !sending
+        ) {
+          onClose();
+        }
+      }}
+    >
+      <section
+        className="admin-decline-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mentor-email-modal-title"
+      >
+        <header>
+          <div>
+            <span>MENTOR PROFILE FOLLOW-UP</span>
+            <h2 id="mentor-email-modal-title">Send email</h2>
+            <p>
+              Send a message to {applicantName} about completing the mentor profile.
+            </p>
+            <p>{applicantEmail}</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={sending}
+            aria-label="Close email modal"
+          >
+            <X size={18} />
+          </button>
+        </header>
+
+        <div className="admin-decline-modal-body">
+          <label>
+            <span>Subject</span>
+            <input
+              type="text"
+              value={subject}
+              onChange={(event) => setSubject(event.target.value)}
+              placeholder="Email subject"
+              maxLength={160}
+              disabled={sending}
+              autoFocus
+            />
+          </label>
+
+          <label>
+            <span>Message</span>
+            <textarea
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              rows="9"
+              placeholder="Write your message to the applicant."
+              maxLength={5000}
+              disabled={sending}
+            />
+          </label>
+
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+        </div>
+
+        <footer>
+          <button
+            type="button"
+            className="admin-drawer-secondary"
+            onClick={onClose}
+            disabled={sending}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            className="admin-final-approve-button"
+            onClick={onSend}
+            disabled={
+              sending ||
+              !subject.trim() ||
+              !message.trim()
+            }
+          >
+            {sending ? "Sending..." : "Send email"}
+          </button>
+        </footer>
+      </section>
+    </div>
+  );
+}
+
 
 function DecisionReasonModal({
 
