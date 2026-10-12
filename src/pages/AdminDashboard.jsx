@@ -1028,6 +1028,8 @@ function PeoplePage({ canManageAccounts = false }) {
   const [peopleStatusFilter, setPeopleStatusFilter] = useState("all");
   const [peopleMembershipFilter, setPeopleMembershipFilter] = useState("all");
   const [selectedPerson, setSelectedPerson] = useState(null);
+  const [selectedPersonDetails, setSelectedPersonDetails] = useState(null);
+  const [personDetailsLoading, setPersonDetailsLoading] = useState(false);
   const [selectedAction, setSelectedAction] = useState("");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -1040,23 +1042,20 @@ function PeoplePage({ canManageAccounts = false }) {
 
     const { data, error: peopleError } = await supabase
       .from("profiles")
-      .select(
-        `
-          id,
-          full_name,
-          email,
-          phone_number,
-          role,
-          signup_intent,
-          account_status,
-          membership_verified,
-          email_verified,
-          created_at
-        `,
-      )
-      .order("created_at", {
-        ascending: false,
-      });
+      .select(`
+        id,
+        full_name,
+        email,
+        phone_number,
+        role,
+        signup_intent,
+        account_status,
+        membership_verified,
+        email_verified,
+        profile_photo_url,
+        created_at
+      `)
+      .order("created_at", { ascending: false });
 
     if (peopleError) {
       console.error(peopleError);
@@ -1067,39 +1066,39 @@ function PeoplePage({ canManageAccounts = false }) {
 
     const profiles = data ?? [];
     const mentorIds = profiles
-      .filter((person) => person.role === "mentor")
+      .filter((person) => person.role === "mentor" || person.signup_intent === "mentor")
       .map((person) => person.id);
 
     let mentorProfilesById = {};
 
     if (mentorIds.length > 0) {
-      const {
-        data: mentorData,
-        error: mentorError,
-      } = await supabase
+      const { data: mentorData, error: mentorError } = await supabase
         .from("mentor_profiles")
-        .select(
-          `
-            mentor_id,
-            accepting_requests,
-            approval_status
-          `,
-        )
+        .select(`
+          mentor_id,
+          biography,
+          job_title,
+          organisation,
+          expertise,
+          mentorship_categories,
+          languages,
+          meeting_formats,
+          session_lengths,
+          maximum_active_mentees,
+          current_active_mentees,
+          years_of_experience,
+          accepting_requests,
+          approval_status
+        `)
         .in("mentor_id", mentorIds);
 
       if (mentorError) {
-        console.error(mentorError);
-        setError("We could not load mentor information.");
-        setLoading(false);
-        return;
+        console.error("Unable to load mentor profiles for People:", mentorError);
+      } else {
+        mentorProfilesById = Object.fromEntries(
+          (mentorData ?? []).map((mentor) => [mentor.mentor_id, mentor]),
+        );
       }
-
-      mentorProfilesById = Object.fromEntries(
-        (mentorData ?? []).map((mentor) => [
-          mentor.mentor_id,
-          mentor,
-        ]),
-      );
     }
 
     const {
@@ -1107,17 +1106,13 @@ function PeoplePage({ canManageAccounts = false }) {
       error: mentorApplicationError,
     } = await supabase
       .from("mentor_applications")
-      .select(
-        `
-          id,
-          applicant_user_id,
-          status,
-          created_at
-        `,
-      )
-      .order("created_at", {
-        ascending: false,
-      });
+      .select(`
+        id,
+        applicant_user_id,
+        status,
+        created_at
+      `)
+      .order("created_at", { ascending: false });
 
     if (mentorApplicationError) {
       console.error(mentorApplicationError);
@@ -1130,29 +1125,19 @@ function PeoplePage({ canManageAccounts = false }) {
 
     for (const application of mentorApplicationData ?? []) {
       if (!latestMentorApplicationByApplicant[application.applicant_user_id]) {
-        latestMentorApplicationByApplicant[application.applicant_user_id] =
-          application;
+        latestMentorApplicationByApplicant[application.applicant_user_id] = application;
       }
     }
 
     setPeople(
-      profiles.map((person) => {
-        const mentorProfile = mentorProfilesById[person.id] ?? null;
-        const latestMentorApplication =
-          latestMentorApplicationByApplicant[person.id] ?? null;
-
-        return {
-          ...person,
-          accepting_requests:
-            mentorProfile?.accepting_requests ?? null,
-          mentor_approval_status:
-            mentorProfile?.approval_status ?? null,
-          mentor_application_id:
-            latestMentorApplication?.id ?? null,
-          mentor_application_status:
-            latestMentorApplication?.status ?? null,
-        };
-      }),
+      profiles.map((person) => ({
+        ...person,
+        mentor_profile: mentorProfilesById[person.id] ?? null,
+        accepting_requests: mentorProfilesById[person.id]?.accepting_requests ?? null,
+        mentor_approval_status: mentorProfilesById[person.id]?.approval_status ?? null,
+        mentor_application_id: latestMentorApplicationByApplicant[person.id]?.id ?? null,
+        mentor_application_status: latestMentorApplicationByApplicant[person.id]?.status ?? null,
+      })),
     );
 
     setLoading(false);
@@ -1162,6 +1147,117 @@ function PeoplePage({ canManageAccounts = false }) {
     loadPeople();
   }, []);
 
+  async function openPersonDetails(person) {
+    setSelectedPerson(person);
+    setSelectedPersonDetails(null);
+    setPersonDetailsLoading(true);
+    setError("");
+
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          full_name,
+          email,
+          phone_number,
+          role,
+          signup_intent,
+          account_status,
+          membership_verified,
+          email_verified,
+          profile_photo_url,
+          created_at
+        `)
+        .eq("id", person.id)
+        .maybeSingle();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      if (!profile) {
+        throw new Error("This person could not be found.");
+      }
+
+      const mentorRelated =
+        profile.role === "mentor" || profile.signup_intent === "mentor";
+
+      let mentorProfile = null;
+      let privateDetails = null;
+
+      if (mentorRelated) {
+        const { data, error: mentorError } = await supabase
+          .from("mentor_profiles")
+          .select(`
+            mentor_id,
+            biography,
+            job_title,
+            organisation,
+            expertise,
+            mentorship_categories,
+            languages,
+            meeting_formats,
+            session_lengths,
+            maximum_active_mentees,
+            current_active_mentees,
+            years_of_experience,
+            accepting_requests,
+            approval_status
+          `)
+          .eq("mentor_id", profile.id)
+          .maybeSingle();
+
+        if (mentorError) {
+          console.error("Unable to load mentor profile details:", mentorError);
+        } else {
+          mentorProfile = data ?? null;
+        }
+
+        const { data: privateData, error: privateError } = await supabase
+          .from("mentor_private_details")
+          .select(`
+            linkedin_url,
+            instagram_url,
+            x_url,
+            website_url,
+            other_url
+          `)
+          .eq("user_id", profile.id)
+          .maybeSingle();
+
+        if (privateError) {
+          console.error("Unable to load private mentor details:", privateError);
+        } else {
+          privateDetails = privateData ?? null;
+        }
+      }
+
+      setSelectedPersonDetails({
+        ...profile,
+        mentorProfile,
+        privateDetails,
+      });
+    } catch (detailsError) {
+      console.error("Unable to load person details:", detailsError);
+      setSelectedPersonDetails({
+        ...person,
+        mentorProfile: person.mentor_profile ?? null,
+        privateDetails: null,
+        detailsError: detailsError?.message || "Some details could not be loaded.",
+      });
+    } finally {
+      setPersonDetailsLoading(false);
+    }
+  }
+
+  function closePersonDetails() {
+    if (processing) return;
+    setSelectedPerson(null);
+    setSelectedPersonDetails(null);
+    setPersonDetailsLoading(false);
+  }
+
   function openConfirmation(person, action) {
     setSelectedPerson(person);
     setSelectedAction(action);
@@ -1170,18 +1266,13 @@ function PeoplePage({ canManageAccounts = false }) {
   }
 
   function closeConfirmation() {
-    if (processing) {
-      return;
-    }
-
+    if (processing) return;
     setSelectedPerson(null);
     setSelectedAction("");
   }
 
   async function confirmAction() {
-    if (!selectedPerson || !selectedAction) {
-      return;
-    }
+    if (!selectedPerson || !selectedAction) return;
 
     const actionBeingCompleted = selectedAction;
     const personBeingUpdated = selectedPerson;
@@ -1190,13 +1281,10 @@ function PeoplePage({ canManageAccounts = false }) {
     setError("");
     setSuccess("");
 
-    const { data, error: actionError } = await supabase.rpc(
-      "admin_manage_member",
-      {
-        p_user_id: personBeingUpdated.id,
-        p_action: actionBeingCompleted,
-      },
-    );
+    const { data, error: actionError } = await supabase.rpc("admin_manage_member", {
+      p_user_id: personBeingUpdated.id,
+      p_action: actionBeingCompleted,
+    });
 
     if (actionError) {
       console.error(actionError);
@@ -1207,9 +1295,7 @@ function PeoplePage({ canManageAccounts = false }) {
 
     setPeople((currentPeople) =>
       currentPeople.map((person) =>
-        person.id === personBeingUpdated.id
-          ? { ...person, ...data }
-          : person,
+        person.id === personBeingUpdated.id ? { ...person, ...data } : person,
       ),
     );
 
@@ -1237,38 +1323,24 @@ function PeoplePage({ canManageAccounts = false }) {
   }
 
   function matchesPeopleType(person) {
-    if (peopleTypeFilter === "all") {
-      return true;
-    }
-
+    if (peopleTypeFilter === "all") return true;
     if (peopleTypeFilter === "mentees") {
-      return (
-        person.role === "mentee" &&
-        person.signup_intent !== "mentor"
-      );
+      return person.role === "mentee" && person.signup_intent !== "mentor";
     }
-
     if (peopleTypeFilter === "mentors") {
       return (
-        (
-          person.role === "mentor" ||
-          person.signup_intent === "mentor"
-        ) &&
+        (person.role === "mentor" || person.signup_intent === "mentor") &&
         !["admin", "safeguarding_lead"].includes(person.role)
       );
     }
-
     if (peopleTypeFilter === "administrators") {
       return ["admin", "safeguarding_lead"].includes(person.role);
     }
-
     return true;
   }
 
   function matchesPeopleStatus(person) {
-    if (peopleStatusFilter === "all") {
-      return true;
-    }
+    if (peopleStatusFilter === "all") return true;
 
     if (peopleTypeFilter === "mentors") {
       if (peopleStatusFilter === "pending") {
@@ -1278,55 +1350,25 @@ function PeoplePage({ canManageAccounts = false }) {
           person.account_status === "pending"
         );
       }
-
-      if (peopleStatusFilter === "active") {
-        return person.account_status === "active";
-      }
-
+      if (peopleStatusFilter === "active") return person.account_status === "active";
       if (peopleStatusFilter === "not_accepting") {
-        return (
-          person.account_status === "active" &&
-          person.accepting_requests === false
-        );
+        return person.account_status === "active" && person.accepting_requests === false;
       }
-
-      if (peopleStatusFilter === "suspended") {
-        return person.account_status === "suspended";
-      }
-
-      if (peopleStatusFilter === "removed") {
-        return person.account_status === "rejected";
-      }
+      if (peopleStatusFilter === "suspended") return person.account_status === "suspended";
+      if (peopleStatusFilter === "removed") return person.account_status === "rejected";
     }
 
-    if (
-      peopleStatusFilter === "pending" ||
-      peopleStatusFilter === "active" ||
-      peopleStatusFilter === "suspended"
-    ) {
+    if (["pending", "active", "suspended"].includes(peopleStatusFilter)) {
       return person.account_status === peopleStatusFilter;
     }
-
-    if (peopleStatusFilter === "removed") {
-      return person.account_status === "rejected";
-    }
-
+    if (peopleStatusFilter === "removed") return person.account_status === "rejected";
     return true;
   }
 
   function matchesPeopleMembership(person) {
-    if (peopleMembershipFilter === "all") {
-      return true;
-    }
-
-    if (peopleMembershipFilter === "verified") {
-      return person.membership_verified === true;
-    }
-
-    if (peopleMembershipFilter === "not_verified") {
-      return person.membership_verified !== true;
-    }
-
+    if (peopleMembershipFilter === "all") return true;
+    if (peopleMembershipFilter === "verified") return person.membership_verified === true;
+    if (peopleMembershipFilter === "not_verified") return person.membership_verified !== true;
     return true;
   }
 
@@ -1343,10 +1385,7 @@ function PeoplePage({ canManageAccounts = false }) {
       { value: "all", label: "All" },
       { value: "pending", label: "Pending" },
       { value: "active", label: "Active" },
-      {
-        value: "not_accepting",
-        label: "Not accepting requests",
-      },
+      { value: "not_accepting", label: "Not accepting requests" },
       { value: "suspended", label: "Suspended" },
       { value: "removed", label: "Removed" },
     ],
@@ -1369,25 +1408,15 @@ function PeoplePage({ canManageAccounts = false }) {
   const searchValue = searchTerm.trim().toLowerCase();
 
   const filteredPeople = people.filter((person) => {
-    if (!matchesPeopleType(person)) {
-      return false;
-    }
-
-    if (!matchesPeopleStatus(person)) {
-      return false;
-    }
-
-    if (!matchesPeopleMembership(person)) {
-      return false;
-    }
-
-    if (!searchValue) {
-      return true;
-    }
+    if (!matchesPeopleType(person)) return false;
+    if (!matchesPeopleStatus(person)) return false;
+    if (!matchesPeopleMembership(person)) return false;
+    if (!searchValue) return true;
 
     return [
       person.full_name,
       person.email,
+      person.phone_number,
       person.role,
       person.signup_intent,
       getPersonAccountType(person),
@@ -1399,59 +1428,22 @@ function PeoplePage({ canManageAccounts = false }) {
       .includes(searchValue);
   });
 
-  const totalPeoplePages = Math.max(
-    1,
-    Math.ceil(
-      filteredPeople.length /
-        PEOPLE_PAGE_SIZE,
-    ),
-  );
+  const totalPeoplePages = Math.max(1, Math.ceil(filteredPeople.length / PEOPLE_PAGE_SIZE));
+  const safePeoplePage = Math.min(peoplePage, totalPeoplePages);
+  const firstPeopleIndex = (safePeoplePage - 1) * PEOPLE_PAGE_SIZE;
+  const visiblePeople = filteredPeople.slice(firstPeopleIndex, firstPeopleIndex + PEOPLE_PAGE_SIZE);
+  const visiblePeopleStart = filteredPeople.length === 0 ? 0 : firstPeopleIndex + 1;
+  const visiblePeopleEnd = Math.min(firstPeopleIndex + PEOPLE_PAGE_SIZE, filteredPeople.length);
 
-  const safePeoplePage = Math.min(
-    peoplePage,
-    totalPeoplePages,
-  );
+  if (loading) return <AdminLoadingState />;
 
-  const firstPeopleIndex =
-    (safePeoplePage - 1) *
-    PEOPLE_PAGE_SIZE;
-
-  const visiblePeople =
-    filteredPeople.slice(
-      firstPeopleIndex,
-      firstPeopleIndex +
-        PEOPLE_PAGE_SIZE,
-    );
-
-  const visiblePeopleStart =
-    filteredPeople.length === 0
-      ? 0
-      : firstPeopleIndex + 1;
-
-  const visiblePeopleEnd =
-    Math.min(
-      firstPeopleIndex +
-        PEOPLE_PAGE_SIZE,
-      filteredPeople.length,
-    );
-
-  if (loading) {
-    return <AdminLoadingState />;
-  }
-
-  const activeStatusTabs =
-    statusTabsByType[peopleTypeFilter] ?? [];
-  const activeMembershipTabs =
-    membershipTabsByType[peopleTypeFilter] ?? [];
+  const activeStatusTabs = statusTabsByType[peopleTypeFilter] ?? [];
+  const activeMembershipTabs = membershipTabsByType[peopleTypeFilter] ?? [];
 
   return (
     <section className="admin-list-section admin-people-page">
       <div className="admin-people-filter-panel">
-        <div
-          className="admin-people-primary-tabs"
-          role="tablist"
-          aria-label="Filter people by account type"
-        >
+        <div className="admin-people-primary-tabs" role="tablist" aria-label="Filter people by account type">
           {[
             { value: "all", label: "All users" },
             { value: "mentees", label: "Mentees" },
@@ -1461,14 +1453,8 @@ function PeoplePage({ canManageAccounts = false }) {
             <button
               key={filter.value}
               type="button"
-              className={
-                peopleTypeFilter === filter.value
-                  ? "active"
-                  : ""
-              }
-              onClick={() =>
-                handlePeopleTypeFilter(filter.value)
-              }
+              className={peopleTypeFilter === filter.value ? "active" : ""}
+              onClick={() => handlePeopleTypeFilter(filter.value)}
             >
               {filter.label}
             </button>
@@ -1478,24 +1464,13 @@ function PeoplePage({ canManageAccounts = false }) {
         {activeMembershipTabs.length > 0 && (
           <div className="admin-people-status-filter">
             <span>Membership</span>
-
-            <div
-              className="admin-people-status-tabs"
-              role="tablist"
-              aria-label="Filter mentors by membership verification"
-            >
+            <div className="admin-people-status-tabs" role="tablist" aria-label="Filter mentors by membership verification">
               {activeMembershipTabs.map((filter) => (
                 <button
                   key={filter.value}
                   type="button"
-                  className={
-                    peopleMembershipFilter === filter.value
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    handlePeopleMembershipFilter(filter.value)
-                  }
+                  className={peopleMembershipFilter === filter.value ? "active" : ""}
+                  onClick={() => handlePeopleMembershipFilter(filter.value)}
                 >
                   {filter.label}
                 </button>
@@ -1507,24 +1482,13 @@ function PeoplePage({ canManageAccounts = false }) {
         {activeStatusTabs.length > 0 && (
           <div className="admin-people-status-filter">
             <span>Status</span>
-
-            <div
-              className="admin-people-status-tabs"
-              role="tablist"
-              aria-label="Filter people by account status"
-            >
+            <div className="admin-people-status-tabs" role="tablist" aria-label="Filter people by account status">
               {activeStatusTabs.map((filter) => (
                 <button
                   key={filter.value}
                   type="button"
-                  className={
-                    peopleStatusFilter === filter.value
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    handlePeopleStatusFilter(filter.value)
-                  }
+                  className={peopleStatusFilter === filter.value ? "active" : ""}
+                  onClick={() => handlePeopleStatusFilter(filter.value)}
                 >
                   {filter.label}
                 </button>
@@ -1537,117 +1501,82 @@ function PeoplePage({ canManageAccounts = false }) {
       <div className="admin-list-toolbar admin-people-list-toolbar">
         <div className="admin-people-search">
           <Search size={16} aria-hidden="true" />
-
           <input
             type="search"
             value={searchTerm}
-            placeholder="Search by name, email or role"
+            placeholder="Search by name, email, phone or role"
             aria-label="Search registered people"
             onChange={(event) => {
-              setSearchTerm(
-                event.target.value,
-              );
+              setSearchTerm(event.target.value);
               setPeoplePage(1);
             }}
           />
         </div>
-
-        <span>
-          {filteredPeople.length}{" "}
-          {filteredPeople.length === 1 ? "person" : "people"}
-        </span>
+        <span>{filteredPeople.length} {filteredPeople.length === 1 ? "person" : "people"}</span>
       </div>
 
       {success && <p className="admin-success-message">{success}</p>}
-
       {error && <p className="form-error">{error}</p>}
 
       {people.length === 0 ? (
-        <AdminEmptyState
-          title="No registered people"
-          description="Registered users will appear here."
-        />
+        <AdminEmptyState title="No registered people" description="Registered users will appear here." />
       ) : filteredPeople.length === 0 ? (
-        <AdminEmptyState
-          title="No matching people"
-          description="Try another search term or filter."
-        />
+        <AdminEmptyState title="No matching people" description="Try another search term or filter." />
       ) : (
         <div className="admin-mobile-table-shell">
           <div className="admin-table-wrapper admin-responsive-table-desktop">
             <table className="admin-data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email address</th>
-                <th>Account type</th>
-                <th>Account status</th>
-                <th>Membership</th>
-                <th>Registered</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {visiblePeople.map((person) => (
-                <tr key={person.id}>
-                  <td>
-                    <strong>{person.full_name || "Name not provided"}</strong>
-                  </td>
-
-                  <td>{person.email}</td>
-
-                  <td>
-                    <StatusBadge
-                      value={getPersonAccountTypeValue(person)}
-                      label={getPersonAccountType(person)}
-                    />
-                  </td>
-
-                  <td>
-                    <StatusBadge
-                      value={person.account_status}
-                      label={
-                        person.account_status === "pending"
-                          ? "Awaiting verification"
-                          : person.account_status === "rejected"
-                            ? "Removed"
-                            : undefined
-                      }
-                    />
-                  </td>
-
-                  <td>
-                    <MembershipStatus person={person} />
-                  </td>
-
-                  <td>{formatDate(person.created_at)}</td>
-
-                  <td>
-                    <div className="admin-people-action-group">
-                      <Link
-                        to={`${ADMIN_ROUTES.people}/${person.id}`}
-                        className="admin-view-details-button"
-                      >
-                        <Eye size={15} />
-                        View
-                      </Link>
-
-                      {canManageAccounts ? (
-                        <MemberActions
-                          person={person}
-                          onAction={openConfirmation}
-                        />
-                      ) : (
-                        <span className="admin-protected-account">
-                          View only
-                        </span>
-                      )}
-                    </div>
-                  </td>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email address</th>
+                  <th>Account type</th>
+                  <th>Account status</th>
+                  <th>Membership</th>
+                  <th>Registered</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
+              </thead>
+              <tbody>
+                {visiblePeople.map((person) => (
+                  <tr key={person.id}>
+                    <td><strong>{person.full_name || "Name not provided"}</strong></td>
+                    <td>{person.email}</td>
+                    <td><StatusBadge value={getPersonAccountTypeValue(person)} label={getPersonAccountType(person)} /></td>
+                    <td>
+                      <StatusBadge
+                        value={person.account_status}
+                        label={
+                          person.account_status === "pending"
+                            ? "Awaiting verification"
+                            : person.account_status === "rejected"
+                              ? "Removed"
+                              : undefined
+                        }
+                      />
+                    </td>
+                    <td><MembershipStatus person={person} /></td>
+                    <td>{formatDate(person.created_at)}</td>
+                    <td>
+                      <div className="admin-people-action-group">
+                        <button
+                          type="button"
+                          className="admin-view-details-button"
+                          onClick={() => openPersonDetails(person)}
+                        >
+                          <Eye size={15} />
+                          View
+                        </button>
+                        {canManageAccounts ? (
+                          <MemberActions person={person} onAction={openConfirmation} />
+                        ) : (
+                          <span className="admin-protected-account">View only</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
 
@@ -1660,13 +1589,8 @@ function PeoplePage({ canManageAccounts = false }) {
                     <strong>{person.full_name || "Name not provided"}</strong>
                     <small>{person.email}</small>
                   </div>
-
-                  <StatusBadge
-                    value={getPersonAccountTypeValue(person)}
-                    label={getPersonAccountType(person)}
-                  />
+                  <StatusBadge value={getPersonAccountTypeValue(person)} label={getPersonAccountType(person)} />
                 </div>
-
                 <dl className="admin-mobile-record-details">
                   <div>
                     <dt>Account status</dt>
@@ -1683,38 +1607,18 @@ function PeoplePage({ canManageAccounts = false }) {
                       />
                     </dd>
                   </div>
-
-                  <div>
-                    <dt>Membership</dt>
-                    <dd>
-                      <MembershipStatus person={person} />
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt>Registered</dt>
-                    <dd>{formatDate(person.created_at)}</dd>
-                  </div>
+                  <div><dt>Membership</dt><dd><MembershipStatus person={person} /></dd></div>
+                  <div><dt>Registered</dt><dd>{formatDate(person.created_at)}</dd></div>
                 </dl>
-
                 <div className="admin-mobile-record-actions">
-                  <Link
-                    to={`${ADMIN_ROUTES.people}/${person.id}`}
-                    className="admin-view-details-button"
-                  >
+                  <button type="button" className="admin-view-details-button" onClick={() => openPersonDetails(person)}>
                     <Eye size={15} />
                     View details
-                  </Link>
-
+                  </button>
                   {canManageAccounts ? (
-                    <MemberActions
-                      person={person}
-                      onAction={openConfirmation}
-                    />
+                    <MemberActions person={person} onAction={openConfirmation} />
                   ) : (
-                    <span className="admin-protected-account">
-                      View only
-                    </span>
+                    <span className="admin-protected-account">View only</span>
                   )}
                 </div>
               </article>
@@ -1722,69 +1626,45 @@ function PeoplePage({ canManageAccounts = false }) {
           </div>
 
           <div className="admin-table-pagination">
-            <p>
-              Showing{" "}
-              {visiblePeopleStart}-
-              {visiblePeopleEnd} of{" "}
-              {filteredPeople.length}
-            </p>
-
+            <p>Showing {visiblePeopleStart}-{visiblePeopleEnd} of {filteredPeople.length}</p>
             <div className="admin-pagination-controls">
               <button
                 type="button"
                 aria-label="Previous people page"
-                onClick={() =>
-                  setPeoplePage(
-                    (currentPage) =>
-                      Math.max(
-                        1,
-                        currentPage - 1,
-                      ),
-                  )
-                }
-                disabled={
-                  safePeoplePage === 1
-                }
+                onClick={() => setPeoplePage((currentPage) => Math.max(1, currentPage - 1))}
+                disabled={safePeoplePage === 1}
               >
-                <ChevronLeft
-                  size={16}
-                />
+                <ChevronLeft size={16} />
                 Previous
               </button>
-
-              <span>
-                Page {safePeoplePage} of{" "}
-                {totalPeoplePages}
-              </span>
-
+              <span>Page {safePeoplePage} of {totalPeoplePages}</span>
               <button
                 type="button"
                 aria-label="Next people page"
-                onClick={() =>
-                  setPeoplePage(
-                    (currentPage) =>
-                      Math.min(
-                        totalPeoplePages,
-                        currentPage + 1,
-                      ),
-                  )
-                }
-                disabled={
-                  safePeoplePage ===
-                  totalPeoplePages
-                }
+                onClick={() => setPeoplePage((currentPage) => Math.min(totalPeoplePages, currentPage + 1))}
+                disabled={safePeoplePage === totalPeoplePages}
               >
                 Next
-                <ChevronRight
-                  size={16}
-                />
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {selectedPerson && (
+      {selectedPerson && selectedPersonDetails && (
+        <PersonDetailsModal
+          person={selectedPersonDetails}
+          loading={personDetailsLoading}
+          onClose={closePersonDetails}
+        />
+      )}
+
+      {selectedPerson && !selectedPersonDetails && personDetailsLoading && (
+        <PersonDetailsModal person={selectedPerson} loading onClose={closePersonDetails} />
+      )}
+
+      {selectedPerson && selectedAction && (
         <ConfirmationModal
           person={selectedPerson}
           action={selectedAction}
@@ -1797,6 +1677,159 @@ function PeoplePage({ canManageAccounts = false }) {
   );
 }
 
+function PersonDetailsModal({ person, loading = false, onClose }) {
+  const mentorRelated =
+    person.role === "mentor" || person.signup_intent === "mentor";
+  const mentor = person.mentorProfile ?? person.mentor_profile ?? null;
+  const privateDetails = person.privateDetails ?? null;
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  function valueOrDash(value) {
+    if (Array.isArray(value)) return value.length ? value.join(", ") : "Not provided";
+    return value === null || value === undefined || value === "" ? "Not provided" : String(value);
+  }
+
+  function sessionLengths(value) {
+    if (!Array.isArray(value) || value.length === 0) return "Not provided";
+    return value.map((length) => `${length} minutes`).join(", ");
+  }
+
+  function detailDate(value) {
+    if (!value) return "Not available";
+    return new Intl.DateTimeFormat("en-NG", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(value));
+  }
+
+  return (
+    <div
+      className="admin-person-details-modal-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section
+        className="admin-person-details-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-person-details-title"
+      >
+        <header className="admin-person-details-modal-header">
+          <div className="admin-person-details-modal-identity">
+            {person.profile_photo_url ? (
+              <img src={person.profile_photo_url} alt="" className="admin-person-details-modal-avatar" />
+            ) : (
+              <span className="admin-person-details-modal-avatar admin-person-details-modal-avatar--fallback">
+                {getInitials(person.full_name)}
+              </span>
+            )}
+            <div>
+              <span className="admin-section-eyebrow">PERSON DETAILS</span>
+              <h2 id="admin-person-details-title">{person.full_name || "Name not provided"}</h2>
+              <p>{mentorRelated ? "Mentor information" : getPersonAccountType(person)}</p>
+            </div>
+          </div>
+          <button type="button" className="admin-mentor-review-close" onClick={onClose} aria-label="Close person details">
+            <X size={18} />
+          </button>
+        </header>
+
+        <div className="admin-person-details-modal-body">
+          {loading ? (
+            <AdminLoadingState />
+          ) : (
+            <>
+              <section className="admin-person-details-modal-section">
+                <span className="admin-section-eyebrow">ACCOUNT</span>
+                <h3>Contact and account information</h3>
+                <div className="admin-person-details-modal-grid">
+                  <ReviewDetail label="Full name" value={person.full_name} />
+                  <ReviewDetail label="Email address" value={person.email} />
+                  <ReviewDetail label="Phone number" value={person.phone_number} />
+                  <ReviewDetail label="Account type" value={getPersonAccountType(person)} />
+                  <ReviewDetail label="Account status" value={person.account_status === "rejected" ? "Removed" : person.account_status} />
+                  <ReviewDetail label="Membership" value={person.membership_verified ? "Verified" : mentorRelated ? "Not verified" : "Not applicable"} />
+                  <ReviewDetail label="Email verified" value={person.email_verified ? "Verified" : "Not verified"} />
+                  <ReviewDetail label="Registered" value={detailDate(person.created_at)} />
+                </div>
+              </section>
+
+              {mentorRelated && (
+                <>
+                  <section className="admin-person-details-modal-section">
+                    <span className="admin-section-eyebrow">MENTOR PROFILE</span>
+                    <h3>Professional and mentoring information</h3>
+                    {mentor ? (
+                      <div className="admin-person-details-modal-grid">
+                        <ReviewDetail label="Job title" value={mentor.job_title} />
+                        <ReviewDetail label="Organisation" value={mentor.organisation} />
+                        <ReviewDetail label="Years of experience" value={mentor.years_of_experience} />
+                        <ReviewDetail label="Maximum active mentees" value={mentor.maximum_active_mentees} />
+                        <ReviewDetail label="Current active mentees" value={mentor.current_active_mentees} />
+                        <ReviewDetail label="Accepting requests" value={mentor.accepting_requests === null || mentor.accepting_requests === undefined ? "Not provided" : mentor.accepting_requests ? "Yes" : "No"} />
+                        <ReviewDetail label="Approval status" value={mentor.approval_status} />
+                        <ReviewDetail label="Expertise" value={valueOrDash(mentor.expertise)} />
+                        <ReviewDetail label="Mentoring categories" value={valueOrDash(mentor.mentorship_categories)} />
+                        <ReviewDetail label="Languages" value={valueOrDash(mentor.languages)} />
+                        <ReviewDetail label="Meeting formats" value={valueOrDash(mentor.meeting_formats)} />
+                        <ReviewDetail label="Session lengths" value={sessionLengths(mentor.session_lengths)} />
+                      </div>
+                    ) : (
+                      <p className="admin-person-details-modal-empty">No mentor profile information is available for this account.</p>
+                    )}
+                  </section>
+
+                  <section className="admin-person-details-modal-section">
+                    <span className="admin-section-eyebrow">BIOGRAPHY</span>
+                    <h3>Mentor biography</h3>
+                    <p className="admin-person-details-modal-long-text">{mentor?.biography || "Not provided"}</p>
+                  </section>
+
+                  <section className="admin-person-details-modal-section">
+                    <span className="admin-section-eyebrow">ADMINISTRATOR ONLY</span>
+                    <h3>Professional links</h3>
+                    <div className="admin-person-details-modal-links">
+                      {[
+                        ["LinkedIn", privateDetails?.linkedin_url],
+                        ["Instagram", privateDetails?.instagram_url],
+                        ["X", privateDetails?.x_url],
+                        ["Website", privateDetails?.website_url],
+                        ["Other", privateDetails?.other_url],
+                      ].map(([label, url]) => (
+                        <div key={label}>
+                          <span>{label}</span>
+                          {url ? (
+                            <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+                          ) : (
+                            <strong>Not provided</strong>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </>
+              )}
+            </>
+          )}
+        </div>
+
+        <footer className="admin-person-details-modal-footer">
+          <button type="button" className="admin-drawer-secondary" onClick={onClose}>Close</button>
+        </footer>
+      </section>
+    </div>
+  );
+}
 
 function PeopleDetailPage() {
   const location = useLocation();

@@ -95,7 +95,7 @@ function AdminMentorApplications({
 }
 /* =========================================================
    SUBMITTED APPLICATIONS
-\\\\\\\\========================================================= \\\\\\\\\\\\*/
+   ========================================================= */
 function SubmittedApplications({
   canRecommendApplications,
   canSecondSignoffApplications,
@@ -152,10 +152,13 @@ function SubmittedApplications({
     success,
     setSuccess,
   ] = useState("");
-  const [emailApplication, setEmailApplication] = useState(null);
-  const [emailSubject, setEmailSubject] = useState("");
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailRecipient, setEmailRecipient] = useState("");
+  const [emailName, setEmailName] = useState("");
+  const [emailSubject, setEmailSubject] = useState(
+    "Complete your Mentor Connect mentor profile",
+  );
   const [emailMessage, setEmailMessage] = useState("");
-  const [emailSending, setEmailSending] = useState(false);
   async function loadApplications({
     keepModalOpen = false,
   } = {}) {
@@ -378,73 +381,39 @@ function SubmittedApplications({
     setSuccess("");
     if (application?.applicant?.email_verified === false) {
       setProcessing(true);
-      const { error: resendError } = await supabase.auth.resend({ type: "signup", email });
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email,
+      });
       setProcessing(false);
       if (resendError) {
-        console.error("Unable to resend verification email:", resendError);
-        setError(resendError.message || "We could not resend the verification email.");
+        console.error(
+          "Unable to resend verification email:",
+          resendError,
+        );
+        setError(
+          resendError.message ||
+            "We could not resend the verification email.",
+        );
         return;
       }
       setSuccess(`Verification email sent again to ${email}.`);
       return;
     }
     const name = application?.applicant?.full_name || "there";
-    setEmailApplication(application);
-    setEmailSubject("Complete your Mentor Connect mentor profile");
-    setEmailMessage(`Hello ${name},
-
+    setEmailRecipient(email);
+    setEmailName(name);
+    setEmailSubject(
+      "Complete your Mentor Connect mentor profile",
+    );
+    setEmailMessage(
+      `Hello ${name},
 Thank you for your interest in becoming a mentor with Mentor Connect.
-
 Our records show that your mentor profile is not yet complete. Please sign in to Mentor Connect and complete the remaining information so your mentor application can be reviewed.
-
 Thank you.
-Mentor Connect | TCN IKEJA`);
-  }
-  function closeEmailComposer() {
-    if (emailSending) return;
-    setEmailApplication(null);
-    setEmailSubject("");
-    setEmailMessage("");
-    setError("");
-  }
-  async function sendApplicantEmail() {
-    const email = emailApplication?.applicant?.email?.trim();
-    const subject = emailSubject.trim();
-    const message = emailMessage.trim();
-    if (!email) {
-      setError("This applicant does not have an email address.");
-      return;
-    }
-    if (subject.length < 2) {
-      setError("Please enter an email subject.");
-      return;
-    }
-    if (message.length < 2) {
-      setError("Please enter a message.");
-      return;
-    }
-    setEmailSending(true);
-    setError("");
-    setSuccess("");
-    try {
-      const { data, error: functionError } = await supabase.functions.invoke("admin-send-notification", {
-        body: { to: email, subject, message, actionUrl: "https://mentorship.tcnikeja.org/login", actionLabel: "Sign in to Mentor Connect" },
-      });
-      if (functionError) {
-        console.error("Unable to send applicant email:", functionError);
-        throw new Error(functionError.message || "We could not send the email.");
-      }
-      if (!data?.success) throw new Error(data?.error || "We could not send the email.");
-      setEmailApplication(null);
-      setEmailSubject("");
-      setEmailMessage("");
-      setSuccess(`Email sent successfully to ${email}.`);
-    } catch (sendError) {
-      console.error("Applicant email error:", sendError);
-      setError(sendError instanceof Error ? sendError.message : "We could not send the email. Please try again.");
-    } finally {
-      setEmailSending(false);
-    }
+Mentor Connect | TCN IKEJA`,
+    );
+    setEmailModalOpen(true);
   }
   async function submitReview(
     action,
@@ -1187,29 +1156,82 @@ Mentor Connect | TCN IKEJA`);
             }
           />
         )}
-          {emailApplication && (
-        <div role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !emailSending) closeEmailComposer(); }} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", background: "rgba(15,20,25,.58)" }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="mentor-email-dialog-title" style={{ width: "min(680px,100%)", maxHeight: "90vh", overflowY: "auto", background: "#fff", borderRadius: "18px", boxShadow: "0 24px 70px rgba(0,0,0,.22)" }}>
-            <header style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "20px", padding: "24px 28px", borderBottom: "1px solid #e8edf2" }}>
+      {emailModalOpen && (
+        <div
+          className="admin-email-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setEmailModalOpen(false);
+            }
+          }}
+        >
+          <section
+            className="admin-email-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-email-modal-title"
+          >
+            <header className="admin-email-modal-header">
               <div>
-                <span style={{ display: "block", marginBottom: "7px", fontSize: "12px", fontWeight: 800, letterSpacing: ".08em", color: "#ff5303" }}>MENTOR PROFILE FOLLOW-UP</span>
-                <h2 id="mentor-email-dialog-title" style={{ margin: 0, fontSize: "24px", lineHeight: 1.2, color: "#101419" }}>Send email</h2>
-                <p style={{ margin: "8px 0 0", fontSize: "14px", lineHeight: 1.5, color: "#66717d" }}>Send a message to {emailApplication.applicant?.full_name || "this applicant"} about completing the mentor profile.</p>
+                <span className="admin-section-eyebrow">MENTOR PROFILE FOLLOW-UP</span>
+                <h2 id="admin-email-modal-title">Send email</h2>
+                <p>Send a message to {emailName} about completing the mentor profile.</p>
               </div>
-              <button type="button" onClick={closeEmailComposer} disabled={emailSending} aria-label="Close email dialog" style={{ width: "40px", height: "40px", flexShrink: 0, border: "1px solid #dce2e8", borderRadius: "10px", background: "#fff", color: "#34404b" }}><X size={18} /></button>
+              <button
+                type="button"
+                className="admin-email-modal-close"
+                onClick={() => setEmailModalOpen(false)}
+                aria-label="Close email"
+              >
+                <X size={18} />
+              </button>
             </header>
-            <div style={{ padding: "24px 28px" }}>
-              <label htmlFor="mentor-email-to" style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: 700 }}>To</label>
-              <input id="mentor-email-to" value={emailApplication.applicant?.email || ""} readOnly style={{ width: "100%", boxSizing: "border-box", padding: "13px 14px", marginBottom: "18px", border: "1px solid #dce2e8", borderRadius: "10px", background: "#f7f9fb", color: "#35404b", fontSize: "14px" }} />
-              <label htmlFor="mentor-email-subject" style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: 700 }}>Subject</label>
-              <input id="mentor-email-subject" value={emailSubject} onChange={(event) => setEmailSubject(event.target.value)} disabled={emailSending} maxLength={160} style={{ width: "100%", boxSizing: "border-box", padding: "13px 14px", marginBottom: "18px", border: "1px solid #dce2e8", borderRadius: "10px", fontSize: "14px" }} />
-              <label htmlFor="mentor-email-message" style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: 700 }}>Message</label>
-              <textarea id="mentor-email-message" value={emailMessage} onChange={(event) => setEmailMessage(event.target.value)} disabled={emailSending} rows={10} maxLength={5000} style={{ width: "100%", boxSizing: "border-box", padding: "14px", border: "1px solid #dce2e8", borderRadius: "10px", fontSize: "14px", lineHeight: 1.6, resize: "vertical", fontFamily: "inherit" }} />
-              {error && <p role="alert" style={{ margin: "14px 0 0", padding: "12px 14px", borderRadius: "10px", background: "#fff1f0", color: "#c62828", fontSize: "13px" }}>{error}</p>}
+            <div className="admin-email-modal-body">
+              <label className="admin-email-field">
+                <span>To</span>
+                <input type="email" value={emailRecipient} readOnly />
+              </label>
+              <label className="admin-email-field">
+                <span>Subject</span>
+                <input
+                  type="text"
+                  value={emailSubject}
+                  onChange={(event) => setEmailSubject(event.target.value)}
+                />
+              </label>
+              <label className="admin-email-field">
+                <span>Message</span>
+                <textarea
+                  value={emailMessage}
+                  onChange={(event) => setEmailMessage(event.target.value)}
+                  rows={10}
+                />
+              </label>
             </div>
-            <footer style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "18px 28px 24px", borderTop: "1px solid #e8edf2" }}>
-              <button type="button" onClick={closeEmailComposer} disabled={emailSending} style={{ minWidth: "120px", padding: "12px 18px", border: "1px solid #d5dce3", borderRadius: "10px", background: "#fff", color: "#35404b", fontWeight: 700 }}>Cancel</button>
-              <button type="button" onClick={sendApplicantEmail} disabled={emailSending} style={{ minWidth: "140px", padding: "12px 18px", border: 0, borderRadius: "10px", background: "#2f8f4e", color: "#fff", fontWeight: 700, opacity: emailSending ? .7 : 1 }}>{emailSending ? "Sending..." : "Send email"}</button>
+            <footer className="admin-email-modal-actions">
+              <button
+                type="button"
+                className="admin-modal-cancel-button"
+                onClick={() => setEmailModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="admin-modal-confirm-button"
+                onClick={() => {
+                  const gmailUrl =
+                    `https://mail.google.com/mail/?view=cm&fs=1` +
+                    `&to=${encodeURIComponent(emailRecipient)}` +
+                    `&su=${encodeURIComponent(emailSubject)}` +
+                    `&body=${encodeURIComponent(emailMessage)}`;
+                  window.open(gmailUrl, "_blank", "noopener,noreferrer");
+                }}
+              >
+                <Mail size={15} />
+                Open email
+              </button>
             </footer>
           </section>
         </div>
@@ -1217,10 +1239,9 @@ Mentor Connect | TCN IKEJA`);
     </>
   );
 }
-
 /* =========================================================
    APPLICATION REVIEW MODAL
-\\\\\\\\========================================================= \\\\\\\\\\\\*/
+   ========================================================= */
 function ApplicationReviewModal({
   application,
   canRecommendApplications,
@@ -1324,7 +1345,12 @@ function ApplicationReviewModal({
               <p>
                 {application.applicant
                   ?.email ||
-                  ""}
+                  "Email not provided"}
+              </p>
+              <p>
+                {application.applicant
+                  ?.phone_number ||
+                  "Phone number not provided"}
               </p>
             </div>
           </div>
@@ -1466,6 +1492,17 @@ function ApplicationReviewModal({
                 }
               />
               <ReviewDetail
+                label="Current active mentees"
+                value={
+                  application.current_active_mentees ??
+                  "Not provided"
+                }
+              />
+              <ReviewDetail
+                label="Expertise"
+                value={(application.expertise ?? []).join(", ")}
+              />
+              <ReviewDetail
                 label="Meeting format"
                 value={(
                   application.meeting_formats ??
@@ -1500,6 +1537,12 @@ function ApplicationReviewModal({
             label="Mentoring areas"
             items={
               application.mentorship_categories
+            }
+          />
+          <ReviewList
+            label="Expertise"
+            items={
+              application.expertise
             }
           />
           <ReviewList
