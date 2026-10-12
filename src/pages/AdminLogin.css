@@ -1,78 +1,45 @@
-/* =========================================================
-   ADMIN LOGIN
-   Centered, mature authentication screen.
-   White + dark neutral + orange only.
-   ========================================================= */
-
-html,
-body,
-#root {
+/* FULL REPLACEMENT: src/pages/AdminLogin.css */
+html, body, #root {
   min-height: 100%;
 }
-
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  scroll-padding-top: 24px;
 }
-
 body {
   margin: 0;
+  background: #fff;
 }
-
+.admin-login-page, .admin-login-page * {
+  box-sizing: border-box;
+}
 .admin-login-page {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
-  box-sizing: border-box;
   padding: 40px 24px max(40px, env(safe-area-inset-bottom));
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: visible;
   color: #101419;
-  background: #ffffff;
+  background: #fff;
+  isolation: isolate;
 }
-
-/* ---------------------------------------------------------
-   SUBTLE BACKGROUND PATTERN
-   --------------------------------------------------------- */
-
 .admin-login-pattern {
   position: absolute;
   inset: 0;
+  z-index: -1;
   pointer-events: none;
-
-  background:
-    radial-gradient(
-      circle at 18% 20%,
-      rgba(255, 83, 3, 0.055) 0,
-      rgba(255, 83, 3, 0.055) 2px,
-      transparent 2px,
-      transparent 30px
-    ),
-    radial-gradient(
-      circle at 82% 78%,
-      rgba(16, 20, 25, 0.035) 0,
-      rgba(16, 20, 25, 0.035) 1px,
-      transparent 1px,
-      transparent 26px
-    ),
-    linear-gradient(
-      180deg,
-      #ffffff 0%,
-      #fbfcfd 100%
-    );
-
-  background-size:
-    46px 46px,
-    40px 40px,
-    100% 100%;
-
-  opacity: 0.9;
+  background:     radial-gradient(circle at 18% 20%, rgba(255,83,3,.055) 0 2px, transparent 2px 30px),     radial-gradient(circle at 82% 78%, rgba(16,20,25,.035) 0 1px, transparent 1px 26px),     linear-gradient(180deg,#fff 0%,#fbfcfd 100%);
+  background-size: 46px 46px, 40px 40px, 100% 100%;
+  opacity: .9;
 }
-
-.admin-login-page::before,
-.admin-login-page::after {
+.admin-login-page::before, .admin-login-page::after {
   position: absolute;
   width: 320px;
   height: 320px;
@@ -80,31 +47,23 @@ body {
   content: "";
   pointer-events: none;
   filter: blur(20px);
+  z-index: -1;
 }
-
 .admin-login-page::before {
   top: -150px;
   right: -110px;
-  background: rgba(255, 83, 3, 0.045);
+  background: rgba(255,83,3,.045);
 }
-
 .admin-login-page::after {
   bottom: -180px;
   left: -120px;
-  background: rgba(16, 20, 25, 0.035);
+  background: rgba(16,20,25,.035);
 }
-
-/* ---------------------------------------------------------
-   SHELL
-   --------------------------------------------------------- */
-
 .admin-login-shell {
   position: relative;
-  z-index: 1;
-  width: min(100%, 460px);
-  box-sizing: border-box;
+  width: min(100%,460px);
+  min-width: 0;
 }
-
 .admin-login-brand {
   display: inline-flex;
   align-items: center;
@@ -113,445 +72,288 @@ body {
   margin: 0 0 30px;
   color: inherit;
   text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
 }
-
 .admin-login-logo {
   flex: 0 0 auto;
   width: 44px;
   height: 44px;
   object-fit: contain;
 }
-
-.admin-login-brand > span {
+.admin-login-brand > span, .admin-login-brand strong, .admin-login-brand small {
   display: block;
 }
-
-.admin-login-brand strong,
-.admin-login-brand small {
-  display: block;
-}
-
 .admin-login-brand strong {
   color: #101419;
   font-size: 16px;
   font-weight: 700;
   line-height: 1.15;
 }
-
 .admin-login-brand small {
   margin-top: 3px;
   color: #6f8095;
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.14em;
+  letter-spacing: .14em;
 }
-
 .admin-login-card {
   width: 100%;
-  box-sizing: border-box;
+  min-width: 0;
   padding: 34px 34px 32px;
   border: 1px solid #e4e8ef;
   border-radius: 18px;
-  background: #ffffff;
-
-  box-shadow:
-    0 18px 50px
-    rgba(16, 20, 25, 0.07);
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(16,20,25,.07);
 }
-
-/* ---------------------------------------------------------
-   COPY
-   --------------------------------------------------------- */
-
 .admin-login-copy {
   margin-bottom: 28px;
 }
-
 .admin-login-eyebrow {
   display: block;
   margin-bottom: 9px;
   color: #ff5303;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.13em;
+  letter-spacing: .13em;
 }
-
 .admin-login-copy h1 {
   margin: 0;
   color: #101419;
-  font-size: clamp(30px, 5vw, 38px);
+  font-size: clamp(30px,5vw,38px);
   font-weight: 650;
   line-height: 1.12;
-  letter-spacing: -0.03em;
+  letter-spacing: -.03em;
 }
-
 .admin-login-copy p {
   margin: 10px 0 0;
   color: #4c5867;
   font-size: 14px;
   line-height: 1.65;
 }
-
-/* ---------------------------------------------------------
-   FORM
-   --------------------------------------------------------- */
-
 .admin-login-form {
   display: grid;
   gap: 18px;
 }
-
 .admin-login-form label {
   display: block;
   color: #101419;
   font-size: 13px;
   font-weight: 600;
 }
-
 .admin-login-form input {
   display: block;
   width: 100%;
+  min-width: 0;
   height: 46px;
-  box-sizing: border-box;
-
   margin-top: 7px;
   padding: 0 13px;
-
   border: 1px solid #c9d2df;
   border-radius: 10px;
-
   outline: none;
-
   color: #101419;
-  background: #ffffff;
-
+  background: #fff;
   font-family: inherit;
-  font-size: 16px;
+  font-size: 16px !important;
   font-weight: 400;
   line-height: normal;
-
   box-shadow: none;
-
   appearance: none;
   -webkit-appearance: none;
-
-  -webkit-text-size-adjust: 100%;
-
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+  scroll-margin-top: 100px;
+  scroll-margin-bottom: 120px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
-
 .admin-login-form input:hover {
   border-color: #97aac2;
 }
-
-.admin-login-form input:focus,
-.admin-login-form input:focus-visible {
+.admin-login-form input:focus, .admin-login-form input:focus-visible {
   border-color: #4c5867;
   outline: none;
-
-  box-shadow:
-    0 0 0 1px
-    rgba(76, 88, 103, 0.10);
+  box-shadow: 0 0 0 1px rgba(76,88,103,.1);
 }
-
 .admin-login-form input::placeholder {
   color: #97aac2;
   opacity: 1;
 }
-
 .admin-login-form input:disabled {
   color: #8794a4;
   background: #f7f8fa;
   cursor: not-allowed;
 }
-
-/* ---------------------------------------------------------
-   PASSWORD
-   --------------------------------------------------------- */
-
 .admin-password-field {
   position: relative;
 }
-
 .admin-password-field input {
   padding-right: 46px;
 }
-
 .admin-password-toggle {
   appearance: none;
   -webkit-appearance: none;
-
   position: absolute;
   top: 50%;
   right: 8px;
-
   display: grid;
   place-items: center;
-
-  width: 34px;
-  height: 34px;
-
+  width: 38px;
+  height: 38px;
   padding: 0;
-
   border: 0;
   border-radius: 8px;
-
   color: #6f8095;
   background: transparent;
-
   cursor: pointer;
-
   transform: translateY(-50%);
-
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
 }
-
 .admin-password-toggle:hover:not(:disabled) {
   color: #101419;
   background: #f7f8fa;
 }
-
 .admin-password-toggle:focus-visible {
-  outline:
-    1px solid
-    rgba(76, 88, 103, 0.28);
-
+  outline: 1px solid rgba(76,88,103,.28);
   outline-offset: 1px;
 }
-
-/* ---------------------------------------------------------
-   ERROR
-   --------------------------------------------------------- */
-
 .admin-login-error {
   margin: -2px 0 0;
   padding: 11px 13px;
-
   border: 1px solid #ffcbc5;
   border-radius: 10px;
-
   color: #832600;
   background: #fff4f3;
-
   font-size: 12px;
   line-height: 1.5;
 }
-
-/* ---------------------------------------------------------
-   PRIMARY ACTION
-   --------------------------------------------------------- */
-
 .admin-login-submit {
   appearance: none;
   -webkit-appearance: none;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   gap: 8px;
-
   width: 100%;
-  min-height: 44px;
-
+  min-height: 48px;
   padding: 0 16px;
-
   border: 1px solid #ff5303;
   border-radius: 9px;
-
-  color: #ffffff;
+  color: #fff;
   background: #ff5303;
-
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   line-height: 1;
-
   cursor: pointer;
-
-  box-shadow: none;
-  transform: none;
-
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-
-  transition:
-    border-color 150ms ease,
-    background-color 150ms ease,
-    opacity 150ms ease;
+  transition: border-color 150ms ease, background-color 150ms ease, opacity 150ms ease;
 }
-
 .admin-login-submit:hover:not(:disabled) {
   border-color: #c13c00;
   background: #c13c00;
 }
-
 .admin-login-submit:focus-visible {
-  outline:
-    2px solid
-    rgba(76, 88, 103, 0.25);
-
+  outline: 2px solid rgba(76,88,103,.25);
   outline-offset: 2px;
 }
-
 .admin-login-submit:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: .6;
 }
-
-/* ---------------------------------------------------------
-   TERTIARY ACTION
-   --------------------------------------------------------- */
-
 .admin-forgot-link {
   display: block;
   width: fit-content;
-
   margin: 16px auto 0;
-
   color: #4c5867;
-
   font-size: 12px;
   font-weight: 500;
   text-decoration: none;
-
-  -webkit-tap-highlight-color: transparent;
 }
-
 .admin-forgot-link:hover {
   color: #101419;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-
-/* ---------------------------------------------------------
-   RESTRICTED NOTICE
-   --------------------------------------------------------- */
-
 .admin-restricted-notice {
   display: flex;
   align-items: flex-start;
-
   gap: 9px;
-
   margin-top: 24px;
   padding: 13px 14px;
-
   border: 1px solid #ffcbc5;
   border-radius: 11px;
-
   color: #4c5867;
   background: #fffaf9;
-
   font-size: 11px;
   line-height: 1.6;
 }
-
 .admin-restricted-notice svg {
   flex: 0 0 auto;
   margin-top: 1px;
   color: #ff5303;
 }
-
-/* ---------------------------------------------------------
-   MOBILE
-   --------------------------------------------------------- */
-
+/* Keep the document naturally scrollable when iOS opens its keyboard.
+   Do not lock body scrolling or use a fixed-height login wrapper. */
 @media (max-width: 560px) {
   .admin-login-page {
-    place-items: start center;
-
-    padding:
-      24px 16px
-      max(
-        32px,
-        calc(
-          24px +
-          env(safe-area-inset-bottom)
-        )
-      );
+    display: block;
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: auto;
+    padding: max(24px, env(safe-area-inset-top)) 16px max(36px, env(safe-area-inset-bottom));
+    overflow: visible;
   }
-
   .admin-login-shell {
     width: 100%;
     max-width: 460px;
-    margin-top: 8px;
+    margin: 8px auto 0;
   }
-
+  .admin-login-form input {
+    scroll-margin-top: 96px;
+  }
   .admin-login-brand {
     margin-bottom: 22px;
   }
-
   .admin-login-logo {
     width: 40px;
     height: 40px;
   }
-
   .admin-login-card {
     padding: 26px 20px;
     border-radius: 15px;
   }
-
   .admin-login-copy {
     margin-bottom: 24px;
   }
-
   .admin-login-copy h1 {
     font-size: 30px;
   }
-
-  .admin-login-copy p {
-    font-size: 14px;
-  }
-
   .admin-login-form {
     gap: 16px;
   }
-
   .admin-login-form input {
     height: 48px;
     min-height: 48px;
     font-size: 16px !important;
   }
-
-  .admin-password-toggle {
-    width: 38px;
-    height: 38px;
-  }
-
   .admin-login-submit {
     min-height: 48px;
-    font-size: 14px;
   }
-
   .admin-restricted-notice {
     margin-top: 20px;
   }
 }
-
 @media (max-width: 380px) {
   .admin-login-page {
     padding-left: 12px;
     padding-right: 12px;
   }
-
   .admin-login-card {
     padding: 24px 16px;
   }
-
   .admin-login-copy h1 {
     font-size: 28px;
   }
 }
-
 @media (prefers-reduced-motion: reduce) {
-  .admin-login-form input,
-  .admin-login-submit {
+  .admin-login-form input, .admin-login-submit {
     transition: none;
   }
 }

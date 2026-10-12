@@ -765,3 +765,35 @@ span {
     font-size: 7.5px !important;
   }
 }
+
+/* =========================================================
+   MOBILE DASHBOARD TOP SPACING FIX
+   ========================================================= */
+
+@media (max-width: 1180px) {
+  .dashboard-content {
+    box-sizing: border-box;
+    padding-top: calc(
+      68px +
+      env(safe-area-inset-top)
+    ) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-content {
+    padding-top: calc(
+      68px +
+      env(safe-area-inset-top)
+    ) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .dashboard-content {
+    padding-top: calc(
+      64px +
+      env(safe-area-inset-top)
+    ) !important;
+  }
+}
