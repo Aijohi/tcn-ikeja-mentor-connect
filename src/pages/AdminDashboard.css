@@ -2125,3 +2125,68 @@ body:has(.admin-list-section) .dashboard-content {
     text-align: left;
   }
 }
+
+
+/* MOBILE ADMIN RESPONSIVENESS FIX */
+
+@media (max-width: 768px) {
+  .admin-people-page,
+  .admin-list-section,
+  .admin-person-detail-page,
+  .admin-mentor-workflow-page {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  .admin-people-search input,
+  .admin-search-field input {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  .admin-people-primary-tabs,
+  .admin-people-status-tabs,
+  .admin-application-filters {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-modal-backdrop,
+  .admin-mentor-review-backdrop {
+    padding: 12px;
+    box-sizing: border-box;
+  }
+
+  .admin-confirmation-modal,
+  .admin-mentor-review-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90dvh;
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+
+  .admin-mentor-review-details-grid,
+  .admin-person-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  button,
+  a {
+    touch-action: manipulation;
+  }
+}

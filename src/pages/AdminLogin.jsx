@@ -229,11 +229,15 @@ function AdminLogin() {
                   updateForm
                 }
                 autoComplete="email"
+                inputMode="email"
                 placeholder="admin@tcnikeja.org"
                 disabled={
                   submitting
                 }
                 required
+                style={{
+                  fontSize: "16px",
+                }}
               />
             </label>
 
@@ -260,6 +264,9 @@ function AdminLogin() {
                     submitting
                   }
                   required
+                  style={{
+                    fontSize: "16px",
+                  }}
                 />
 
                 <button
