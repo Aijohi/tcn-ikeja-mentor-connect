@@ -429,3 +429,873 @@
   max-height: calc(100dvh - 150px);
   overflow-y: auto;
 }
+
+/* =========================================================
+   MENTOR APPLICATION REVIEW MODAL FIX
+   ========================================================= */
+
+.admin-mentor-review-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+  padding: 28px;
+
+  background: rgba(16, 20, 25, 0.48);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.admin-mentor-review-modal {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+
+  width: min(980px, calc(100vw - 56px));
+  max-height: calc(100dvh - 56px);
+  min-height: 0;
+
+  overflow: hidden;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e3e7eb;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 24px 70px
+    rgba(16, 24, 40, 0.22);
+}
+
+/* ---------------------------------------------------------
+   HEADER
+   --------------------------------------------------------- */
+
+.admin-mentor-review-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  min-width: 0;
+
+  padding: 24px 28px 20px;
+
+  border-bottom: 1px solid #e7eaee;
+
+  background: #ffffff;
+}
+
+.admin-mentor-review-person {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  min-width: 0;
+}
+
+.admin-mentor-review-person > div {
+  min-width: 0;
+}
+
+.admin-mentor-review-person img,
+.admin-mentor-review-avatar {
+  display: block;
+
+  width: 52px !important;
+  height: 52px !important;
+
+  min-width: 52px;
+  min-height: 52px;
+
+  flex: 0 0 52px;
+
+  border-radius: 14px;
+}
+
+.admin-mentor-review-person img {
+  object-fit: cover !important;
+  object-position: center 22%;
+}
+
+.admin-mentor-review-avatar {
+  display: grid;
+  place-items: center;
+
+  color: #ff5303;
+  background: #fff1eb;
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.admin-mentor-review-header h2 {
+  margin: 4px 0 0;
+
+  color: #101419;
+
+  font-size: 24px;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+
+  text-align: left;
+}
+
+.admin-mentor-review-header p {
+  margin: 5px 0 0;
+
+  color: #697782;
+
+  font-size: 12px;
+  line-height: 1.5;
+
+  text-align: left;
+}
+
+.admin-mentor-review-close {
+  display: grid;
+  place-items: center;
+
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+
+  flex: 0 0 36px;
+
+  padding: 0;
+
+  border: 1px solid #e1e6eb;
+  border-radius: 9px;
+
+  color: #4f5d6a;
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+.admin-mentor-review-close:hover:not(:disabled) {
+  border-color: #cbd3dc;
+  background: #f8f9fa;
+}
+
+.admin-mentor-review-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------
+   BODY
+   --------------------------------------------------------- */
+
+.admin-mentor-review-body {
+  min-height: 0;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  box-sizing: border-box;
+
+  padding: 24px 28px 32px;
+
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---------------------------------------------------------
+   STATUS
+   --------------------------------------------------------- */
+
+.admin-mentor-review-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  gap: 9px;
+
+  margin-bottom: 20px;
+}
+
+.admin-mentor-review-status-row > span:not(.admin-status-badge) {
+  color: #687582;
+  font-size: 11px;
+}
+
+/* ---------------------------------------------------------
+   CALLOUT
+   --------------------------------------------------------- */
+
+.admin-mentor-review-callout {
+  margin-bottom: 20px;
+
+  padding: 14px 15px;
+
+  border: 1px solid #e4e8ed;
+  border-radius: 11px;
+
+  background: #fafbfc;
+
+  text-align: left;
+}
+
+.admin-mentor-review-callout strong {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #252e37;
+
+  font-size: 12px;
+}
+
+.admin-mentor-review-callout p {
+  margin: 0;
+
+  color: #667481;
+
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+/* ---------------------------------------------------------
+   INFORMATION SECTIONS
+   --------------------------------------------------------- */
+
+.admin-mentor-review-section {
+  margin-bottom: 20px;
+
+  padding-bottom: 20px;
+
+  border-bottom: 1px solid #edf0f3;
+}
+
+.admin-mentor-review-section h3 {
+  margin: 0 0 13px;
+
+  color: #1d252d;
+
+  font-size: 14px;
+  font-weight: 750;
+
+  text-align: left;
+}
+
+.admin-mentor-review-details-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+.admin-mentor-review-detail {
+  min-width: 0;
+
+  padding: 13px 14px;
+
+  border: 1px solid #e7eaee;
+  border-radius: 11px;
+
+  background: #fbfcfd;
+
+  text-align: left;
+}
+
+.admin-mentor-review-detail span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #7b8794;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-mentor-review-detail strong {
+  display: block;
+
+  overflow-wrap: anywhere;
+
+  color: #202830;
+
+  font-size: 12px;
+  font-weight: 650;
+
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------
+   BIOGRAPHY
+   --------------------------------------------------------- */
+
+.admin-mentor-review-biography {
+  margin: 0;
+
+  color: #566472;
+
+  font-size: 12px;
+  line-height: 1.75;
+
+  text-align: left;
+}
+
+/* ---------------------------------------------------------
+   LIST CHIPS
+   --------------------------------------------------------- */
+
+.admin-mentor-review-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 7px;
+}
+
+.admin-mentor-review-chip-list span {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 29px;
+
+  padding: 5px 9px;
+
+  border: 1px solid #e3e7eb;
+  border-radius: 999px;
+
+  color: #475563;
+  background: #ffffff;
+
+  font-size: 10px;
+  font-weight: 650;
+}
+
+/* ---------------------------------------------------------
+   CHECKLIST
+   --------------------------------------------------------- */
+
+.admin-mentor-checklist-section {
+  padding: 18px;
+
+  border: 1px solid #e3e7eb;
+  border-radius: 13px;
+
+  background: #fbfcfd;
+}
+
+.admin-mentor-checklist-section > p {
+  margin: 0 0 15px;
+
+  color: #667481;
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.admin-mentor-checklist {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-mentor-checklist-item {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  padding: 10px 11px;
+
+  border: 1px solid #e5e9ed;
+  border-radius: 9px;
+
+  color: #3f4d5a;
+  background: #ffffff;
+
+  font-size: 11px;
+  line-height: 1.45;
+
+  cursor: pointer;
+}
+
+.admin-mentor-checklist-item:hover {
+  border-color: #cbd3dc;
+}
+
+.admin-mentor-checklist-item input {
+  width: 17px;
+  height: 17px;
+
+  min-width: 17px;
+
+  margin: 0;
+
+  accent-color: #ff5303;
+
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------
+   STAGE CARDS
+   --------------------------------------------------------- */
+
+.admin-mentor-review-stage-card {
+  margin-top: 20px;
+
+  padding: 18px;
+
+  border: 1px solid #e3e7eb;
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  text-align: left;
+}
+
+.admin-mentor-review-stage-card > span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #ff5303;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.1em;
+}
+
+.admin-mentor-review-stage-card h3 {
+  margin: 0 0 7px;
+
+  color: #1d252d;
+
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.admin-mentor-review-stage-card > p {
+  margin: 0;
+
+  color: #667481;
+
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.admin-mentor-review-stage-card.is-complete {
+  border-color: #dce2e7;
+  background: #fafbfc;
+}
+
+.admin-mentor-review-stage-card.is-ready {
+  border-color: #d8dde3;
+}
+
+/* ---------------------------------------------------------
+   STAGE RESULTS
+   --------------------------------------------------------- */
+
+.admin-mentor-stage-result {
+  margin-top: 15px;
+
+  padding-top: 14px;
+
+  border-top: 1px solid #e9edf0;
+}
+
+.admin-mentor-stage-result > strong {
+  display: block;
+
+  color: #202830;
+
+  font-size: 12px;
+}
+
+.admin-mentor-stage-result p {
+  margin: 6px 0 0;
+
+  color: #667481;
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------
+   ACTIONS
+   --------------------------------------------------------- */
+
+.admin-mentor-review-actions-box {
+  margin-top: 15px;
+
+  padding-top: 14px;
+
+  border-top: 1px solid #e9edf0;
+}
+
+.admin-mentor-review-action-helper {
+  margin: 0 0 12px;
+
+  color: #667481;
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.admin-mentor-review-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+
+  justify-content: flex-end;
+
+  gap: 9px;
+}
+
+.admin-recommend-reject-button,
+.admin-recommend-approve-button,
+.admin-final-reject-button,
+.admin-final-approve-button,
+.admin-drawer-secondary {
+  min-height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 14px;
+
+  border-radius: 9px;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.admin-recommend-reject-button,
+.admin-final-reject-button {
+  border: 1px solid #101419;
+
+  color: #ffffff;
+  background: #101419;
+}
+
+.admin-recommend-reject-button:hover:not(:disabled),
+.admin-final-reject-button:hover:not(:disabled) {
+  border-color: #2d353f;
+
+  background: #2d353f;
+}
+
+.admin-recommend-approve-button,
+.admin-final-approve-button {
+  border: 1px solid #ff5303;
+
+  color: #ffffff;
+  background: #ff5303;
+}
+
+.admin-recommend-approve-button:hover:not(:disabled),
+.admin-final-approve-button:hover:not(:disabled) {
+  border-color: #c13c00;
+
+  background: #c13c00;
+}
+
+.admin-recommend-reject-button:disabled,
+.admin-recommend-approve-button:disabled,
+.admin-final-reject-button:disabled,
+.admin-final-approve-button:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------
+   WAITING STATE
+   --------------------------------------------------------- */
+
+.admin-mentor-stage-waiting {
+  margin-top: 15px;
+
+  padding: 14px;
+
+  border: 1px solid #e7eaee;
+  border-radius: 10px;
+
+  background: #fafbfc;
+}
+
+.admin-mentor-stage-waiting strong {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #303a44;
+
+  font-size: 12px;
+}
+
+.admin-mentor-stage-waiting p {
+  margin: 0;
+
+  color: #687582;
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------
+   FOOTER
+   --------------------------------------------------------- */
+
+.admin-mentor-review-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 12px;
+
+  min-height: 68px;
+
+  padding: 13px 28px;
+
+  border-top: 1px solid #e7eaee;
+
+  background: #ffffff;
+}
+
+.admin-drawer-secondary {
+  border: 1px solid #d7dde3;
+
+  color: #45525f;
+  background: #ffffff;
+}
+
+.admin-drawer-secondary:hover:not(:disabled) {
+  border-color: #aeb8c3;
+
+  background: #f7f8fa;
+}
+
+/* ---------------------------------------------------------
+   REJECTION REASON MODAL
+   --------------------------------------------------------- */
+
+.admin-decline-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(16, 20, 25, 0.58);
+}
+
+.admin-decline-modal {
+  width: min(520px, calc(100vw - 40px));
+
+  overflow: hidden;
+
+  border: 1px solid #e3e7eb;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 24px 70px
+    rgba(16, 24, 40, 0.26);
+}
+
+.admin-decline-modal header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  padding: 22px;
+
+  border-bottom: 1px solid #e7eaee;
+}
+
+.admin-decline-modal header h2 {
+  margin: 0;
+
+  color: #101419;
+
+  font-size: 20px;
+}
+
+.admin-decline-modal header p {
+  margin: 6px 0 0;
+
+  color: #697782;
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.admin-decline-modal-body {
+  padding: 20px 22px;
+}
+
+.admin-decline-modal-body label {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-decline-modal-body label > span {
+  color: #27313a;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-decline-modal-body textarea {
+  width: 100%;
+  min-height: 120px;
+
+  box-sizing: border-box;
+
+  padding: 11px 12px;
+
+  border: 1px solid #ccd4dc;
+  border-radius: 10px;
+
+  color: #1b242c;
+  background: #ffffff;
+
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+
+  resize: vertical;
+  outline: none;
+}
+
+.admin-decline-modal-body textarea:focus {
+  border-color: #4c5867;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(76, 88, 103, 0.1);
+}
+
+.admin-decline-modal footer {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  padding: 16px 22px 20px;
+
+  border-top: 1px solid #e7eaee;
+}
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .admin-mentor-review-modal {
+    width: min(
+      900px,
+      calc(100vw - 32px)
+    );
+
+    max-height:
+      calc(100dvh - 32px);
+  }
+
+  .admin-mentor-review-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-mentor-review-backdrop {
+    padding: 12px;
+  }
+
+  .admin-mentor-review-modal {
+    width: 100%;
+
+    max-height:
+      calc(100dvh - 24px);
+
+    border-radius: 14px;
+  }
+
+  .admin-mentor-review-header {
+    padding:
+      18px 16px 16px;
+  }
+
+  .admin-mentor-review-person {
+    gap: 11px;
+  }
+
+  .admin-mentor-review-person img,
+  .admin-mentor-review-avatar {
+    width: 46px !important;
+    height: 46px !important;
+
+    min-width: 46px;
+    min-height: 46px;
+
+    flex-basis: 46px;
+
+    border-radius: 12px;
+  }
+
+  .admin-mentor-review-header h2 {
+    font-size: 19px;
+  }
+
+  .admin-mentor-review-header p {
+    font-size: 10px;
+  }
+
+  .admin-mentor-review-body {
+    padding:
+      18px 16px 24px;
+  }
+
+  .admin-mentor-review-inline-actions,
+  .admin-mentor-review-footer,
+  .admin-decline-modal footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .admin-mentor-review-inline-actions button,
+  .admin-mentor-review-footer button,
+  .admin-decline-modal footer button {
+    width: 100%;
+  }
+
+  .admin-mentor-review-footer {
+    padding:
+      13px 16px;
+  }
+
+  .admin-decline-modal {
+    width:
+      calc(100vw - 24px);
+  }
+}
