@@ -401,3 +401,31 @@
     width: 100%;
   }
 }
+
+.admin-mentor-review-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(16, 20, 25, 0.55);
+}
+
+.admin-mentor-review-modal {
+  position: relative;
+  width: min(100%, 980px);
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
+  border: 1px solid #e4e8ef;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 30px 90px rgba(16, 20, 25, 0.25);
+}
+
+.admin-mentor-review-body {
+  max-height: calc(100dvh - 150px);
+  overflow-y: auto;
+}

@@ -427,32 +427,35 @@ Mentor Connect | TCN IKEJA`,
     ) {
       return;
     }
+
     const isRecommendationAction =
       [
         "recommend_approve",
         "recommend_reject",
-      ].includes(
-        action,
-      );
+      ].includes(action);
+
     const isFinalAction =
       [
         "approve",
         "reject",
-      ].includes(
-        action,
-      );
+      ].includes(action);
+
+    const hasMentorOnboardingRecommendationAccess =
+      canRecommendApplications ||
+      isFullAccessAdmin ||
+      adminOperationalRole ===
+        "mentor_onboarding_vetting_training_lead";
+
     if (
       isRecommendationAction &&
-      !(
-        canRecommendApplications ||
-        isFullAccessAdmin
-      )
+      !hasMentorOnboardingRecommendationAccess
     ) {
       setError(
         "Your administrator role cannot record the Mentor Onboarding recommendation.",
       );
       return;
     }
+
     if (
       isFinalAction &&
       !(
@@ -465,36 +468,32 @@ Mentor Connect | TCN IKEJA`,
       );
       return;
     }
+
     if (
       isFinalAction &&
-      !selectedApplication
-        .onboarding_recommendation
+      !selectedApplication.onboarding_recommendation
     ) {
       setError(
         "The Mentor Onboarding recommendation must be recorded before the final Operations and Governance decision.",
       );
       return;
     }
+
     if (
       [
         "recommend_reject",
         "reject",
-      ].includes(
-        action,
-      ) &&
-      !String(
-        reason ||
-          "",
-      ).trim()
+      ].includes(action) &&
+      !String(reason || "").trim()
     ) {
       setError(
-        action ===
-          "recommend_reject"
+        action === "recommend_reject"
           ? "Please provide a reason before recommending rejection."
           : "Please provide a reason before rejecting this mentor application.",
       );
       return;
     }
+
     const checklistComplete = [
       "identity_checked",
       "profile_information_checked",
@@ -508,70 +507,109 @@ Mentor Connect | TCN IKEJA`,
       "safeguarding_checked",
       "conduct_checked",
     ].every((key) => onboardingChecklist[key] === true);
+
     const isMentorOnboardingRole =
-      adminOperationalRole === "mentor_onboarding_vetting_training_lead";
-    if (isRecommendationAction && !checklistComplete) {
+      adminOperationalRole ===
+      "mentor_onboarding_vetting_training_lead";
+
+    if (
+      isRecommendationAction &&
+      !checklistComplete
+    ) {
       setError(
         "Complete the Mentor Onboarding checklist before recording the recommendation.",
       );
       return;
     }
-    if (isFinalAction && isMentorOnboardingRole && !isFullAccessAdmin) {
+
+    if (
+      isFinalAction &&
+      isMentorOnboardingRole &&
+      !isFullAccessAdmin
+    ) {
       setError(
         "The Mentor Onboarding role cannot give the final Operations and Governance decision.",
       );
       return;
     }
-    if (isRecommendationAction) {
-      const { error: checklistError } = await supabase
-        .from("mentor_applications")
-        .update({ onboarding_checklist: onboardingChecklist })
-        .eq("id", selectedApplication.id);
-      if (checklistError) {
-        setError(
-          checklistError.message ||
-            "We could not save the Mentor Onboarding checklist.",
-        );
-        return;
-      }
-    }
+
     setProcessing(true);
     setError("");
     setSuccess("");
-    const {
-      error: reviewError,
-    } = await supabase.rpc(
-      "admin_review_mentor_application",
-      {
-        p_application_id:
-          selectedApplication.id,
-        p_action:
-          action,
-        p_feedback:
-          [
-            "recommend_reject",
-            "reject",
-          ].includes(
+
+    if (isRecommendationAction) {
+      const recommendation =
+        action === "recommend_approve"
+          ? "approve"
+          : "reject";
+
+      const {
+        error: recommendationError,
+      } = await supabase.rpc(
+        "admin_record_mentor_recommendation",
+        {
+          p_application_id:
+            selectedApplication.id,
+          p_recommendation:
+            recommendation,
+          p_feedback:
+            action === "recommend_reject"
+              ? String(reason || "").trim()
+              : null,
+          p_onboarding_checklist:
+            onboardingChecklist,
+        },
+      );
+
+      if (recommendationError) {
+        console.error(
+          "Unable to record mentor recommendation:",
+          recommendationError,
+        );
+
+        setError(
+          recommendationError.message ||
+            "We could not record the Mentor Onboarding recommendation.",
+        );
+
+        setProcessing(false);
+        return;
+      }
+    } else {
+      const {
+        error: reviewError,
+      } = await supabase.rpc(
+        "admin_review_mentor_application",
+        {
+          p_application_id:
+            selectedApplication.id,
+          p_action:
             action,
-          )
-            ? String(
-                reason,
-              ).trim()
-            : null,
-      },
-    );
-    if (reviewError) {
-      console.error(
-        "Unable to review mentor application:",
-        reviewError,
+          p_feedback:
+            [
+              "reject",
+            ].includes(action)
+              ? String(reason || "").trim()
+              : null,
+        },
       );
-      setError(
-        reviewError.message ||
-          "We could not update this mentor application.",
-      );
-      setProcessing(false);
-      return;
+
+      if (reviewError) {
+        console.error(
+          "Unable to review mentor application:",
+          reviewError,
+        );
+
+        setError(
+          reviewError.message ||
+            "We could not update this mentor application.",
+        );
+
+        setProcessing(false);
+        return;
+      }
     }
+
     const messages = {
       recommend_approve:
         "Approval has been recommended. The application is now ready for Operations and Governance review.",
@@ -582,16 +620,19 @@ Mentor Connect | TCN IKEJA`,
       reject:
         "The mentor application has been rejected.",
     };
+
     setSuccess(
       messages[action] ||
         "The application was updated.",
     );
+
     setRejectionMode("");
     setRejectionReason("");
+
     await loadApplications({
-      keepModalOpen:
-        true,
+      keepModalOpen: true,
     });
+
     setProcessing(false);
   }
   const filteredApplications =
@@ -1282,7 +1323,9 @@ function ApplicationReviewModal({
     !onboardingComplete &&
     (
       canRecommendApplications ||
-      isFullAccessAdmin
+      isFullAccessAdmin ||
+      adminOperationalRole ===
+        "mentor_onboarding_vetting_training_lead"
     );
   const canMakeFinalDecision =
     isPending &&
